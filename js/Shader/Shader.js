@@ -19,6 +19,7 @@ export default class Shader {
     this.gl.canvas.height
   );
   animData = {
+    frameDeltaTime: 0,
     deltaTime: 0,
     prevAnimTime: 0,
   };
@@ -105,6 +106,7 @@ export default class Shader {
     const deltaTime = timeInSecs - this.animData.prevAnimTime;
 
     this.animData.prevAnimTime = timeInSecs;
+    this.animData.frameDeltaTime = deltaTime
     this.animData.deltaTime += deltaTime;
 
     this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);

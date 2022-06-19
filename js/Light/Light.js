@@ -30,7 +30,7 @@ export default class Light extends Shader {
 
   #effects;
 
-  #animate = true;
+  #animate = false;
 
   #initLocations() {
     this.#locations = {
@@ -84,23 +84,33 @@ export default class Light extends Shader {
           return false;
         };
       })(),
-      pulsingLightness: (lightness, anim, lastShapeReached) => {
-        const t = this.animData.deltaTime / 2 - anim.borderDeltaT;
+      pulsingLightness: (
+        lightness,
+        anim,
+        lastShape,
+        lightnessBorder,
+        stepFurther
+      ) => {
+        const t = this.animData.deltaTime * anim.speed - anim.borderDeltaT;
 
         switch (anim.direction) {
           case "inward":
+            if (!lightnessBorder) lightnessBorder = 0;
+
             lightness -= t;
 
-            if (lastShapeReached && lightness <= 0) {
+            if (lastShape && lightness <= lightnessBorder) {
               anim.direction = "outward";
               anim.borderDeltaT = t;
             }
             break;
 
           case "outward":
+            if (!lightnessBorder) lightnessBorder = 1;
+
             lightness -= anim.borderDeltaT - t;
 
-            if (lastShapeReached && lightness >= 1) {
+            if (lastShape && lightness >= lightnessBorder) {
               anim.direction = "inward";
               this.animData.deltaTime = 0;
               anim.borderDeltaT = 0;
@@ -108,11 +118,19 @@ export default class Light extends Shader {
             break;
         }
 
+        if (anim.stepping.active) {
+          if (stepFurther) {
+            anim.stepping.nextShape += anim.stepping.step;
+          } else {
+            anim.stepping.nextShape = 0;
+          }
+        }
+
         return lightness;
       },
       fluidLayers: (shapesCount, anim) => {
         const { op, firstTriangle } = anim;
-        const t = Math.round(this.animData.deltaTime * 160);
+        const t = Math.round(this.animData.deltaTime * anim.speed);
         let newCount;
 
         switch (op) {
@@ -122,8 +140,6 @@ export default class Light extends Shader {
 
           case "add":
             newCount = Math.min(shapesCount, firstTriangle + t);
-
-            console.log("add", newCount);
             break;
         }
 
@@ -295,7 +311,7 @@ export default class Light extends Shader {
     this.gl.bindVertexArray(vao);
 
     const squareLength = this.gl.canvas.height / 3;
-    const squares = 8;
+    const squares = 1;
     const squareRotationStep = Math.PI / 2 / squares;
 
     const coords = new Float32Array([
@@ -370,9 +386,24 @@ export default class Light extends Shader {
         index: this.createAndBindElementsBuffer(indices, this.gl.STATIC_READ),
       },
       anim: {
-        active: "fluidLayers",
-        pulsingLightness: { direction: "inward", borderDeltaT: 0 },
-        fluidLayers: { firstTriangle: 9, op: "subtract" },
+        pulsingLightness: {
+          active: true,
+          direction: "inward",
+          borderDeltaT: 0,
+          speed: 0.1,
+          stepping: {
+            active: true,
+            step: 2,
+            nextShape: 0,
+          },
+        },
+        fluidLayers: {
+          active: true,
+          speed: 64,
+          firstTriangle: 16,
+          op: "add",
+        },
+        rotation: { active: false, speed: 0.0625, angle: 0 },
       },
     };
   }
@@ -383,16 +414,12 @@ export default class Light extends Shader {
 
     let { trianglesCount } = this.#triangularStar;
 
-    if (this.#animate) {
-      if (anim.active === "fluidLayers") {
-        trianglesCount = this.#effects.fluidLayers(
-          trianglesCount,
-          anim.fluidLayers
-        );
-      }
+    if (this.#animate && anim.fluidLayers.active) {
+      trianglesCount = this.#effects.fluidLayers(
+        trianglesCount,
+        anim.fluidLayers
+      );
     }
-
-    // console.log("trianglesCount", trianglesCount)
 
     const scaleStep = 1 / trianglesCount;
     const lightnessStep = 1 / trianglesCount;
@@ -406,6 +433,18 @@ export default class Light extends Shader {
     this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, buffers.index);
 
     for (let square = 0; square < squares; square++) {
+      let squareMat = mats.squares[square];
+
+      if (this.#animate && anim.rotation.active) {
+        anim.rotation.angle -=
+          this.animData.frameDeltaTime * anim.rotation.speed;
+
+        squareMat = ShaderUtils.mult2dMats(
+          squareMat,
+          ShaderUtils.init2dRotationMat(anim.rotation.angle)
+        );
+      }
+
       for (let side = 0; side < 4; side++) {
         for (
           let triangle = 0,
@@ -419,20 +458,49 @@ export default class Light extends Shader {
             triangle++
         ) {
           const triangleMat = ShaderUtils.mult2dMats(
-            mats.squares[square],
+            squareMat,
             ShaderUtils.init2dScaleMat(scale, scale)
           );
 
           let l = lightness;
 
-          if (this.#animate) {
-            if (anim.active === "pulsingLightness") {
-              l = this.#effects.pulsingLightness(
-                l,
-                anim.pulsingLightness,
-                side === 3 && triangle === trianglesCount - 1
-              );
+          if (
+            this.#animate &&
+            anim.pulsingLightness.active &&
+            (!anim.pulsingLightness.stepping.active ||
+              anim.pulsingLightness.stepping.nextShape === triangle)
+          ) {
+            const lastSideReached = square === squares - 1 && side === 3;
+
+            const lastTriangleInSideReached = anim.pulsingLightness.stepping
+              .active
+              ? triangle + anim.pulsingLightness.stepping.step >
+                trianglesCount - 1
+              : triangle === trianglesCount - 1;
+
+            const lastTriangle = lastSideReached && lastTriangleInSideReached;
+
+            let lBorder;
+            let stepFurther;
+
+            if (anim.pulsingLightness.stepping.active) {
+              if (lastTriangle) {
+                lBorder =
+                  anim.pulsingLightness.direction === "inward"
+                    ? l - lightnessStep
+                    : l;
+              }
+
+              stepFurther = !lastTriangleInSideReached;
             }
+
+            l = this.#effects.pulsingLightness(
+              l,
+              anim.pulsingLightness,
+              lastTriangle,
+              lBorder,
+              stepFurther
+            );
           }
 
           this.gl.uniformMatrix3fv(this.#locations.mat, false, triangleMat);
