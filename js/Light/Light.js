@@ -30,7 +30,7 @@ export default class Light extends Shader {
 
   #effects;
 
-  #animate = false;
+  #animate = true;
 
   #initLocations() {
     this.#locations = {
@@ -129,22 +129,22 @@ export default class Light extends Shader {
         return lightness;
       },
       fluidLayers: (shapesCount, anim) => {
-        const { op, firstTriangle } = anim;
+        const { op, firstShape } = anim;
         const t = Math.round(this.animData.deltaTime * anim.speed);
         let newCount;
 
         switch (op) {
           case "subtract":
-            newCount = Math.max(firstTriangle, shapesCount - t);
+            newCount = Math.max(firstShape, shapesCount - t);
             break;
 
           case "add":
-            newCount = Math.min(shapesCount, firstTriangle + t);
+            newCount = Math.min(shapesCount, firstShape + t);
             break;
         }
 
         if (
-          (anim.op === "subtract" && newCount === firstTriangle) ||
+          (anim.op === "subtract" && newCount === firstShape) ||
           (anim.op === "add" && newCount === shapesCount)
         ) {
           this.animData.deltaTime = 0;
@@ -311,7 +311,7 @@ export default class Light extends Shader {
     this.gl.bindVertexArray(vao);
 
     const squareLength = this.gl.canvas.height / 3;
-    const squares = 1;
+    const squares = 4;
     const squareRotationStep = Math.PI / 2 / squares;
 
     const coords = new Float32Array([
@@ -376,7 +376,7 @@ export default class Light extends Shader {
         squares: squareMats,
       },
       trianglesCount: 100,
-      invertLightness: false,
+      invertLightness: true,
       buffers: {
         vertex: this.createAndBindVerticesBuffer(
           this.#locations.position,
@@ -390,17 +390,17 @@ export default class Light extends Shader {
           active: true,
           direction: "inward",
           borderDeltaT: 0,
-          speed: 0.1,
+          speed: 2,
           stepping: {
-            active: true,
+            active: false,
             step: 2,
             nextShape: 0,
           },
         },
         fluidLayers: {
-          active: true,
+          active: false,
           speed: 64,
-          firstTriangle: 16,
+          firstShape: 16,
           op: "add",
         },
         rotation: { active: false, speed: 0.0625, angle: 0 },
@@ -426,8 +426,11 @@ export default class Light extends Shader {
 
     this.gl.enable(this.gl.DEPTH_TEST);
     this.gl.depthFunc(invertLightness ? this.gl.LESS : this.gl.GREATER);
-    this.gl.clearDepth(0);
-    if (!invertLightness) this.gl.clear(this.gl.DEPTH_BUFFER_BIT);
+
+    if (!invertLightness) {
+      this.gl.clearDepth(0);
+      this.gl.clear(this.gl.DEPTH_BUFFER_BIT);
+    }
 
     this.gl.bindVertexArray(vao);
     this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, buffers.index);
@@ -453,7 +456,7 @@ export default class Light extends Shader {
           triangle < trianglesCount;
           scale -= scaleStep,
             lightness = invertLightness
-              ? lightness - lightnessStep * 4
+              ? lightness - lightnessStep
               : lightness + lightnessStep,
             triangle++
         ) {
@@ -492,6 +495,10 @@ export default class Light extends Shader {
               }
 
               stepFurther = !lastTriangleInSideReached;
+            } else {
+              if (lastTriangle && invertLightness) {
+                lBorder = anim.pulsingLightness.direction === "inward" ? lightnessStep - 1 : -4 * lightnessStep
+              }
             }
 
             l = this.#effects.pulsingLightness(
