@@ -95,7 +95,7 @@ export default class Light extends Shader {
 
         switch (anim.direction) {
           case "inward":
-            if (!lightnessBorder) lightnessBorder = 0;
+            if (lightnessBorder === undefined) lightnessBorder = 0;
 
             lightness -= t;
 
@@ -106,7 +106,7 @@ export default class Light extends Shader {
             break;
 
           case "outward":
-            if (!lightnessBorder) lightnessBorder = 1;
+            if (lightnessBorder === undefined) lightnessBorder = 1;
 
             lightness -= anim.borderDeltaT - t;
 
@@ -375,7 +375,7 @@ export default class Light extends Shader {
       mats: {
         squares: squareMats,
       },
-      trianglesCount: 100,
+      trianglesCount: 5,
       invertLightness: true,
       buffers: {
         vertex: this.createAndBindVerticesBuffer(
@@ -389,10 +389,12 @@ export default class Light extends Shader {
         pulsingLightness: {
           active: true,
           direction: "inward",
+          inwardBorderMult: 0,
+          outwardBorderMult: 0,
           borderDeltaT: 0,
-          speed: 2,
+          speed: 0.1,
           stepping: {
-            active: false,
+            active: true,
             step: 2,
             nextShape: 0,
           },
@@ -496,11 +498,15 @@ export default class Light extends Shader {
 
               stepFurther = !lastTriangleInSideReached;
             } else {
-              if (lastTriangle && invertLightness) {
-                lBorder = anim.pulsingLightness.direction === "inward" ? lightnessStep - 1 : -4 * lightnessStep
+              if (lastTriangle) {
+                lBorder =
+                  anim.pulsingLightness.direction === "inward"
+                    ? 0 + anim.pulsingLightness.inwardBorderMult * lightnessStep
+                    : l -
+                      anim.pulsingLightness.outwardBorderMult * lightnessStep;
               }
             }
-
+            
             l = this.#effects.pulsingLightness(
               l,
               anim.pulsingLightness,
