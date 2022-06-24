@@ -7,8 +7,8 @@ export default class ShaderUtils {
   static init2dTranslationMat = (x, y) =>
     new Float32Array([1, 0, 0, 0, 1, 0, x, y, 1]);
 
-  static init3dTranslationMat = (x, y, z) =>
-    new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, x, y, z, 1]);
+  static init3dTranslationMat = (x, y, z) => 
+  new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, x, y, z, 1]);
 
   static init2dScaleMat = (w, h) =>
     new Float32Array([w, 0, 0, 0, h, 0, 0, 0, 1]);
@@ -16,7 +16,7 @@ export default class ShaderUtils {
   static init3dScaleMat = (wS, hS, dS) =>
     new Float32Array([wS, 0, 0, 0, 0, hS, 0, 0, 0, 0, dS, 0, 0, 0, 0, 1]);
 
-  static init2dRotationMat = rad => {
+  static init2dRotationMat = (rad) => {
     const cos = Math.cos(rad);
     const sin = Math.sin(rad);
 
@@ -313,7 +313,7 @@ export default class ShaderUtils {
   static subtractVecs = (vecA, vecB) =>
     new Float32Array([vecA[0] - vecB[0], vecA[1] - vecB[1], vecA[2] - vecB[2]]);
 
-  static normalizeVec = vec => {
+  static normalizeVec = (vec) => {
     const length = Math.sqrt(
       Math.pow(vec[0], 2) + Math.pow(vec[1], 2) + Math.pow(vec[2], 2)
     );

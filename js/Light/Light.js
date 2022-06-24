@@ -311,7 +311,7 @@ export default class Light extends Shader {
     this.gl.bindVertexArray(vao);
 
     const squareLength = this.gl.canvas.height / 3;
-    const squares = 4;
+    const squares = 64;
     const squareRotationStep = Math.PI / 2 / squares;
 
     const coords = new Float32Array([
@@ -375,8 +375,8 @@ export default class Light extends Shader {
       mats: {
         squares: squareMats,
       },
-      trianglesCount: 5,
-      invertLightness: true,
+      trianglesCount: 100,
+      inversedMode: { active: true, lStepMult: 3 },
       buffers: {
         vertex: this.createAndBindVerticesBuffer(
           this.#locations.position,
@@ -388,15 +388,19 @@ export default class Light extends Shader {
       anim: {
         pulsingLightness: {
           active: true,
+          lborderOffset: 0.1,
           direction: "inward",
-          inwardBorderMult: 0,
-          outwardBorderMult: 0,
+          inwardBorderMult: 20,
+          inversedMode: { inwardBorderMult: 24 },
           borderDeltaT: 0,
-          speed: 0.1,
+          speed: 2,
           stepping: {
-            active: true,
+            active: false,
             step: 2,
             nextShape: 0,
+            inversedMode: {
+              inwardBorderMult: 16,
+            },
           },
         },
         fluidLayers: {
@@ -411,7 +415,7 @@ export default class Light extends Shader {
   }
 
   #renderTriangularStar() {
-    const { anim, vao, mats, squares, buffers, invertLightness } =
+    const { anim, vao, mats, squares, buffers, inversedMode } =
       this.#triangularStar;
 
     let { trianglesCount } = this.#triangularStar;
@@ -427,9 +431,9 @@ export default class Light extends Shader {
     const lightnessStep = 1 / trianglesCount;
 
     this.gl.enable(this.gl.DEPTH_TEST);
-    this.gl.depthFunc(invertLightness ? this.gl.LESS : this.gl.GREATER);
+    this.gl.depthFunc(inversedMode.active ? this.gl.LESS : this.gl.GREATER);
 
-    if (!invertLightness) {
+    if (!inversedMode.active) {
       this.gl.clearDepth(0);
       this.gl.clear(this.gl.DEPTH_BUFFER_BIT);
     }
@@ -454,11 +458,11 @@ export default class Light extends Shader {
         for (
           let triangle = 0,
             scale = 1,
-            lightness = invertLightness ? 1 : lightnessStep;
+            lightness = inversedMode.active ? 1 : lightnessStep;
           triangle < trianglesCount;
           scale -= scaleStep,
-            lightness = invertLightness
-              ? lightness - lightnessStep
+            lightness = inversedMode.active
+              ? lightness - lightnessStep * inversedMode.lStepMult
               : lightness + lightnessStep,
             triangle++
         ) {
@@ -490,23 +494,37 @@ export default class Light extends Shader {
 
             if (anim.pulsingLightness.stepping.active) {
               if (lastTriangle) {
+                const lStepMult = inversedMode.active
+                  ? anim.pulsingLightness.stepping.inversedMode.inwardBorderMult
+                  : 1;
+
                 lBorder =
                   anim.pulsingLightness.direction === "inward"
-                    ? l - lightnessStep
-                    : l;
+                    ? l - lStepMult * lightnessStep
+                    : l - anim.pulsingLightness.lborderOffset;
               }
 
               stepFurther = !lastTriangleInSideReached;
             } else {
               if (lastTriangle) {
-                lBorder =
-                  anim.pulsingLightness.direction === "inward"
-                    ? 0 + anim.pulsingLightness.inwardBorderMult * lightnessStep
-                    : l -
-                      anim.pulsingLightness.outwardBorderMult * lightnessStep;
+                if (inversedMode.active) {
+                  lBorder =
+                    anim.pulsingLightness.direction === "inward"
+                      ? l -
+                        1 +
+                        anim.pulsingLightness.inversedMode.inwardBorderMult *
+                          lightnessStep
+                      : l - anim.pulsingLightness.lborderOffset;
+                } else {
+                  lBorder =
+                    anim.pulsingLightness.direction === "inward"
+                      ? 0 +
+                        anim.pulsingLightness.inwardBorderMult * lightnessStep
+                      : l - anim.pulsingLightness.lborderOffset;
+                }
               }
             }
-            
+
             l = this.#effects.pulsingLightness(
               l,
               anim.pulsingLightness,
