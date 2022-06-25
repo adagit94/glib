@@ -27,7 +27,7 @@ export default class CircShader extends Shader {
         this.#circ.mat
       );
 
-      this.gl.canvas.dispatchEvent(new CustomEvent("circInitCompleted"));
+      this.requestAnimationFrame();
     });
   }
 
@@ -490,20 +490,9 @@ export default class CircShader extends Shader {
 
     // this.#renderCircleCurvesGrps();
     // this.#renderPointsGrps();
-    this.#renderLines();
+    // this.#renderLines("inversed");
     // this.#renderCircles();
 
-    // window.requestAnimationFrame(this.renderScene);
+    // this.requestAnimationFrame();
   };
 }
-
-// const circShader = new CircShader({
-//   circ: {
-//     vShader: "shaders/circ/circ.vert",
-//     fShader: "shaders/circ/circ.frag",
-//   },
-// });
-
-// circShader.gl.canvas.addEventListener("circInitCompleted", () => {
-//   window.requestAnimationFrame(circShader.renderScene);
-// });

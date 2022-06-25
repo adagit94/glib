@@ -30,7 +30,7 @@ export default class Light extends Shader {
 
   #effects;
 
-  #animate = true;
+  #animate = false;
 
   #initLocations() {
     this.#locations = {
@@ -42,7 +42,24 @@ export default class Light extends Shader {
   }
 
   #initObjectsData() {
-    this.#initRadialLightData();
+    // ellipse
+    // {
+    //       x: this.gl.canvas.width / 2,
+    //       y: this.gl.canvas.height,
+    //       rx: this.gl.canvas.width / 2,
+    //       ry: this.gl.canvas.height,
+    //       angle: -Math.PI,
+    //       vertices: 1000,
+    //     }
+
+    this.#initRadialLightData("circle", {
+      x: this.gl.canvas.width / 2,
+      y: this.gl.canvas.height / 2,
+      r: this.gl.canvas.height / 2,
+      angle: 2 * Math.PI,
+      vertices: 1000,
+    });
+
     this.#initRadialQuadData();
     this.#initEllipticQuadData();
     this.#initTriangularStarData();
@@ -55,7 +72,7 @@ export default class Light extends Shader {
         let trianglesLightness = [];
 
         return (triangle, lightness, side) => {
-          const { triangles, mode } = this.#triangular;
+          const { triangles, mode, anim } = this.#triangular;
 
           trianglesLightness[triangle] = lightness;
 
@@ -73,7 +90,7 @@ export default class Light extends Shader {
 
               mode[1].triggerDimming = false;
 
-              this.animData.deltaTime = 0;
+              anim.deltaT = 0;
             }
 
             trianglesLightness = [];
@@ -91,7 +108,7 @@ export default class Light extends Shader {
         lightnessBorder,
         stepFurther
       ) => {
-        const t = this.animData.deltaTime * anim.speed - anim.borderDeltaT;
+        const t = anim.deltaT * anim.speed - anim.borderDeltaT;
 
         switch (anim.direction) {
           case "inward":
@@ -112,7 +129,7 @@ export default class Light extends Shader {
 
             if (lastShape && lightness >= lightnessBorder) {
               anim.direction = "inward";
-              this.animData.deltaTime = 0;
+              anim.deltaT = 0;
               anim.borderDeltaT = 0;
             }
             break;
@@ -126,11 +143,14 @@ export default class Light extends Shader {
           }
         }
 
+        if (lastShape) anim.deltaT += this.animData.frameDeltaTime;
+
         return lightness;
       },
       fluidLayers: (shapesCount, anim) => {
-        const { op, firstShape } = anim;
-        const t = Math.round(this.animData.deltaTime * anim.speed);
+        const { op, firstShape, deltaT } = anim;
+
+        const t = Math.round(deltaT * anim.speed);
         let newCount;
 
         switch (op) {
@@ -143,11 +163,13 @@ export default class Light extends Shader {
             break;
         }
 
+        anim.deltaT += this.animData.frameDeltaTime;
+
         if (
           (anim.op === "subtract" && newCount === firstShape) ||
           (anim.op === "add" && newCount === shapesCount)
         ) {
-          this.animData.deltaTime = 0;
+          anim.deltaT = 0;
           anim.op = anim.op === "subtract" ? "add" : "subtract";
         }
 
@@ -156,43 +178,89 @@ export default class Light extends Shader {
     };
   }
 
-  #initRadialLightData() {
+  #initRadialLightData(shapeType, conf) {
     const vao = this.gl.createVertexArray();
-    const ellipse = new Ellipse(
-      this.gl.canvas.width / 2,
-      this.gl.canvas.height,
-      this.gl.canvas.width / 2,
-      this.gl.canvas.height,
-      -Math.PI,
-      1000
-    );
+
+    let shape;
+
+    switch (shapeType) {
+      case "circle":
+        shape = new Circle(conf.x, conf.y, conf.r, conf.angle, conf.vertices);
+        break;
+
+      case "ellipse":
+        shape = new Ellipse(
+          conf.x,
+          conf.y,
+          conf.rx,
+          conf.ry,
+          conf.angle,
+          conf.vertices
+        );
+        break;
+    }
 
     this.gl.bindVertexArray(vao);
 
     this.#radial = {
       vao,
-      ellipse,
+      shape,
       count: 10000,
-      mat: ShaderUtils.mult2dMats(this.projectionMat, ellipse.mat),
+      mat: ShaderUtils.mult2dMats(this.projectionMat, shape.mat),
       buffer: this.createAndBindVerticesBuffer(
         this.#locations.position,
-        ellipse.coordinates,
+        shape.coordinates,
         { size: 2 }
       ),
-      anim: { direction: "inward", borderDeltaT: 0 },
+      inversedMode: { active: true, lStepMult: 1 },
+      anim: {
+        pulsingLightness: {
+          active: true,
+          direction: "inward",
+          lOffset: 0.1,
+          inwardBorderMult: 5000,
+          inversedMode: { inwardBorderMult: 5000 },
+          borderDeltaT: 0,
+          deltaT: 0,
+          speed: 0.4,
+          stepping: {
+            active: false,
+            step: 3,
+            nextShape: 0,
+            inversedMode: {
+              inwardBorderMult: 40,
+            },
+          },
+        },
+        fluidLayers: {
+          active: false,
+          speed: 36,
+          firstShape: 10,
+          op: "add",
+          deltaT: 0,
+        },
+      },
     };
   }
 
   #renderRadialLight() {
     this.gl.bindVertexArray(this.#radial.vao);
 
+    const { inversedMode, anim } = this.#radial;
+
     const rScaleStep = 1 / this.#radial.count;
     const lightnessStep = 1 / this.#radial.count;
 
     for (
-      let ellipse = 0, rScale = 1, lightness = lightnessStep;
-      ellipse < this.#radial.count;
-      rScale -= rScaleStep, lightness += lightnessStep, ellipse++
+      let shape = 0,
+        rScale = 1,
+        lightness = inversedMode.active ? 1 : lightnessStep;
+      shape < this.#radial.count;
+      rScale -= rScaleStep,
+        lightness = inversedMode.active
+          ? lightness - lightnessStep
+          : lightness + lightnessStep,
+        shape++
     ) {
       const mat = ShaderUtils.mult2dMats(
         this.#radial.mat,
@@ -202,11 +270,39 @@ export default class Light extends Shader {
       let l = lightness;
 
       if (this.#animate) {
-        l = this.#effects.pulsingLightness(
-          l,
-          this.#radial.anim,
-          ellipse === this.#radial.count - 1
-        );
+        const { pulsingLightness } = anim;
+
+        if (pulsingLightness.active) {
+          const isLastShape = shape === this.#radial.count - 1;
+
+          let lBorder;
+
+          if (isLastShape) {
+            if (pulsingLightness.direction === "inward") {
+              let inwardBorderMult;
+
+              if (inversedMode.active) {
+                inwardBorderMult =
+                  pulsingLightness.inversedMode.inwardBorderMult;
+              } else {
+                inwardBorderMult = pulsingLightness.inwardBorderMult;
+              }
+
+              const lOffset = lightnessStep * inwardBorderMult;
+
+              lBorder = l - 1 + lOffset;
+            } else {
+              lBorder = l;
+            }
+          }
+
+          l = this.#effects.pulsingLightness(
+            l,
+            pulsingLightness,
+            isLastShape,
+            lBorder
+          );
+        }
       }
 
       this.gl.uniformMatrix3fv(this.#locations.mat, false, mat);
@@ -214,7 +310,7 @@ export default class Light extends Shader {
       this.gl.drawArrays(
         this.gl.LINE_STRIP,
         0,
-        this.#radial.ellipse.verticesCount + 1
+        this.#radial.shape.verticesCount + 1
       );
     }
   }
@@ -260,7 +356,33 @@ export default class Light extends Shader {
         circle.coordinates,
         { size: 2 }
       ),
-      anim: { direction: "inward", borderDeltaT: 0 },
+      anim: {
+        pulsingLightness: {
+          active: true,
+          direction: "inward",
+          lOffset: 0.1,
+          inwardBorderMult: 0,
+          inversedMode: { inwardBorderMult: 40 },
+          borderDeltaT: 0,
+          deltaT: 0,
+          speed: 0.4,
+          stepping: {
+            active: true,
+            step: 3,
+            nextShape: 0,
+            inversedMode: {
+              inwardBorderMult: 40,
+            },
+          },
+        },
+        fluidLayers: {
+          active: false,
+          speed: 36,
+          firstShape: 10,
+          op: "add",
+          deltaT: 0,
+        },
+      },
     };
   }
 
@@ -289,8 +411,10 @@ export default class Light extends Shader {
         if (this.#animate) {
           l = this.#effects.pulsingLightness(
             l,
-            anim,
-            direction === directions - 1 && circle === count - 1
+            anim.pulsingLightness,
+            direction === directions - 1 && circle === count - 1,
+            undefined,
+            circle < count - 1
           );
         }
 
@@ -311,7 +435,7 @@ export default class Light extends Shader {
     this.gl.bindVertexArray(vao);
 
     const squareLength = this.gl.canvas.height / 3;
-    const squares = 64;
+    const squares = 1;
     const squareRotationStep = Math.PI / 2 / squares;
 
     const coords = new Float32Array([
@@ -376,7 +500,7 @@ export default class Light extends Shader {
         squares: squareMats,
       },
       trianglesCount: 100,
-      inversedMode: { active: true, lStepMult: 3 },
+      inversedMode: { active: true, lStepMult: 1 },
       buffers: {
         vertex: this.createAndBindVerticesBuffer(
           this.#locations.position,
@@ -388,26 +512,28 @@ export default class Light extends Shader {
       anim: {
         pulsingLightness: {
           active: true,
-          lborderOffset: 0.1,
           direction: "inward",
-          inwardBorderMult: 20,
-          inversedMode: { inwardBorderMult: 24 },
+          lOffset: 0.1,
+          inwardBorderMult: 0,
+          inversedMode: { inwardBorderMult: 40 },
           borderDeltaT: 0,
-          speed: 2,
+          deltaT: 0,
+          speed: 0.4,
           stepping: {
-            active: false,
-            step: 2,
+            active: true,
+            step: 3,
             nextShape: 0,
             inversedMode: {
-              inwardBorderMult: 16,
+              inwardBorderMult: 40,
             },
           },
         },
         fluidLayers: {
           active: false,
-          speed: 64,
-          firstShape: 16,
+          speed: 36,
+          firstShape: 10,
           op: "add",
+          deltaT: 0,
         },
         rotation: { active: false, speed: 0.0625, angle: 0 },
       },
@@ -432,11 +558,8 @@ export default class Light extends Shader {
 
     this.gl.enable(this.gl.DEPTH_TEST);
     this.gl.depthFunc(inversedMode.active ? this.gl.LESS : this.gl.GREATER);
-
-    if (!inversedMode.active) {
-      this.gl.clearDepth(0);
-      this.gl.clear(this.gl.DEPTH_BUFFER_BIT);
-    }
+    this.gl.clearDepth(inversedMode.active ? 1 : 0);
+    this.gl.clear(this.gl.DEPTH_BUFFER_BIT);
 
     this.gl.bindVertexArray(vao);
     this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, buffers.index);
@@ -501,7 +624,7 @@ export default class Light extends Shader {
                 lBorder =
                   anim.pulsingLightness.direction === "inward"
                     ? l - lStepMult * lightnessStep
-                    : l - anim.pulsingLightness.lborderOffset;
+                    : l;
               }
 
               stepFurther = !lastTriangleInSideReached;
@@ -514,13 +637,13 @@ export default class Light extends Shader {
                         1 +
                         anim.pulsingLightness.inversedMode.inwardBorderMult *
                           lightnessStep
-                      : l - anim.pulsingLightness.lborderOffset;
+                      : l;
                 } else {
                   lBorder =
                     anim.pulsingLightness.direction === "inward"
                       ? 0 +
                         anim.pulsingLightness.inwardBorderMult * lightnessStep
-                      : l - anim.pulsingLightness.lborderOffset;
+                      : l;
                 }
               }
             }
@@ -532,6 +655,8 @@ export default class Light extends Shader {
               lBorder,
               stepFurther
             );
+
+            l -= anim.pulsingLightness.lOffset;
           }
 
           this.gl.uniformMatrix3fv(this.#locations.mat, false, triangleMat);
@@ -607,7 +732,33 @@ export default class Light extends Shader {
         ellipse.coordinates,
         { size: 2 }
       ),
-      anim: { direction: "inward", borderDeltaT: 0 },
+      anim: {
+        pulsingLightness: {
+          active: true,
+          direction: "inward",
+          lOffset: 0.1,
+          inwardBorderMult: 0,
+          inversedMode: { inwardBorderMult: 40 },
+          borderDeltaT: 0,
+          deltaT: 0,
+          speed: 0.4,
+          stepping: {
+            active: true,
+            step: 3,
+            nextShape: 0,
+            inversedMode: {
+              inwardBorderMult: 40,
+            },
+          },
+        },
+        fluidLayers: {
+          active: false,
+          speed: 36,
+          firstShape: 10,
+          op: "add",
+          deltaT: 0,
+        },
+      },
     };
   }
 
@@ -643,8 +794,10 @@ export default class Light extends Shader {
         if (this.#animate) {
           l = this.#effects.pulsingLightness(
             l,
-            anim,
-            direction === directions - 1 && ellipse === countPerEllipse - 1
+            anim.pulsingLightness,
+            direction === directions - 1 && ellipse === countPerEllipse - 1,
+            undefined,
+            ellipse < countPerEllipse - 1
           );
         }
 
@@ -755,7 +908,7 @@ export default class Light extends Shader {
       this.gl.STATIC_READ
     );
 
-    const tPercMult = 5;
+    const tPercMult = 80;
 
     this.#triangular = {
       vaos: { left: leftSideVao, right: rightSideVao },
@@ -763,8 +916,8 @@ export default class Light extends Shader {
       coordinates: leftSideCoordinates,
       indices: leftIndices,
       triangles,
-      lightnessStep: 0.5 / (triangles - 1),
-      // lightnessStep: 1 / (triangles - 1),
+      // lightnessStep: 0.5 / (triangles - 1),
+      lightnessStep: 1 / (triangles - 1),
       mat: this.projectionMat,
       mode: [
         "pendulum", // forwards, backwards, pendulum
@@ -772,10 +925,10 @@ export default class Light extends Shader {
           direction: "backwards",
           frontTriangle: undefined,
           triggerDimming: false,
-          lightnessMult: (0.5 / 100) * tPercMult,
-          // lightnessMult: (1 / 100) * tPercMult,
+          // lightnessMult: (0.5 / 100) * tPercMult,
+          lightnessMult: (1 / 100) * tPercMult,
           triangleMult: (triangles / 100) * tPercMult,
-          side: "both",
+          side: "left",
         },
       ],
       buffers: {
@@ -788,6 +941,7 @@ export default class Light extends Shader {
           right: rightIndexBuffer,
         },
       },
+      anim: { deltaT: 0 },
     };
   }
 
@@ -882,124 +1036,12 @@ export default class Light extends Shader {
     }
   }
 
-  #renderTrianglesPendulum(side) {
-    this.gl.enable(this.gl.BLEND);
-    this.gl.blendEquation(this.gl.FUNC_ADD);
-    this.gl.blendFunc(this.gl.SRC_COLOR, this.gl.DST_COLOR);
-    this.gl.disable(this.gl.DEPTH_TEST);
-
-    const { triangles, mode, lightnessStep } = this.#triangular;
-    const {
-      direction,
-      triggerDimming,
-      triangleMult,
-      lightnessMult,
-      side: confSide,
-    } = mode[1];
-
-    if (!triggerDimming) {
-      const roundedT = Math.round(this.animData.deltaTime * triangleMult);
-
-      let frontTriangle =
-        direction === "forwards" ? 0 + roundedT : triangles - 1 - roundedT;
-
-      switch (direction) {
-        case "forwards": {
-          const remainingTriangles = triangles - 1 - frontTriangle;
-
-          if (remainingTriangles < 0) {
-            frontTriangle = triangles - 1;
-          }
-          break;
-        }
-
-        case "backwards": {
-          if (frontTriangle < 0) frontTriangle = 0;
-          break;
-        }
-      }
-
-      mode[1].frontTriangle = frontTriangle;
-    }
-
-    let { frontTriangle } = mode[1];
-
-    this.gl.bindVertexArray(this.#triangular.vaos[side]);
-    this.gl.bindBuffer(
-      this.gl.ELEMENT_ARRAY_BUFFER,
-      this.#triangular.buffers.indices[side]
-    );
-
-    for (let triangle = 0; triangle < triangles; triangle++) {
-      let lightness;
-
-      if (triangle === frontTriangle) {
-        lightness = 0.5;
-      } else if (
-        (direction === "forwards" && triangle > frontTriangle) ||
-        (direction === "backwards" && triangle < frontTriangle)
-      ) {
-        lightness = 0;
-      } else if (
-        (direction === "forwards" && triangle < frontTriangle) ||
-        (direction === "backwards" && triangle > frontTriangle)
-      ) {
-        const triangleStepsFromFront =
-          direction === "backwards"
-            ? triangle - frontTriangle
-            : frontTriangle - triangle;
-
-        lightness = 0.5 - triangleStepsFromFront * lightnessStep;
-      }
-
-      if (triggerDimming) {
-        lightness -= this.animData.deltaTime * lightnessMult;
-      }
-
-      this.gl.uniform1f(this.#locations.lightness, lightness);
-
-      this.gl.drawElements(
-        this.gl.TRIANGLES,
-        3,
-        this.gl.UNSIGNED_SHORT,
-        triangle * 3 * 2
-      );
-
-      if (
-        triggerDimming &&
-        this.#effects.pendulumTick(triangle, lightness, side)
-      )
-        return;
-    }
-
-    if (!triggerDimming) {
-      switch (direction) {
-        case "forwards":
-          if (
-            frontTriangle === triangles - 1 &&
-            ((confSide === "both" && side === "right") || confSide !== "both")
-          ) {
-            this.animData.deltaTime = 0;
-
-            mode[1].triggerDimming = true;
-          }
-          break;
-
-        case "backwards":
-          if (
-            frontTriangle === 0 &&
-            ((confSide === "both" && side === "right") || confSide !== "both")
-          ) {
-            this.animData.deltaTime = 0;
-
-            mode[1].triggerDimming = true;
-          }
-          break;
-      }
-    }
-  }
-
   // #renderTrianglesPendulum(side) {
+  //   this.gl.enable(this.gl.BLEND);
+  //   this.gl.blendEquation(this.gl.FUNC_ADD);
+  //   this.gl.blendFunc(this.gl.SRC_COLOR, this.gl.DST_COLOR);
+  //   this.gl.disable(this.gl.DEPTH_TEST);
+
   //   const { triangles, mode, lightnessStep } = this.#triangular;
   //   const {
   //     direction,
@@ -1046,7 +1088,7 @@ export default class Light extends Shader {
   //     let lightness;
 
   //     if (triangle === frontTriangle) {
-  //       lightness = 1;
+  //       lightness = 0.5;
   //     } else if (
   //       (direction === "forwards" && triangle > frontTriangle) ||
   //       (direction === "backwards" && triangle < frontTriangle)
@@ -1061,7 +1103,7 @@ export default class Light extends Shader {
   //           ? triangle - frontTriangle
   //           : frontTriangle - triangle;
 
-  //       lightness = 1 - triangleStepsFromFront * lightnessStep;
+  //       lightness = 0.5 - triangleStepsFromFront * lightnessStep;
   //     }
 
   //     if (triggerDimming) {
@@ -1077,7 +1119,11 @@ export default class Light extends Shader {
   //       triangle * 3 * 2
   //     );
 
-  //     if (triggerDimming && this.#effects.pendulumTick(triangle, lightness)) return;
+  //     if (
+  //       triggerDimming &&
+  //       this.#effects.pendulumTick(triangle, lightness, side)
+  //     )
+  //       return;
   //   }
 
   //   if (!triggerDimming) {
@@ -1107,16 +1153,127 @@ export default class Light extends Shader {
   //   }
   // }
 
+  #renderTrianglesPendulum(side) {
+    const { triangles, mode, lightnessStep, anim } = this.#triangular;
+    const {
+      direction,
+      triggerDimming,
+      triangleMult,
+      lightnessMult,
+      side: confSide,
+    } = mode[1];
+
+    if (!triggerDimming) {
+      const roundedT = Math.round(anim.deltaT * triangleMult);
+
+      let frontTriangle =
+        direction === "forwards" ? 0 + roundedT : triangles - 1 - roundedT;
+
+      switch (direction) {
+        case "forwards": {
+          const remainingTriangles = triangles - 1 - frontTriangle;
+
+          if (remainingTriangles < 0) {
+            frontTriangle = triangles - 1;
+          }
+          break;
+        }
+
+        case "backwards": {
+          if (frontTriangle < 0) frontTriangle = 0;
+          break;
+        }
+      }
+
+      mode[1].frontTriangle = frontTriangle;
+    }
+
+    let { frontTriangle } = mode[1];
+
+    this.gl.bindVertexArray(this.#triangular.vaos[side]);
+    this.gl.bindBuffer(
+      this.gl.ELEMENT_ARRAY_BUFFER,
+      this.#triangular.buffers.indices[side]
+    );
+
+    for (let triangle = 0; triangle < triangles; triangle++) {
+      let lightness;
+
+      if (triangle === frontTriangle) {
+        lightness = 1;
+      } else if (
+        (direction === "forwards" && triangle > frontTriangle) ||
+        (direction === "backwards" && triangle < frontTriangle)
+      ) {
+        lightness = 0;
+      } else if (
+        (direction === "forwards" && triangle < frontTriangle) ||
+        (direction === "backwards" && triangle > frontTriangle)
+      ) {
+        const triangleStepsFromFront =
+          direction === "backwards"
+            ? triangle - frontTriangle
+            : frontTriangle - triangle;
+
+        lightness = 1 - triangleStepsFromFront * lightnessStep;
+      }
+
+      if (triggerDimming) {
+        lightness -= anim.deltaT * lightnessMult;
+      }
+
+      this.gl.uniform1f(this.#locations.lightness, lightness);
+
+      this.gl.drawElements(
+        this.gl.TRIANGLES,
+        3,
+        this.gl.UNSIGNED_SHORT,
+        triangle * 3 * 2
+      );
+
+      if (triggerDimming && this.#effects.pendulumTick(triangle, lightness))
+        return;
+    }
+
+    if (!triggerDimming) {
+      switch (direction) {
+        case "forwards":
+          if (
+            frontTriangle === triangles - 1 &&
+            ((confSide === "both" && side === "right") || confSide !== "both")
+          ) {
+            anim.deltaT = 0;
+
+            mode[1].triggerDimming = true;
+          }
+          break;
+
+        case "backwards":
+          if (
+            frontTriangle === 0 &&
+            ((confSide === "both" && side === "right") || confSide !== "both")
+          ) {
+            anim.deltaT = 0;
+
+            mode[1].triggerDimming = true;
+          }
+          break;
+      }
+    }
+
+    anim.deltaT += this.animData.frameDeltaTime;
+  }
+
   renderScene(timeNow) {
     super.renderScene(timeNow);
 
     this.gl.useProgram(this.#program);
 
-    // this.#renderRadialLight();
+    this.#renderRadialLight();
     // this.#renderRadialQuad();
     // this.#renderEllipticQuad();
-    this.#renderTriangularStar();
-    // this.#renderTriangles();
+    // this.#renderTriangularStar();
+    // this.#renderTriangles("pendulum");
 
     if (this.#animate) this.requestAnimationFrame();
   }

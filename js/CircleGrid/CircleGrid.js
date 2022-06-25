@@ -17,7 +17,7 @@ export default class CircleGrid extends Shader {
       this.#initLocations();
       this.#initObjectsData();
 
-      window.requestAnimationFrame(() => this.renderScene());
+      this.requestAnimationFrame();
     });
   }
 
@@ -34,12 +34,12 @@ export default class CircleGrid extends Shader {
       centerCircleVertices
     );
 
-    const circumferenceCirclesCount = 8;
+    const circumferenceCirclesCount = 4;
     const circumferenceCircle = new Circle(
       this.gl.canvas.width / 2,
       this.gl.canvas.height / 2,
-      centerCircleR,
-      Math.PI,
+      centerCircleR / 2,
+      Math.PI / 2,
       centerCircleVertices
     );
 
@@ -137,7 +137,7 @@ export default class CircleGrid extends Shader {
       this.#grid.circumferenceCircles;
 
     for (
-      let circle = 0, positionAngle = -Math.PI / 2;
+      let circle = 0, positionAngle = -Math.PI / 4 -  Math.PI / 2;
       circle < count;
       positionAngle += positionAngleStep, circle++
     ) {
@@ -146,7 +146,7 @@ export default class CircleGrid extends Shader {
 
       const circleMat = ShaderUtils.mult2dMats(this.#grid.centerCircle.mat, [
         ShaderUtils.init2dTranslationMat(x, y),
-        ShaderUtils.init2dRotationMat(circle * (-Math.PI / 4)),
+        ShaderUtils.init2dRotationMat(circle * (-Math.PI / 2)),
       ]);
 
       this.gl.uniformMatrix3fv(this.#locations.mat, false, circleMat);
@@ -198,17 +198,11 @@ export default class CircleGrid extends Shader {
 
     this.gl.useProgram(this.#grid.circleProgram);
 
-    this.#renderCenterCircle();
-    // this.#renderCircumferenceCircles();
-    this.#renderInnerCircles();
+    // this.#renderCenterCircle();
+    this.#renderCircumferenceCircles();
+    // this.#renderInnerCircles();
 
-    // window.requestAnimationFrame(this.renderScene);
+    // this.requestAnimationFrame();
   }
 }
 
-// new CircleGrid({
-//   circle: {
-//     vShader: "shaders/circle-grid/circle.vert",
-//     fShader: "shaders/circle-grid/circle.frag",
-//   },
-// });
