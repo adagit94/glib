@@ -1,7 +1,7 @@
-import Shader from "../Shader/Shader.js";
-import ShaderUtils from "../Shader/ShaderUtils.js";
-import Ellipse from "../Shapes/Ellipse.js";
-import Circle from "../Shapes/Circle.js";
+import Shader from '../Shader/Shader.js';
+import ShaderUtils from '../Shader/ShaderUtils.js';
+import Ellipse from '../Shapes/Ellipse.js';
+import Circle from '../Shapes/Circle.js';
 
 export default class Light extends Shader {
   constructor(shaders) {
@@ -34,10 +34,10 @@ export default class Light extends Shader {
 
   #initLocations() {
     this.#locations = {
-      position: this.gl.getAttribLocation(this.#program, "a_position"),
-      mat: this.gl.getUniformLocation(this.#program, "u_mat"),
-      lightness: this.gl.getUniformLocation(this.#program, "u_lightness"),
-      zIndex: this.gl.getUniformLocation(this.#program, "u_zIndex"),
+      position: this.gl.getAttribLocation(this.#program, 'a_position'),
+      mat: this.gl.getUniformLocation(this.#program, 'u_mat'),
+      lightness: this.gl.getUniformLocation(this.#program, 'u_lightness'),
+      zIndex: this.gl.getUniformLocation(this.#program, 'u_zIndex'),
     };
   }
 
@@ -52,7 +52,7 @@ export default class Light extends Shader {
     //       vertices: 1000,
     //     }
 
-    this.#initRadialLightData("circle", {
+    this.#initRadialLightData('circle', {
       x: this.gl.canvas.width / 2,
       y: this.gl.canvas.height / 2,
       r: this.gl.canvas.height / 2,
@@ -78,15 +78,15 @@ export default class Light extends Shader {
 
           const fullTick =
             trianglesLightness.length === triangles &&
-            trianglesLightness.every((lightness) => lightness <= 0);
+            trianglesLightness.every(lightness => lightness <= 0);
 
           if (fullTick) {
             if (
-              (mode[1].side === "both" && side === "right") ||
-              mode[1].side !== "both"
+              (mode[1].side === 'both' && side === 'right') ||
+              mode[1].side !== 'both'
             ) {
               mode[1].direction =
-                mode[1].direction === "forwards" ? "backwards" : "forwards";
+                mode[1].direction === 'forwards' ? 'backwards' : 'forwards';
 
               mode[1].triggerDimming = false;
 
@@ -111,24 +111,24 @@ export default class Light extends Shader {
         const t = anim.deltaT * anim.speed - anim.borderDeltaT;
 
         switch (anim.direction) {
-          case "inward":
+          case 'inward':
             if (lightnessBorder === undefined) lightnessBorder = 0;
 
             lightness -= t;
 
             if (lastShape && lightness <= lightnessBorder) {
-              anim.direction = "outward";
+              anim.direction = 'outward';
               anim.borderDeltaT = t;
             }
             break;
 
-          case "outward":
+          case 'outward':
             if (lightnessBorder === undefined) lightnessBorder = 1;
 
             lightness -= anim.borderDeltaT - t;
 
             if (lastShape && lightness >= lightnessBorder) {
-              anim.direction = "inward";
+              anim.direction = 'inward';
               anim.deltaT = 0;
               anim.borderDeltaT = 0;
             }
@@ -154,11 +154,11 @@ export default class Light extends Shader {
         let newCount;
 
         switch (op) {
-          case "subtract":
+          case 'subtract':
             newCount = Math.max(firstShape, shapesCount - t);
             break;
 
-          case "add":
+          case 'add':
             newCount = Math.min(shapesCount, firstShape + t);
             break;
         }
@@ -166,11 +166,11 @@ export default class Light extends Shader {
         anim.deltaT += this.animData.frameDeltaTime;
 
         if (
-          (anim.op === "subtract" && newCount === firstShape) ||
-          (anim.op === "add" && newCount === shapesCount)
+          (anim.op === 'subtract' && newCount === firstShape) ||
+          (anim.op === 'add' && newCount === shapesCount)
         ) {
           anim.deltaT = 0;
-          anim.op = anim.op === "subtract" ? "add" : "subtract";
+          anim.op = anim.op === 'subtract' ? 'add' : 'subtract';
         }
 
         return newCount;
@@ -184,11 +184,11 @@ export default class Light extends Shader {
     let shape;
 
     switch (shapeType) {
-      case "circle":
+      case 'circle':
         shape = new Circle(conf.x, conf.y, conf.r, conf.angle, conf.vertices);
         break;
 
-      case "ellipse":
+      case 'ellipse':
         shape = new Ellipse(
           conf.x,
           conf.y,
@@ -212,17 +212,17 @@ export default class Light extends Shader {
         shape.coordinates,
         { size: 2 }
       ),
-      inversedMode: { active: true, lStepMult: 1 },
+      inversedMode: { active: true, lStepMult: 5 },
       anim: {
         pulsingLightness: {
           active: true,
-          direction: "inward",
+          direction: 'inward',
           lOffset: 0.1,
-          inwardBorderMult: 5000,
-          inversedMode: { inwardBorderMult: 5000 },
+          inwardBorderMult: 7500,
+          inversedMode: { inwardBorderMult: 6000 },
           borderDeltaT: 0,
           deltaT: 0,
-          speed: 0.4,
+          speed: 2,
           stepping: {
             active: false,
             step: 3,
@@ -236,7 +236,7 @@ export default class Light extends Shader {
           active: false,
           speed: 36,
           firstShape: 10,
-          op: "add",
+          op: 'add',
           deltaT: 0,
         },
       },
@@ -258,7 +258,7 @@ export default class Light extends Shader {
       shape < this.#radial.count;
       rScale -= rScaleStep,
         lightness = inversedMode.active
-          ? lightness - lightnessStep
+          ? lightness - lightnessStep * inversedMode.lStepMult
           : lightness + lightnessStep,
         shape++
     ) {
@@ -278,7 +278,7 @@ export default class Light extends Shader {
           let lBorder;
 
           if (isLastShape) {
-            if (pulsingLightness.direction === "inward") {
+            if (pulsingLightness.direction === 'inward') {
               let inwardBorderMult;
 
               if (inversedMode.active) {
@@ -359,7 +359,7 @@ export default class Light extends Shader {
       anim: {
         pulsingLightness: {
           active: true,
-          direction: "inward",
+          direction: 'inward',
           lOffset: 0.1,
           inwardBorderMult: 0,
           inversedMode: { inwardBorderMult: 40 },
@@ -379,7 +379,7 @@ export default class Light extends Shader {
           active: false,
           speed: 36,
           firstShape: 10,
-          op: "add",
+          op: 'add',
           deltaT: 0,
         },
       },
@@ -512,30 +512,36 @@ export default class Light extends Shader {
       anim: {
         pulsingLightness: {
           active: true,
-          direction: "inward",
-          lOffset: 0.1,
+          direction: 'inward',
+          lOffset: 0.05,
           inwardBorderMult: 0,
-          inversedMode: { inwardBorderMult: 40 },
+          inversedMode: {
+            inwardBorderMult: 40,
+            cascade: {
+              active: true,
+              controlShape: 5,
+            },
+          },
           borderDeltaT: 0,
           deltaT: 0,
-          speed: 0.4,
+          speed: 0.1,
           stepping: {
-            active: true,
-            step: 3,
+            active: false,
+            step: 2,
             nextShape: 0,
             inversedMode: {
-              inwardBorderMult: 40,
+              inwardBorderMult: 16,
             },
           },
         },
         fluidLayers: {
           active: false,
           speed: 36,
-          firstShape: 10,
-          op: "add",
+          firstShape: 9,
+          op: 'subtract',
           deltaT: 0,
         },
-        rotation: { active: false, speed: 0.0625, angle: 0 },
+        rotation: { active: false, speed: 0.1, angle: 0 },
       },
     };
   }
@@ -596,11 +602,24 @@ export default class Light extends Shader {
 
           let l = lightness;
 
+          // function for conditions needed
           if (
             this.#animate &&
             anim.pulsingLightness.active &&
-            (!anim.pulsingLightness.stepping.active ||
-              anim.pulsingLightness.stepping.nextShape === triangle)
+            ((!anim.pulsingLightness.stepping.active &&
+              !(
+                anim.pulsingLightness.inversedMode.active &&
+                anim.pulsingLightness.inversedMode.cascade.active
+              )) ||
+              (anim.pulsingLightness.stepping.active &&
+                (!anim.pulsingLightness.inversedMode.active ||
+                  !anim.pulsingLightness.inversedMode.cascade.active) &&
+                anim.pulsingLightness.stepping.nextShape === triangle) ||
+              (!anim.pulsingLightness.stepping.active &&
+                anim.pulsingLightness.inversedMode.active &&
+                anim.pulsingLightness.inversedMode.cascade.active &&
+                anim.pulsingLightness.inversedMode.cascade.controlShape ===
+                  triangle))
           ) {
             const lastSideReached = square === squares - 1 && side === 3;
 
@@ -622,7 +641,7 @@ export default class Light extends Shader {
                   : 1;
 
                 lBorder =
-                  anim.pulsingLightness.direction === "inward"
+                  anim.pulsingLightness.direction === 'inward'
                     ? l - lStepMult * lightnessStep
                     : l;
               }
@@ -632,7 +651,7 @@ export default class Light extends Shader {
               if (lastTriangle) {
                 if (inversedMode.active) {
                   lBorder =
-                    anim.pulsingLightness.direction === "inward"
+                    anim.pulsingLightness.direction === 'inward'
                       ? l -
                         1 +
                         anim.pulsingLightness.inversedMode.inwardBorderMult *
@@ -640,7 +659,7 @@ export default class Light extends Shader {
                       : l;
                 } else {
                   lBorder =
-                    anim.pulsingLightness.direction === "inward"
+                    anim.pulsingLightness.direction === 'inward'
                       ? 0 +
                         anim.pulsingLightness.inwardBorderMult * lightnessStep
                       : l;
@@ -735,13 +754,13 @@ export default class Light extends Shader {
       anim: {
         pulsingLightness: {
           active: true,
-          direction: "inward",
+          direction: 'inward',
           lOffset: 0.1,
           inwardBorderMult: 0,
           inversedMode: { inwardBorderMult: 40 },
           borderDeltaT: 0,
           deltaT: 0,
-          speed: 0.4,
+          speed: 1,
           stepping: {
             active: true,
             step: 3,
@@ -755,7 +774,7 @@ export default class Light extends Shader {
           active: false,
           speed: 36,
           firstShape: 10,
-          op: "add",
+          op: 'add',
           deltaT: 0,
         },
       },
@@ -920,15 +939,15 @@ export default class Light extends Shader {
       lightnessStep: 1 / (triangles - 1),
       mat: this.projectionMat,
       mode: [
-        "pendulum", // forwards, backwards, pendulum
+        'pendulum', // forwards, backwards, pendulum
         {
-          direction: "backwards",
+          direction: 'backwards',
           frontTriangle: undefined,
           triggerDimming: false,
           // lightnessMult: (0.5 / 100) * tPercMult,
           lightnessMult: (1 / 100) * tPercMult,
           triangleMult: (triangles / 100) * tPercMult,
-          side: "left",
+          side: 'left',
         },
       ],
       buffers: {
@@ -951,19 +970,19 @@ export default class Light extends Shader {
     this.gl.uniformMatrix3fv(this.#locations.mat, false, this.#triangular.mat);
 
     switch (mode[0]) {
-      case "forwards":
+      case 'forwards':
         this.#renderTrianglesForwards(mode[1].side);
         break;
 
-      case "backwards":
+      case 'backwards':
         this.#renderTrianglesBackwards(mode[1].side);
         break;
 
-      case "pendulum":
+      case 'pendulum':
         switch (mode[1].side) {
-          case "both":
-            this.#renderTrianglesPendulum("left");
-            this.#renderTrianglesPendulum("right");
+          case 'both':
+            this.#renderTrianglesPendulum('left');
+            this.#renderTrianglesPendulum('right');
             break;
 
           default:
@@ -1167,10 +1186,10 @@ export default class Light extends Shader {
       const roundedT = Math.round(anim.deltaT * triangleMult);
 
       let frontTriangle =
-        direction === "forwards" ? 0 + roundedT : triangles - 1 - roundedT;
+        direction === 'forwards' ? 0 + roundedT : triangles - 1 - roundedT;
 
       switch (direction) {
-        case "forwards": {
+        case 'forwards': {
           const remainingTriangles = triangles - 1 - frontTriangle;
 
           if (remainingTriangles < 0) {
@@ -1179,7 +1198,7 @@ export default class Light extends Shader {
           break;
         }
 
-        case "backwards": {
+        case 'backwards': {
           if (frontTriangle < 0) frontTriangle = 0;
           break;
         }
@@ -1202,16 +1221,16 @@ export default class Light extends Shader {
       if (triangle === frontTriangle) {
         lightness = 1;
       } else if (
-        (direction === "forwards" && triangle > frontTriangle) ||
-        (direction === "backwards" && triangle < frontTriangle)
+        (direction === 'forwards' && triangle > frontTriangle) ||
+        (direction === 'backwards' && triangle < frontTriangle)
       ) {
         lightness = 0;
       } else if (
-        (direction === "forwards" && triangle < frontTriangle) ||
-        (direction === "backwards" && triangle > frontTriangle)
+        (direction === 'forwards' && triangle < frontTriangle) ||
+        (direction === 'backwards' && triangle > frontTriangle)
       ) {
         const triangleStepsFromFront =
-          direction === "backwards"
+          direction === 'backwards'
             ? triangle - frontTriangle
             : frontTriangle - triangle;
 
@@ -1237,10 +1256,10 @@ export default class Light extends Shader {
 
     if (!triggerDimming) {
       switch (direction) {
-        case "forwards":
+        case 'forwards':
           if (
             frontTriangle === triangles - 1 &&
-            ((confSide === "both" && side === "right") || confSide !== "both")
+            ((confSide === 'both' && side === 'right') || confSide !== 'both')
           ) {
             anim.deltaT = 0;
 
@@ -1248,10 +1267,10 @@ export default class Light extends Shader {
           }
           break;
 
-        case "backwards":
+        case 'backwards':
           if (
             frontTriangle === 0 &&
-            ((confSide === "both" && side === "right") || confSide !== "both")
+            ((confSide === 'both' && side === 'right') || confSide !== 'both')
           ) {
             anim.deltaT = 0;
 
@@ -1269,11 +1288,11 @@ export default class Light extends Shader {
 
     this.gl.useProgram(this.#program);
 
-    this.#renderRadialLight();
+    // this.#renderRadialLight();
     // this.#renderRadialQuad();
     // this.#renderEllipticQuad();
-    // this.#renderTriangularStar();
-    // this.#renderTriangles("pendulum");
+    this.#renderTriangularStar();
+    // this.#renderTriangles();
 
     if (this.#animate) this.requestAnimationFrame();
   }
