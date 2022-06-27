@@ -30,7 +30,7 @@ export default class Light extends Shader {
 
   #effects;
 
-  #animate = true;
+  #animate = false;
 
   #initLocations() {
     this.#locations = {
@@ -106,31 +106,43 @@ export default class Light extends Shader {
         anim,
         lastShape,
         lightnessBorder,
-        stepFurther
+        stepFurther,
+        settings
       ) => {
-        const t = anim.deltaT * anim.speed - anim.borderDeltaT;
+        if (lastShape) anim.deltaT += this.animData.frameDeltaTime;
+
+        const t = anim.deltaT * anim.speed;
 
         switch (anim.direction) {
           case "inward":
             if (lightnessBorder === undefined) lightnessBorder = 0;
 
-            lightness -= t;
+            if (!settings.subanim || settings.inverted) {
+              lightness -= t;
+            } else {
+              lightness += anim.pastLightnessBorder - t;
+            }
 
             if (lastShape && lightness <= lightnessBorder) {
               anim.direction = "outward";
-              anim.borderDeltaT = t;
+              anim.deltaT = 0;
+              anim.pastLightnessBorder = t;
             }
             break;
 
           case "outward":
             if (lightnessBorder === undefined) lightnessBorder = 1;
 
-            lightness -= anim.borderDeltaT - t;
+            if (!settings.subanim || settings.inverted) {
+              lightness -= anim.pastLightnessBorder - t;
+            } else {
+              lightness += t;
+            }
 
             if (lastShape && lightness >= lightnessBorder) {
               anim.direction = "inward";
               anim.deltaT = 0;
-              anim.borderDeltaT = 0;
+              anim.pastLightnessBorder = t;
             }
             break;
         }
@@ -142,8 +154,6 @@ export default class Light extends Shader {
             anim.stepping.nextShape = 0;
           }
         }
-
-        if (lastShape) anim.deltaT += this.animData.frameDeltaTime;
 
         return lightness;
       },
@@ -220,7 +230,7 @@ export default class Light extends Shader {
           lOffset: 0.1,
           inwardBorderMult: 7500,
           inversedMode: { inwardBorderMult: 6000 },
-          borderDeltaT: 0,
+          pastLigthnessBorder: 0,
           deltaT: 0,
           speed: 2,
           stepping: {
@@ -363,7 +373,7 @@ export default class Light extends Shader {
           lOffset: 0.1,
           inwardBorderMult: 0,
           inversedMode: { inwardBorderMult: 40 },
-          borderDeltaT: 0,
+          pastLigthnessBorder: 0,
           deltaT: 0,
           speed: 0.4,
           stepping: {
@@ -499,8 +509,9 @@ export default class Light extends Shader {
       mats: {
         squares: squareMats,
       },
-      trianglesCount: 100,
-      inversedMode: { active: true, lStepMult: 1 },
+      trianglesCount: 10,
+      inversedMode: { active: false },
+      lStepMult: 1,
       buffers: {
         vertex: this.createAndBindVerticesBuffer(
           this.#locations.position,
@@ -512,32 +523,20 @@ export default class Light extends Shader {
       anim: {
         pulsingLightness: {
           active: true,
-          direction: "inward",
+          direction: "outward",
           lOffset: 0.05,
-          inwardBorderMult: 0,
-          inversedMode: {
-            inwardBorderMult: 0,
-          },
-          borderDeltaT: 0,
+          inwardBorderMult: 2,
+          pastLightnessBorder: 0,
           deltaT: 0,
-          speed: 0.4,
+          speed: 0.1,
           stepping: {
             active: false,
-            step: 4,
+            step: 2,
             nextShape: 0,
-            inversedMode: {
-              inwardBorderMult: 1,
-            },
           },
           cascade: {
             active: true,
-            controlShape: 20,
-            inwardBorderMult: 20,
-            inversedMode: {
-              active: true,
-              controlShape: 20,
-              inwardBorderMult: 20,
-            },
+            controlShape: 0,
           },
         },
         fluidLayers: {
@@ -553,7 +552,7 @@ export default class Light extends Shader {
   }
 
   #renderTriangularStar() {
-    const { anim, vao, mats, squares, buffers, inversedMode } =
+    const { anim, vao, mats, squares, buffers, inversedMode, lStepMult } =
       this.#triangularStar;
 
     let { trianglesCount } = this.#triangularStar;
@@ -597,8 +596,8 @@ export default class Light extends Shader {
           triangle < trianglesCount;
           scale -= scaleStep,
             lightness = inversedMode.active
-              ? lightness - lightnessStep * inversedMode.lStepMult
-              : lightness + lightnessStep,
+              ? lightness - lightnessStep * lStepMult
+              : lightness + lightnessStep * lStepMult,
             triangle++
         ) {
           const triangleMat = ShaderUtils.mult2dMats(
@@ -611,25 +610,17 @@ export default class Light extends Shader {
           if (this.#animate && anim.pulsingLightness.active) {
             const performPurePulsing =
               !anim.pulsingLightness.stepping.active &&
-              !(
-                inversedMode.active &&
-                anim.pulsingLightness.cascade.inversedMode.active
-              );
+              !anim.pulsingLightness.cascade.active;
 
             const performStepPulsing =
+              !anim.pulsingLightness.cascade.active &&
               anim.pulsingLightness.stepping.active &&
-              !(
-                inversedMode.active &&
-                anim.pulsingLightness.cascade.inversedMode.active
-              ) &&
               anim.pulsingLightness.stepping.nextShape === triangle;
 
             const performCascadePulsing =
               !anim.pulsingLightness.stepping.active &&
-              inversedMode.active &&
-              anim.pulsingLightness.cascade.inversedMode.active &&
-              anim.pulsingLightness.cascade.inversedMode.controlShape ===
-                triangle;
+              anim.pulsingLightness.cascade.active &&
+              anim.pulsingLightness.cascade.controlShape === triangle;
 
             if (
               performPurePulsing ||
@@ -650,51 +641,41 @@ export default class Light extends Shader {
               }
 
               const lastTriangle = lastSideReached && lastTriangleInSideReached;
+              const lStepOffset =
+                anim.pulsingLightness.inwardBorderMult * lightnessStep;
 
               let lBorder;
               let stepFurther;
+              let subanim = true;
 
-              if (performStepPulsing) {
+              if (performStepPulsing || performCascadePulsing) {
                 if (lastTriangle) {
-                  const lStepMult = inversedMode.active
-                    ? anim.pulsingLightness.stepping.inversedMode
-                        .inwardBorderMult
-                    : 1;
+                  const directionBorder = inversedMode.active
+                    ? "inward"
+                    : "outward";
 
-                  lBorder =
-                    anim.pulsingLightness.direction === "inward"
-                      ? l - lStepMult * lightnessStep
-                      : l;
+                  if (anim.pulsingLightness.direction === directionBorder) {
+                    const lOffset = inversedMode.active
+                      ? l - lStepOffset
+                      : l + lStepOffset;
+
+                    lBorder = lOffset;
+                  } else {
+                    lBorder = l;
+                  }
                 }
 
-                stepFurther = !lastTriangleInSideReached;
-              } else if (performCascadePulsing) {
-                if (lastTriangle) {
-                  lBorder =
-                    anim.pulsingLightness.direction === "inward"
-                      ? l -
-                        anim.pulsingLightness.cascade.inversedMode
-                          .inwardBorderMult *
-                          lightnessStep
-                      : l;
+                if (performStepPulsing) {
+                  stepFurther = !lastTriangleInSideReached;
                 }
               } else {
+                subanim = false;
+
                 if (lastTriangle) {
-                  if (inversedMode.active) {
-                    lBorder =
-                      anim.pulsingLightness.direction === "inward"
-                        ? l -
-                          1 +
-                          anim.pulsingLightness.inversedMode.inwardBorderMult *
-                            lightnessStep
-                        : l;
-                  } else {
-                    lBorder =
-                      anim.pulsingLightness.direction === "inward"
-                        ? 0 +
-                          anim.pulsingLightness.inwardBorderMult * lightnessStep
-                        : l;
-                  }
+                  lBorder =
+                    anim.pulsingLightness.direction === "inward"
+                      ? l - 1 + lStepOffset
+                      : l;
                 }
               }
 
@@ -703,10 +684,11 @@ export default class Light extends Shader {
                 anim.pulsingLightness,
                 lastTriangle,
                 lBorder,
-                stepFurther
+                stepFurther,
+                { subanim, inverted: inversedMode.active }
               );
 
-              l -= anim.pulsingLightness.lOffset;
+              // l -= anim.pulsingLightness.lOffset;
             }
           }
 
@@ -790,7 +772,7 @@ export default class Light extends Shader {
           lOffset: 0.1,
           inwardBorderMult: 0,
           inversedMode: { inwardBorderMult: 40 },
-          borderDeltaT: 0,
+          pastLigthnessBorder: 0,
           deltaT: 0,
           speed: 1,
           stepping: {
