@@ -148,9 +148,19 @@ export default class Light extends Shader {
             break;
         }
 
-        if (anim.stepping.active) {
+        if (anim.stepping.active && stepFurther !== undefined) {
           if (stepFurther) {
-            anim.stepping.nextShape += anim.stepping.step;
+            const outlineShape = Object.prototype.hasOwnProperty.call(
+              anim.stepping,
+              "range"
+            );
+
+            if (outlineShape) {
+              anim.stepping.nextShape +=
+                anim.stepping.range - 1 + anim.stepping.step;
+            } else {
+              anim.stepping.nextShape += anim.stepping.step;
+            }
           } else {
             anim.stepping.nextShape = 0;
           }
@@ -216,7 +226,7 @@ export default class Light extends Shader {
     this.#radial = {
       vao,
       shape,
-      count: 10,
+      count: 100,
       mat: ShaderUtils.mult2dMats(this.projectionMat, shape.mat),
       buffer: this.createAndBindVerticesBuffer(
         this.#locations.position,
@@ -227,22 +237,20 @@ export default class Light extends Shader {
       lStepMult: 1,
       anim: {
         pulsingLightness: {
-          active: false,
-          direction: "inward",
+          active: true,
+          direction: "outward",
           lOffset: 0.05,
-          inwardBorderMult: 10,
+          inwardBorderMult: 30,
           pastLightnessBorder: 0,
           deltaT: 0,
-          speed: 0.1,
+          speed: 0.01,
           stepping: {
-            active: false,
-            step: 2,
-            nextShape: 0,
-          },
-          cascade: {
             active: true,
-            controlShape: 4,
+            step: 10,
+            nextShape: 0,
+            range: 30,
           },
+          cascade: {},
         },
         fluidLayers: {
           active: false,
@@ -258,7 +266,7 @@ export default class Light extends Shader {
   #renderRadialLight() {
     this.gl.bindVertexArray(this.#radial.vao);
 
-    const { inversedMode, anim } = this.#radial;
+    const { inversedMode, anim, lStepMult } = this.#radial;
 
     const rScaleStep = 1 / this.#radial.count;
     const lightnessStep = 1 / this.#radial.count;
@@ -270,8 +278,8 @@ export default class Light extends Shader {
       shape < this.#radial.count;
       rScale -= rScaleStep,
         lightness = inversedMode.active
-          ? lightness - lightnessStep * inversedMode.lStepMult
-          : lightness + lightnessStep,
+          ? lightness - lightnessStep * lStepMult
+          : lightness + lightnessStep * lStepMult,
         shape++
     ) {
       const mat = ShaderUtils.mult2dMats(
@@ -285,22 +293,15 @@ export default class Light extends Shader {
         const { pulsingLightness } = anim;
 
         if (pulsingLightness.active) {
-          const {
-            performPurePulsing,
-            performStepPulsing,
-            performCascadePulsing,
-          } = PulsingUtils.getAnimsStates(anim.pulsingLightness, shape);
+          const { performPurePulsing, performStepPulsing } =
+            PulsingUtils.getAnimsStates(anim.pulsingLightness, shape);
 
-          if (
-            performPurePulsing ||
-            performStepPulsing ||
-            performCascadePulsing
-          ) {
+          if (performPurePulsing || performStepPulsing) {
             const isLastShape = PulsingUtils.lastShapeReached(
               anim.pulsingLightness,
               shape,
               this.#radial.count,
-              { performStepPulsing, performCascadePulsing }
+              { performStepPulsing }
             );
 
             const values = PulsingUtils.getAnimValues(
@@ -310,7 +311,8 @@ export default class Light extends Shader {
               isLastShape,
               isLastShape,
               inversedMode.active,
-              { performStepPulsing, performCascadePulsing }
+              { performStepPulsing },
+              shape
             );
 
             l = this.#effects.pulsingLightness(
@@ -320,7 +322,7 @@ export default class Light extends Shader {
               values.lightnessBorder,
               values.stepFurther,
               {
-                subanim: performStepPulsing || performCascadePulsing,
+                subanim: performStepPulsing,
                 inverted: inversedMode.active,
               }
             );
@@ -1073,8 +1075,6 @@ export default class Light extends Shader {
       this.gl.ELEMENT_ARRAY_BUFFER,
       this.#triangular.buffers.indices[side]
     );
-
-    // console.log("renderTrianglesForwards", renderTrianglesForwards);
 
     for (
       let triangle = 0, lightness = 0;

@@ -2,10 +2,22 @@ export default class PulsingUtils {
   static getAnimsStates(anim, shape) {
     const performPurePulsing = !anim.stepping.active && !anim.cascade.active;
 
-    const performStepPulsing =
-      !anim.cascade.active &&
-      anim.stepping.active &&
-      anim.stepping.nextShape === shape;
+    let performStepPulsing = !anim.cascade.active && anim.stepping.active;
+
+    const outlineShape = Object.prototype.hasOwnProperty.call(
+      anim.stepping,
+      "range"
+    );
+
+    if (outlineShape) {
+      performStepPulsing =
+        performStepPulsing &&
+        shape >= anim.stepping.nextShape &&
+        shape < anim.stepping.nextShape + anim.stepping.range;
+    } else {
+      performStepPulsing =
+        performStepPulsing && anim.stepping.nextShape === shape;
+    }
 
     const performCascadePulsing =
       !anim.stepping.active &&
@@ -15,7 +27,7 @@ export default class PulsingUtils {
     return { performPurePulsing, performStepPulsing, performCascadePulsing };
   }
 
-  static getLightnessOffsetForSubanim(
+  static getLightnessBorderForSubanim(
     anim,
     isInversedModeActive,
     lightness,
@@ -38,6 +50,23 @@ export default class PulsingUtils {
 
   static lastShapeReached(anim, shape, shapesCount, animsStates) {
     if (animsStates.performStepPulsing) {
+      const outlineShape = Object.prototype.hasOwnProperty.call(
+        anim.stepping,
+        "range"
+      );
+
+      if (outlineShape) {
+        return (
+          anim.stepping.nextShape +
+            anim.stepping.range -
+            1 +
+            anim.stepping.step +
+            anim.stepping.range -
+            1 >
+          shapesCount - 1
+        );
+      }
+
       return shape + anim.stepping.step > shapesCount - 1;
     } else if (animsStates.performCascadePulsing) {
       return true;
@@ -53,7 +82,8 @@ export default class PulsingUtils {
     isLastShape,
     isLastShapeInSegment,
     isInversedModeActive,
-    animsStates
+    animsStates,
+    shape
   ) {
     const ligthnessStepOffset = anim.inwardBorderMult * lightnessStep;
 
@@ -62,7 +92,7 @@ export default class PulsingUtils {
 
     if (animsStates.performStepPulsing || animsStates.performCascadePulsing) {
       if (isLastShape) {
-        lightnessBorder = PulsingUtils.getLightnessOffsetForSubanim(
+        lightnessBorder = PulsingUtils.getLightnessBorderForSubanim(
           anim,
           isInversedModeActive,
           lightness,
@@ -71,7 +101,17 @@ export default class PulsingUtils {
       }
 
       if (animsStates.performStepPulsing) {
-        stepFurther = !isLastShapeInSegment;
+        const outlineShape = Object.prototype.hasOwnProperty.call(
+          anim.stepping,
+          "range"
+        );
+
+        if (
+          !outlineShape ||
+          shape === anim.stepping.nextShape + anim.stepping.range - 1
+        ) {
+          stepFurther = !isLastShapeInSegment;
+        }
       }
     } else {
       if (isLastShape) {
