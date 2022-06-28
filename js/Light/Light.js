@@ -2,6 +2,7 @@ import Shader from "../Shader/Shader.js";
 import ShaderUtils from "../Shader/ShaderUtils.js";
 import Ellipse from "../Shapes/Ellipse.js";
 import Circle from "../Shapes/Circle.js";
+import PulsingUtils from "./PulsingUtils.js";
 
 export default class Light extends Shader {
   constructor(shaders) {
@@ -215,38 +216,39 @@ export default class Light extends Shader {
     this.#radial = {
       vao,
       shape,
-      count: 10000,
+      count: 10,
       mat: ShaderUtils.mult2dMats(this.projectionMat, shape.mat),
       buffer: this.createAndBindVerticesBuffer(
         this.#locations.position,
         shape.coordinates,
         { size: 2 }
       ),
-      inversedMode: { active: true, lStepMult: 5 },
+      inversedMode: { active: false },
+      lStepMult: 1,
       anim: {
         pulsingLightness: {
-          active: true,
+          active: false,
           direction: "inward",
-          lOffset: 0.1,
-          inwardBorderMult: 7500,
-          inversedMode: { inwardBorderMult: 6000 },
-          pastLigthnessBorder: 0,
+          lOffset: 0.05,
+          inwardBorderMult: 10,
+          pastLightnessBorder: 0,
           deltaT: 0,
-          speed: 2,
+          speed: 0.1,
           stepping: {
             active: false,
-            step: 3,
+            step: 2,
             nextShape: 0,
-            inversedMode: {
-              inwardBorderMult: 40,
-            },
+          },
+          cascade: {
+            active: true,
+            controlShape: 4,
           },
         },
         fluidLayers: {
           active: false,
           speed: 36,
-          firstShape: 10,
-          op: "add",
+          firstShape: 9,
+          op: "subtract",
           deltaT: 0,
         },
       },
@@ -283,35 +285,48 @@ export default class Light extends Shader {
         const { pulsingLightness } = anim;
 
         if (pulsingLightness.active) {
-          const isLastShape = shape === this.#radial.count - 1;
+          const {
+            performPurePulsing,
+            performStepPulsing,
+            performCascadePulsing,
+          } = PulsingUtils.getAnimsStates(anim.pulsingLightness, shape);
 
-          let lBorder;
+          if (
+            performPurePulsing ||
+            performStepPulsing ||
+            performCascadePulsing
+          ) {
+            const isLastShape = PulsingUtils.lastShapeReached(
+              anim.pulsingLightness,
+              shape,
+              this.#radial.count,
+              { performStepPulsing, performCascadePulsing }
+            );
 
-          if (isLastShape) {
-            if (pulsingLightness.direction === "inward") {
-              let inwardBorderMult;
+            const values = PulsingUtils.getAnimValues(
+              anim.pulsingLightness,
+              lightness,
+              lightnessStep,
+              isLastShape,
+              isLastShape,
+              inversedMode.active,
+              { performStepPulsing, performCascadePulsing }
+            );
 
-              if (inversedMode.active) {
-                inwardBorderMult =
-                  pulsingLightness.inversedMode.inwardBorderMult;
-              } else {
-                inwardBorderMult = pulsingLightness.inwardBorderMult;
+            l = this.#effects.pulsingLightness(
+              l,
+              pulsingLightness,
+              isLastShape,
+              values.lightnessBorder,
+              values.stepFurther,
+              {
+                subanim: performStepPulsing || performCascadePulsing,
+                inverted: inversedMode.active,
               }
+            );
 
-              const lOffset = lightnessStep * inwardBorderMult;
-
-              lBorder = l - 1 + lOffset;
-            } else {
-              lBorder = l;
-            }
+            // l -= anim.pulsingLightness.lOffset;
           }
-
-          l = this.#effects.pulsingLightness(
-            l,
-            pulsingLightness,
-            isLastShape,
-            lBorder
-          );
         }
       }
 
@@ -366,30 +381,32 @@ export default class Light extends Shader {
         circle.coordinates,
         { size: 2 }
       ),
+      inversedMode: { active: false },
+      lStepMult: 1,
       anim: {
         pulsingLightness: {
           active: true,
-          direction: "inward",
-          lOffset: 0.1,
-          inwardBorderMult: 0,
-          inversedMode: { inwardBorderMult: 40 },
-          pastLigthnessBorder: 0,
+          direction: "outward",
+          lOffset: 0.05,
+          inwardBorderMult: 2,
+          pastLightnessBorder: 0,
           deltaT: 0,
-          speed: 0.4,
+          speed: 0.1,
           stepping: {
-            active: true,
-            step: 3,
+            active: false,
+            step: 2,
             nextShape: 0,
-            inversedMode: {
-              inwardBorderMult: 40,
-            },
+          },
+          cascade: {
+            active: true,
+            controlShape: 0,
           },
         },
         fluidLayers: {
           active: false,
           speed: 36,
-          firstShape: 10,
-          op: "add",
+          firstShape: 9,
+          op: "subtract",
           deltaT: 0,
         },
       },
@@ -419,13 +436,52 @@ export default class Light extends Shader {
         let l = lightness;
 
         if (this.#animate) {
-          l = this.#effects.pulsingLightness(
-            l,
-            anim.pulsingLightness,
-            direction === directions - 1 && circle === count - 1,
-            undefined,
-            circle < count - 1
-          );
+          const { pulsingLightness } = anim;
+
+          if (pulsingLightness.active) {
+            const {
+              performPurePulsing,
+              performStepPulsing,
+              performCascadePulsing,
+            } = PulsingUtils.getAnimsStates(anim.pulsingLightness, circle);
+
+            if (
+              performPurePulsing ||
+              performStepPulsing ||
+              performCascadePulsing
+            ) {
+              const lastCircleInDirection = PulsingUtils.lastShapeReached(
+                anim.pulsingLightness,
+                circle,
+                count,
+                { performStepPulsing, performCascadePulsing }
+              );
+
+              const values = PulsingUtils.getAnimValues(
+                anim.pulsingLightness,
+                l,
+                lightnessStep,
+                lastCircleInDirection && direction === directions - 1,
+                lastCircleInDirection,
+                inversedMode.active,
+                { performStepPulsing, performCascadePulsing }
+              );
+
+              l = this.#effects.pulsingLightness(
+                l,
+                pulsingLightness,
+                lastCircleInDirection,
+                values.lightnessBorder,
+                values.stepFurther,
+                {
+                  subanim: performStepPulsing || performCascadePulsing,
+                  inverted: inversedMode.active,
+                }
+              );
+
+              // l -= anim.pulsingLightness.lOffset;
+            }
+          }
         }
 
         this.gl.uniformMatrix3fv(this.#locations.mat, false, mat);
@@ -510,8 +566,6 @@ export default class Light extends Shader {
         squares: squareMats,
       },
       trianglesCount: 10,
-      inversedMode: { active: false },
-      lStepMult: 1,
       buffers: {
         vertex: this.createAndBindVerticesBuffer(
           this.#locations.position,
@@ -520,22 +574,24 @@ export default class Light extends Shader {
         ),
         index: this.createAndBindElementsBuffer(indices, this.gl.STATIC_READ),
       },
+      inversedMode: { active: true },
+      lStepMult: 1,
       anim: {
         pulsingLightness: {
           active: true,
-          direction: "outward",
+          direction: "inward",
           lOffset: 0.05,
-          inwardBorderMult: 2,
+          inwardBorderMult: 1,
           pastLightnessBorder: 0,
           deltaT: 0,
-          speed: 0.1,
+          speed: 0.2,
           stepping: {
             active: false,
-            step: 2,
+            step: 4,
             nextShape: 0,
           },
           cascade: {
-            active: true,
+            active: false,
             controlShape: 0,
           },
         },
@@ -608,19 +664,11 @@ export default class Light extends Shader {
           let l = lightness;
 
           if (this.#animate && anim.pulsingLightness.active) {
-            const performPurePulsing =
-              !anim.pulsingLightness.stepping.active &&
-              !anim.pulsingLightness.cascade.active;
-
-            const performStepPulsing =
-              !anim.pulsingLightness.cascade.active &&
-              anim.pulsingLightness.stepping.active &&
-              anim.pulsingLightness.stepping.nextShape === triangle;
-
-            const performCascadePulsing =
-              !anim.pulsingLightness.stepping.active &&
-              anim.pulsingLightness.cascade.active &&
-              anim.pulsingLightness.cascade.controlShape === triangle;
+            const {
+              performPurePulsing,
+              performStepPulsing,
+              performCascadePulsing,
+            } = PulsingUtils.getAnimsStates(anim.pulsingLightness, triangle);
 
             if (
               performPurePulsing ||
@@ -628,64 +676,35 @@ export default class Light extends Shader {
               performCascadePulsing
             ) {
               const lastSideReached = square === squares - 1 && side === 3;
-              let lastTriangleInSideReached;
-
-              if (performStepPulsing) {
-                lastTriangleInSideReached =
-                  triangle + anim.pulsingLightness.stepping.step >
-                  trianglesCount - 1;
-              } else if (performCascadePulsing) {
-                lastTriangleInSideReached = true;
-              } else {
-                lastTriangleInSideReached = triangle === trianglesCount - 1;
-              }
+              const lastTriangleInSideReached = PulsingUtils.lastShapeReached(
+                anim.pulsingLightness,
+                triangle,
+                trianglesCount,
+                { performStepPulsing, performCascadePulsing }
+              );
 
               const lastTriangle = lastSideReached && lastTriangleInSideReached;
-              const lStepOffset =
-                anim.pulsingLightness.inwardBorderMult * lightnessStep;
 
-              let lBorder;
-              let stepFurther;
-              let subanim = true;
-
-              if (performStepPulsing || performCascadePulsing) {
-                if (lastTriangle) {
-                  const directionBorder = inversedMode.active
-                    ? "inward"
-                    : "outward";
-
-                  if (anim.pulsingLightness.direction === directionBorder) {
-                    const lOffset = inversedMode.active
-                      ? l - lStepOffset
-                      : l + lStepOffset;
-
-                    lBorder = lOffset;
-                  } else {
-                    lBorder = l;
-                  }
-                }
-
-                if (performStepPulsing) {
-                  stepFurther = !lastTriangleInSideReached;
-                }
-              } else {
-                subanim = false;
-
-                if (lastTriangle) {
-                  lBorder =
-                    anim.pulsingLightness.direction === "inward"
-                      ? l - 1 + lStepOffset
-                      : l;
-                }
-              }
+              const values = PulsingUtils.getAnimValues(
+                anim.pulsingLightness,
+                l,
+                lightnessStep,
+                lastTriangle,
+                lastTriangleInSideReached,
+                inversedMode.active,
+                { performStepPulsing, performCascadePulsing }
+              );
 
               l = this.#effects.pulsingLightness(
                 l,
                 anim.pulsingLightness,
                 lastTriangle,
-                lBorder,
-                stepFurther,
-                { subanim, inverted: inversedMode.active }
+                values.lightnessBorder,
+                values.stepFurther,
+                {
+                  subanim: performStepPulsing || performCascadePulsing,
+                  inverted: inversedMode.active,
+                }
               );
 
               // l -= anim.pulsingLightness.lOffset;
@@ -765,30 +784,32 @@ export default class Light extends Shader {
         ellipse.coordinates,
         { size: 2 }
       ),
+      inversedMode: { active: false },
+      lStepMult: 1,
       anim: {
         pulsingLightness: {
           active: true,
-          direction: "inward",
-          lOffset: 0.1,
-          inwardBorderMult: 0,
-          inversedMode: { inwardBorderMult: 40 },
-          pastLigthnessBorder: 0,
+          direction: "outward",
+          lOffset: 0.05,
+          inwardBorderMult: 2,
+          pastLightnessBorder: 0,
           deltaT: 0,
-          speed: 1,
+          speed: 0.1,
           stepping: {
-            active: true,
-            step: 3,
+            active: false,
+            step: 2,
             nextShape: 0,
-            inversedMode: {
-              inwardBorderMult: 40,
-            },
+          },
+          cascade: {
+            active: true,
+            controlShape: 0,
           },
         },
         fluidLayers: {
           active: false,
           speed: 36,
-          firstShape: 10,
-          op: "add",
+          firstShape: 9,
+          op: "subtract",
           deltaT: 0,
         },
       },
@@ -825,13 +846,52 @@ export default class Light extends Shader {
         let l = lightness;
 
         if (this.#animate) {
-          l = this.#effects.pulsingLightness(
-            l,
-            anim.pulsingLightness,
-            direction === directions - 1 && ellipse === countPerEllipse - 1,
-            undefined,
-            ellipse < countPerEllipse - 1
-          );
+          const { pulsingLightness } = anim;
+
+          if (pulsingLightness.active) {
+            const {
+              performPurePulsing,
+              performStepPulsing,
+              performCascadePulsing,
+            } = PulsingUtils.getAnimsStates(anim.pulsingLightness, ellipse);
+
+            if (
+              performPurePulsing ||
+              performStepPulsing ||
+              performCascadePulsing
+            ) {
+              const lastEllipseInDirection = PulsingUtils.lastShapeReached(
+                anim.pulsingLightness,
+                ellipse,
+                countPerEllipse,
+                { performStepPulsing, performCascadePulsing }
+              );
+
+              const values = PulsingUtils.getAnimValues(
+                anim.pulsingLightness,
+                l,
+                lightnessStep,
+                lastEllipseInDirection && direction === directions - 1,
+                lastEllipseInDirection,
+                inversedMode.active,
+                { performStepPulsing, performCascadePulsing }
+              );
+
+              l = this.#effects.pulsingLightness(
+                l,
+                pulsingLightness,
+                lastEllipseInDirection,
+                values.lightnessBorder,
+                values.stepFurther,
+                {
+                  subanim: performStepPulsing || performCascadePulsing,
+                  inverted: inversedMode.active,
+                }
+              );
+
+              // l -= anim.pulsingLightness.lOffset;
+            }
+          }
         }
 
         this.gl.uniformMatrix3fv(this.#locations.mat, false, scaledEllipseMat);
@@ -1302,10 +1362,10 @@ export default class Light extends Shader {
 
     this.gl.useProgram(this.#program);
 
-    // this.#renderRadialLight();
+    this.#renderRadialLight();
     // this.#renderRadialQuad();
     // this.#renderEllipticQuad();
-    this.#renderTriangularStar();
+    // this.#renderTriangularStar();
     // this.#renderTriangles();
 
     if (this.#animate) this.requestAnimationFrame();
