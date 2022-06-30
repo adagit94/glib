@@ -171,6 +171,8 @@ export default class Light extends Shader {
       fluidLayers: (shapesCount, anim) => {
         const { op, firstShape, deltaT } = anim;
 
+        anim.deltaT += this.animData.frameDeltaTime;
+
         const t = Math.round(deltaT * anim.speed);
         let newCount;
 
@@ -183,8 +185,6 @@ export default class Light extends Shader {
             newCount = Math.min(shapesCount, firstShape + t);
             break;
         }
-
-        anim.deltaT += this.animData.frameDeltaTime;
 
         if (
           (anim.op === "subtract" && newCount === firstShape) ||
@@ -223,10 +223,12 @@ export default class Light extends Shader {
 
     this.gl.bindVertexArray(vao);
 
+    const circles = 100;
+
     this.#radial = {
       vao,
       shape,
-      count: 100,
+      count: circles,
       mat: ShaderUtils.mult2dMats(this.projectionMat, shape.mat),
       buffer: this.createAndBindVerticesBuffer(
         this.#locations.position,
@@ -234,28 +236,33 @@ export default class Light extends Shader {
         { size: 2 }
       ),
       inversedMode: { active: false },
+      striped: {
+        active: true,
+        width: 20,
+        spacing: 5,
+        currentStripeStart: 0,
+      },
       lStepMult: 1,
       anim: {
         pulsingLightness: {
-          active: true,
+          active: false,
           direction: "outward",
-          lOffset: 0.05,
-          inwardBorderMult: 30,
+          lOffset: 0,
+          inwardBorderMult: 0,
           pastLightnessBorder: 0,
           deltaT: 0,
-          speed: 0.01,
+          speed: 10,
           stepping: {
-            active: true,
-            step: 10,
-            nextShape: 0,
-            range: 30,
+            active: false,
+            step: 7,
+            range: 19,
           },
           cascade: {},
         },
         fluidLayers: {
-          active: false,
-          speed: 36,
-          firstShape: 9,
+          active: true,
+          speed: 32,
+          firstShape: 1,
           op: "subtract",
           deltaT: 0,
         },
@@ -266,21 +273,23 @@ export default class Light extends Shader {
   #renderRadialLight() {
     this.gl.bindVertexArray(this.#radial.vao);
 
-    const { inversedMode, anim, lStepMult } = this.#radial;
+    const { inversedMode, anim, lStepMult, striped } = this.#radial;
 
-    const rScaleStep = 1 / this.#radial.count;
-    const lightnessStep = 1 / this.#radial.count;
+    let count = this.#radial.count;
+
+    if (this.#animate && anim.fluidLayers.active) {
+      count = this.#effects.fluidLayers(count, anim.fluidLayers);
+    }
+
+    const rScaleStep = 1 / count;
+    const lightnessStep = 1 / count;
 
     for (
       let shape = 0,
         rScale = 1,
-        lightness = inversedMode.active ? 1 : lightnessStep;
-      shape < this.#radial.count;
-      rScale -= rScaleStep,
-        lightness = inversedMode.active
-          ? lightness - lightnessStep * lStepMult
-          : lightness + lightnessStep * lStepMult,
-        shape++
+        lightness = inversedMode.active || striped.active ? 1 : lightnessStep;
+      shape < count;
+
     ) {
       const mat = ShaderUtils.mult2dMats(
         this.#radial.mat,
@@ -300,7 +309,7 @@ export default class Light extends Shader {
             const isLastShape = PulsingUtils.lastShapeReached(
               anim.pulsingLightness,
               shape,
-              this.#radial.count,
+              count,
               { performStepPulsing }
             );
 
@@ -327,7 +336,7 @@ export default class Light extends Shader {
               }
             );
 
-            // l -= anim.pulsingLightness.lOffset;
+            l -= anim.pulsingLightness.lOffset;
           }
         }
       }
@@ -339,6 +348,24 @@ export default class Light extends Shader {
         0,
         this.#radial.shape.verticesCount + 1
       );
+
+      if (
+        striped.active &&
+        shape === striped.currentStripeStart + striped.width - 1
+      ) {
+        striped.currentStripeStart += striped.width + striped.spacing;
+        shape = striped.currentStripeStart;
+        rScale = 1 - striped.currentStripeStart * rScaleStep;
+      } else {
+        if (!striped.active) {
+          lightness = inversedMode.active
+            ? lightness - lightnessStep * lStepMult
+            : lightness + lightnessStep * lStepMult;
+        }
+
+        rScale -= rScaleStep;
+        shape++;
+      }
     }
   }
 
@@ -1359,10 +1386,10 @@ export default class Light extends Shader {
 
   renderScene(timeNow) {
     super.renderScene(timeNow);
-
+    console.log("shape");
     this.gl.useProgram(this.#program);
 
-    this.#renderRadialLight();
+    // this.#renderRadialLight();
     // this.#renderRadialQuad();
     // this.#renderEllipticQuad();
     // this.#renderTriangularStar();
