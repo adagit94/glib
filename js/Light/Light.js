@@ -388,7 +388,7 @@ export default class Light extends Shader {
     this.#radialQuad = {
       vao,
       circle,
-      count: 5000,
+      count: 10,
       mat: ShaderUtils.mult2dMats(this.projectionMat, circle.mat),
       directions: 4,
       translations: [
@@ -418,20 +418,20 @@ export default class Light extends Shader {
       lStepMult: 1,
       anim: {
         pulsingLightness: {
-          active: true,
-          direction: 'outward',
+          active: false,
+          direction: 'inward',
           lOffset: 0.05,
-          inwardBorderMult: 2,
+          inwardBorderMult: 2000,
           pastLightnessBorder: 0,
           deltaT: 0,
           speed: 0.1,
           stepping: {
-            active: false,
-            step: 2,
+            active: true,
+            step: 3,
             nextShape: 0,
           },
           cascade: {
-            active: true,
+            active: false,
             controlShape: 0,
           },
         },
@@ -447,7 +447,7 @@ export default class Light extends Shader {
   }
 
   #renderRadialQuad() {
-    const { anim, count, vao, directions, translations } = this.#radialQuad;
+    const { anim, count, vao, directions, translations, inversedMode } = this.#radialQuad;
 
     const rScaleStep = 1 / count;
     const lightnessStep = 1 / count;
@@ -1393,9 +1393,9 @@ export default class Light extends Shader {
 
     this.gl.useProgram(this.#program);
 
-    this.#renderRadialLight();
+    // this.#renderRadialLight();
     // this.#renderRadialQuad();
-    // this.#renderEllipticQuad();
+    this.#renderEllipticQuad();
     // this.#renderTriangularStar();
     // this.#renderTriangles();
 

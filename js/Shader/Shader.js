@@ -1,23 +1,24 @@
-import ShaderUtils from "./ShaderUtils.js";
+import ShaderUtils from './ShaderUtils.js';
 
 export default class Shader {
   static #shaderFetchConf = {
-    mode: "same-origin",
-    method: "GET",
+    mode: 'same-origin',
+    method: 'GET',
   };
 
   static setCanvasDimensions() {
-    const gl = document.querySelector("#glFrame").getContext("webgl2");
+    const gl = document.querySelector('#glFrame').getContext('webgl2');
 
     gl.canvas.width = gl.canvas.clientWidth;
     gl.canvas.height = gl.canvas.clientHeight;
   }
 
-  gl = document.querySelector("#glFrame").getContext("webgl2");
+  gl = document.querySelector('#glFrame').getContext('webgl2');
   projectionMat = ShaderUtils.init2dProjectionMat(
     this.gl.canvas.width,
     this.gl.canvas.height
   );
+  aspectRatio = this.gl.canvas.width / this.gl.canvas.height
   animData = {
     frameDeltaTime: 0,
     deltaTime: 0,
@@ -64,6 +65,19 @@ export default class Shader {
     return programs;
   };
 
+  initCommonLocations(programs) {
+    let locations = [];
+
+    for (const program of programs) {
+      locations.push({
+        position: this.gl.getAttribLocation(program, 'a_position'),
+        mat: this.gl.getUniformLocation(program, 'u_mat'),
+      });
+    }
+
+    return locations;
+  }
+
   createAndBindVerticesBuffer(
     attrLocation,
     bufferData,
@@ -106,7 +120,7 @@ export default class Shader {
     const deltaTime = timeInSecs - this.animData.prevAnimTime;
 
     this.animData.prevAnimTime = timeInSecs;
-    this.animData.frameDeltaTime = deltaTime
+    this.animData.frameDeltaTime = deltaTime;
     this.animData.deltaTime += deltaTime;
 
     this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
