@@ -1,15 +1,15 @@
-import Shader from '../Shader/Shader.js';
-import Circle from '../Shapes/Circle.js';
-import ShaderUtils from '../Shader/ShaderUtils.js';
+import Shader from "../Shader/Shader.js";
+import Circle from "../Shapes/Circle.js";
+import ShaderUtils from "../Shader/ShaderUtils.js";
 
 export default class CirclesChain extends Shader {
   constructor(shaders) {
     super();
 
-    this.initShaders(shaders).then(programs => {
+    this.initShaders(shaders).then((programs) => {
       const [circle] = programs;
 
-      this.#circle.program = circle;
+      this.#circles.program = circle;
 
       this.#initLocations(programs);
       this.#initObjectsData();
@@ -19,22 +19,22 @@ export default class CirclesChain extends Shader {
   }
 
   #chain = {};
-  #circle = {};
+  #circles = {};
 
   #initLocations(programs) {
     const locations = this.initCommonLocations(programs);
 
-    this.#circle.locations = {
+    this.#circles.locations = {
       ...locations[0],
-      color: this.gl.getUniformLocation(this.#circle.program, 'u_color'),
+      color: this.gl.getUniformLocation(this.#circles.program, "u_color"),
     };
   }
 
   #initObjectsData() {
-    this.#initCircleData();
+    this.#initCirclesData();
   }
 
-  #initCircleData() {
+  #initCirclesData() {
     const vao = this.gl.createVertexArray();
 
     const r = (this.gl.canvas.width + this.gl.canvas.height) / 2 / 20;
@@ -42,23 +42,28 @@ export default class CirclesChain extends Shader {
 
     this.gl.bindVertexArray(vao);
 
-    this.#circle.vao = vao;
-    this.#circle.verticesCount = circle.coordinates.length / 2;
-    this.#circle.instance = circle;
-    this.#circle.r = r;
-    this.#circle.innerCircles = 1;
-    this.#circle.spacing = {
+    this.#circles.vao = vao;
+    this.#circles.verticesCount = circle.coordinates.length / 2;
+    this.#circles.circle = circle;
+    this.#circles.circles = [
+      { color: [0, 0, 1] },
+      { color: [0, 1, 0] },
+      { color: [1, 0, 0] },
+    ];
+    this.#circles.r = r;
+    this.#circles.spacing = {
       x: (this.gl.canvas.width / 100) * 15,
       y: (this.gl.canvas.height / 100) * 15,
     };
-    this.#circle.mat = ShaderUtils.mult2dMats(this.projectionMat, circle.mat);
-    this.#circle.buffers = {
+    this.#circles.mat = ShaderUtils.mult2dMats(this.projectionMat, circle.mat);
+    this.#circles.buffers = {
       vertex: this.createAndBindVerticesBuffer(
-        this.#circle.locations.pos,
+        this.#circles.locations.pos,
         circle.coordinates,
         { size: 2 }
       ),
     };
+    this.#circles.offset = { multBase: 2, multStep: 20 };
   }
 
   #renderCircles() {
@@ -70,47 +75,48 @@ export default class CirclesChain extends Shader {
       verticesCount,
       spacing,
       r,
-      innerCircles,
-    } = this.#circle;
+      circles,
+      offset,
+    } = this.#circles;
 
     this.gl.useProgram(program);
     this.gl.bindVertexArray(vao);
 
     for (
-      let xOffset = spacing.x, yOffset = -spacing.y, scale = 1;
-      xOffset + r * scale < this.gl.canvas.width &&
-      yOffset * -1 + r * scale < this.gl.canvas.height;
-      xOffset += spacing.x - (xOffset / this.gl.canvas.width) * 10,
-        yOffset -= spacing.y - ((yOffset * -1) / this.gl.canvas.height) * 10,
+      let xOffset = spacing.x,
+        yOffset = -spacing.y,
+        scale = 1,
+        offsetMult = offset.multBase;
+      xOffset + (spacing.x - (xOffset / this.gl.canvas.width) * offsetMult) <
+        this.gl.canvas.width &&
+      (yOffset -
+        (spacing.y - ((yOffset * -1) / this.gl.canvas.height) * offsetMult)) *
+        -1 <
+        this.gl.canvas.height;
+      xOffset += spacing.x - (xOffset / this.gl.canvas.width) * offsetMult,
+        yOffset -=
+          spacing.y - ((yOffset * -1) / this.gl.canvas.height) * offsetMult,
         scale =
           1 -
           (xOffset / this.gl.canvas.width +
             (yOffset * -1) / this.gl.canvas.height) /
-            2
+            2,
+        offsetMult += offset.multStep
     ) {
-      const mat = ShaderUtils.mult2dMats(circleMat, [
-        ShaderUtils.init2dTranslationMat(xOffset, yOffset),
-        ShaderUtils.init2dScaleMat(scale, scale),
-      ]);
+      for (let circle = 0; circle < circles.length; circle++) {
+        const circleData = circles[circle];
 
-      this.gl.uniformMatrix3fv(locations.mat, false, mat);
-      this.gl.uniform3f(locations.color, 1, 1, 1);
-
-      this.gl.drawArrays(this.gl.TRIANGLE_FAN, 0, verticesCount - 2);
-
-      for (let innerCircle = 0; innerCircle < innerCircles; innerCircle++) {
-        const innerCircleDifference = 0.1;
-        const innerCircleScale = scale * (1 - innerCircleDifference);
-        const innerCircleYTranslation =
-          yOffset + r * scale * innerCircleDifference;
+        const circleDifference = 0.1 * circle;
+        const circleScale = scale * (1 - circleDifference);
+        const circleYTranslation = yOffset + r * scale * circleDifference;
 
         const innerCircleMat = ShaderUtils.mult2dMats(circleMat, [
-          ShaderUtils.init2dTranslationMat(xOffset, innerCircleYTranslation),
-          ShaderUtils.init2dScaleMat(innerCircleScale, innerCircleScale),
+          ShaderUtils.init2dTranslationMat(xOffset, circleYTranslation),
+          ShaderUtils.init2dScaleMat(circleScale, circleScale),
         ]);
 
         this.gl.uniformMatrix3fv(locations.mat, false, innerCircleMat);
-        this.gl.uniform3f(locations.color, 1, 0, 0);
+        this.gl.uniform3f(locations.color, ...circleData.color);
 
         this.gl.drawArrays(this.gl.TRIANGLE_FAN, 0, verticesCount - 2);
       }
