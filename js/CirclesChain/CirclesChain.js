@@ -63,7 +63,7 @@ export default class CirclesChain extends Shader {
         { size: 2 }
       ),
     };
-    this.#circles.offset = { multBase: 2, multStep: 20 };
+    this.#circles.offset = { step: 30 };
   }
 
   #renderCircles() {
@@ -83,29 +83,23 @@ export default class CirclesChain extends Shader {
     this.gl.bindVertexArray(vao);
 
     for (
-      let xOffset = spacing.x,
-        yOffset = -spacing.y,
-        scale = 1,
-        offsetMult = offset.multBase;
-      xOffset + (spacing.x - (xOffset / this.gl.canvas.width) * offsetMult) <
-        this.gl.canvas.width &&
-      (yOffset -
-        (spacing.y - ((yOffset * -1) / this.gl.canvas.height) * offsetMult)) *
-        -1 <
-        this.gl.canvas.height;
-      xOffset += spacing.x - (xOffset / this.gl.canvas.width) * offsetMult,
+      let xOffset = r, yOffset = -r, scale = 1, offsetMult = 6;
+      xOffset + r * scale < this.gl.canvas.width &&
+      (yOffset - r * scale) * -1 < this.gl.canvas.height;
+      xOffset +=
+        spacing.x - (xOffset / this.gl.canvas.width) * Math.pow(offsetMult, 2),
         yOffset -=
-          spacing.y - ((yOffset * -1) / this.gl.canvas.height) * offsetMult,
+          spacing.y -
+          ((yOffset * -1) / this.gl.canvas.height) * Math.pow(offsetMult, 2),
         scale =
           1 -
           (xOffset / this.gl.canvas.width +
             (yOffset * -1) / this.gl.canvas.height) /
             2,
-        offsetMult += offset.multStep
+        offsetMult += 1
     ) {
       for (let circle = 0; circle < circles.length; circle++) {
         const circleData = circles[circle];
-
         const circleDifference = 0.1 * circle;
         const circleScale = scale * (1 - circleDifference);
         const circleYTranslation = yOffset + r * scale * circleDifference;
