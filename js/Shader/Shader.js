@@ -1,31 +1,32 @@
-import ShaderUtils from './ShaderUtils.js';
+import ShaderUtils from "./ShaderUtils.js";
 
 export default class Shader {
   static #shaderFetchConf = {
-    mode: 'same-origin',
-    method: 'GET',
+    mode: "same-origin",
+    method: "GET",
   };
 
   static setCanvasDimensions() {
-    const gl = document.querySelector('#glFrame').getContext('webgl2');
+    const gl = document.querySelector("#glFrame").getContext("webgl2");
 
     gl.canvas.width = gl.canvas.clientWidth;
     gl.canvas.height = gl.canvas.clientHeight;
   }
 
-  gl = document.querySelector('#glFrame').getContext('webgl2');
+  gl = document.querySelector("#glFrame").getContext("webgl2");
   projectionMat = ShaderUtils.init2dProjectionMat(
     this.gl.canvas.width,
     this.gl.canvas.height
   );
-  aspectRatio = this.gl.canvas.width / this.gl.canvas.height
+  aspectRatio = this.gl.canvas.width / this.gl.canvas.height;
+  animate = false;
   animData = {
     frameDeltaTime: 0,
     deltaTime: 0,
     prevAnimTime: 0,
   };
 
-  initShaders = async shadersData => {
+  initShaders = async (shadersData) => {
     let shadersFetches = [];
 
     Object.values(shadersData).forEach(({ vShader, fShader }) => {
@@ -35,7 +36,7 @@ export default class Shader {
 
     let shadersSources = await Promise.all(shadersFetches);
 
-    shadersSources = await Promise.all(shadersSources.map(res => res.text()));
+    shadersSources = await Promise.all(shadersSources.map((res) => res.text()));
 
     let programs = [];
 
@@ -70,8 +71,8 @@ export default class Shader {
 
     for (const program of programs) {
       locations.push({
-        position: this.gl.getAttribLocation(program, 'a_position'),
-        mat: this.gl.getUniformLocation(program, 'u_mat'),
+        position: this.gl.getAttribLocation(program, "a_position"),
+        mat: this.gl.getUniformLocation(program, "u_mat"),
       });
     }
 
@@ -110,7 +111,7 @@ export default class Shader {
     return buffer;
   }
 
-  #triggerFrame = t => this.renderScene(t);
+  #triggerFrame = (t) => this.renderScene(t);
 
   requestAnimationFrame = () =>
     window.requestAnimationFrame(this.#triggerFrame);
@@ -126,6 +127,10 @@ export default class Shader {
     this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
     this.gl.clearColor(0, 0, 0, 1);
     this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+
+    this.computeScene?.();
+
+    if (this.animate) this.requestAnimationFrame();
   }
 }
 

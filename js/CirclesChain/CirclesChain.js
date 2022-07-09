@@ -14,11 +14,12 @@ export default class CirclesChain extends Shader {
       this.#initLocations(programs);
       this.#initObjectsData();
 
+      this.animate = true;
+
       this.requestAnimationFrame();
     });
   }
 
-  #chain = {};
   #circles = {};
 
   #initLocations(programs) {
@@ -40,6 +41,8 @@ export default class CirclesChain extends Shader {
     const r = (this.gl.canvas.width + this.gl.canvas.height) / 2 / 20;
     const circle = new Circle(0, this.gl.canvas.height, r, Math.PI * 2, 100);
 
+    const yLimitBase = -25;
+
     this.gl.bindVertexArray(vao);
 
     this.#circles.vao = vao;
@@ -50,6 +53,15 @@ export default class CirclesChain extends Shader {
       { color: [0, 1, 0] },
       { color: [1, 0, 0] },
     ];
+    this.#circles.anims = {
+      yTranslation: {
+        active: true,
+        direction: "down",
+        limitBase: yLimitBase,
+        limitAdditionFactor: ((yLimitBase * -1) / 100) * 10,
+        groups: [],
+      },
+    };
     this.#circles.r = r;
     this.#circles.spacing = {
       x: (this.gl.canvas.width / 100) * 15,
@@ -63,7 +75,6 @@ export default class CirclesChain extends Shader {
         { size: 2 }
       ),
     };
-    this.#circles.offset = { step: 30 };
   }
 
   #renderCircles() {
@@ -76,18 +87,20 @@ export default class CirclesChain extends Shader {
       spacing,
       r,
       circles,
-      offset,
+      anims,
     } = this.#circles;
 
     this.gl.useProgram(program);
     this.gl.bindVertexArray(vao);
 
     for (
-      let xOffset = r, yOffset = -r, scale = 1, offsetMult = 6;
+      let grp = 0, xOffset = r, yOffset = -r, scale = 1, offsetMult = 5;
       xOffset + r * scale < this.gl.canvas.width &&
       (yOffset - r * scale) * -1 < this.gl.canvas.height;
-      xOffset +=
-        spacing.x - (xOffset / this.gl.canvas.width) * Math.pow(offsetMult, 2),
+      grp++,
+        xOffset +=
+          spacing.x -
+          (xOffset / this.gl.canvas.width) * Math.pow(offsetMult, 2),
         yOffset -=
           spacing.y -
           ((yOffset * -1) / this.gl.canvas.height) * Math.pow(offsetMult, 2),
@@ -96,15 +109,52 @@ export default class CirclesChain extends Shader {
           (xOffset / this.gl.canvas.width +
             (yOffset * -1) / this.gl.canvas.height) /
             2,
-        offsetMult += 1
+        offsetMult += 1.1
     ) {
+      let circlesGroupMat = circleMat;
+
+      if (this.animate && anims.yTranslation.active) {
+        let circlesGroup = anims.yTranslation.groups[grp];
+
+        if (!circlesGroup) {
+          circlesGroup = anims.yTranslation.groups[grp] = { y: 0 };
+        }
+
+        const limit =
+          anims.yTranslation.limitBase +
+          anims.yTranslation.limitAdditionFactor * grp;
+
+        const translationSpeed = ((limit * -1) / 100) * 1;
+
+        if (circlesGroup.y >= 0) {
+          anims.yTranslation.direction = "down";
+        } else if (circlesGroup.y <= limit) {
+          anims.yTranslation.direction = "up";
+        }
+
+        switch (anims.yTranslation.direction) {
+          case "up":
+            circlesGroup.y += translationSpeed;
+            break;
+
+          case "down":
+            circlesGroup.y -= translationSpeed;
+            break;
+        }
+
+        circlesGroupMat = ShaderUtils.mult2dMats(
+          circlesGroupMat,
+          ShaderUtils.init2dTranslationMat(0, circlesGroup.y)
+        );
+      }
+
       for (let circle = 0; circle < circles.length; circle++) {
         const circleData = circles[circle];
         const circleDifference = 0.1 * circle;
         const circleScale = scale * (1 - circleDifference);
         const circleYTranslation = yOffset + r * scale * circleDifference;
 
-        const innerCircleMat = ShaderUtils.mult2dMats(circleMat, [
+        const innerCircleMat = ShaderUtils.mult2dMats(circlesGroupMat, [
           ShaderUtils.init2dTranslationMat(xOffset, circleYTranslation),
           ShaderUtils.init2dScaleMat(circleScale, circleScale),
         ]);
@@ -117,9 +167,7 @@ export default class CirclesChain extends Shader {
     }
   }
 
-  renderScene(timeNow) {
-    super.renderScene(timeNow);
-
+  computeScene() {
     this.#renderCircles();
   }
 }

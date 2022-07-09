@@ -3,12 +3,12 @@ import CircShader from "./Shader/CircShader.js";
 import CircleGrid from "./CircleGrid/CircleGrid.js";
 import CirclesChain from "./CirclesChain/CirclesChain.js";
 
-// new Light({
-//   light: {
-//     fShader: "shaders/light/light.frag",
-//     vShader: "shaders/light/light.vert",
-//   },
-// });
+new Light({
+  light: {
+    fShader: "shaders/light/light.frag",
+    vShader: "shaders/light/light.vert",
+  },
+});
 
 // new CircShader({
 //   circ: {
@@ -24,10 +24,9 @@ import CirclesChain from "./CirclesChain/CirclesChain.js";
 //   },
 // });
 
-new CirclesChain({
-  circle: {
-    vShader: "shaders/circles-chain/circle.vert",
-    fShader: "shaders/circles-chain/circle.frag",
-  },
-});
-
+// new CirclesChain({
+//   circle: {
+//     vShader: "shaders/circles-chain/circle.vert",
+//     fShader: "shaders/circles-chain/circle.frag",
+//   },
+// });
