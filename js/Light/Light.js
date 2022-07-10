@@ -31,7 +31,7 @@ export default class Light extends Shader {
 
   #effects;
 
-  #animate = true;
+  #animate = false;
 
   #initLocations() {
     this.#locations = {
@@ -74,6 +74,7 @@ export default class Light extends Shader {
 
         return (triangle, lightness, side) => {
           const { triangles, mode, anim } = this.#triangular;
+          const { sides } = mode[1];
 
           trianglesLightness[triangle] = lightness;
 
@@ -83,8 +84,8 @@ export default class Light extends Shader {
 
           if (fullTick) {
             if (
-              (mode[1].side === "both" && side === "right") ||
-              mode[1].side !== "both"
+              (sides.length > 1 && side === sides[sides.length - 1]) ||
+              sides.length === 1
             ) {
               mode[1].direction =
                 mode[1].direction === "forwards" ? "backwards" : "forwards";
@@ -944,104 +945,146 @@ export default class Light extends Shader {
     const vertices = triangles + 1;
     const sideCount = triangles / 2;
 
-    const widthStep = this.gl.canvas.width / sideCount;
+    const sides = ["left", "right"];
+    const eagle = sides.length === 2 && false;
+
+    const widthStep =
+      (eagle ? this.gl.canvas.width / 2 : this.gl.canvas.width) / sideCount;
     const heightStep = this.gl.canvas.height / sideCount;
 
-    let leftSideCoordinates = [0, this.gl.canvas.height];
-    let rightSideCoordinates = [this.gl.canvas.width, this.gl.canvas.height];
-
+    let leftSideCoordinates = [];
+    let rightSideCoordinates = [];
     let leftIndices = [];
     let rightIndices = [];
 
-    for (
-      let vertex = 0, x = this.gl.canvas.width, y = this.gl.canvas.height;
-      vertex < vertices;
-      vertex++
-    ) {
-      leftSideCoordinates.push(x, y);
+    let vaos = {};
+    let buffers = {
+      vertices: {},
+      indices: {},
+    };
 
-      if (vertex > 1) {
-        leftIndices.push(vertex, vertex - 1, 0);
-      }
+    const renderLeftSide = sides.includes("left");
+    const renderRightSide = sides.includes("right");
 
-      if (vertex < sideCount) {
-        y -= heightStep;
-      }
-
-      if (vertex >= sideCount) {
-        x -= widthStep;
-      }
+    if (eagle) {
+      leftSideCoordinates.push(this.gl.canvas.width / 2, this.gl.canvas.height);
+      rightSideCoordinates.push(
+        this.gl.canvas.width / 2,
+        this.gl.canvas.height
+      );
+    } else {
+      if (renderLeftSide) leftSideCoordinates.push(0, this.gl.canvas.height);
+      if (renderRightSide)
+        rightSideCoordinates.push(this.gl.canvas.width, this.gl.canvas.height);
     }
 
-    leftIndices.push(vertices, vertices - 1, 0);
+    if (renderLeftSide) {
+      for (
+        let vertex = 0,
+          x = eagle ? 0 : this.gl.canvas.width,
+          y = this.gl.canvas.height;
+        vertex < vertices;
+        vertex++
+      ) {
+        leftSideCoordinates.push(x, y);
 
-    for (
-      let vertex = 0, x = 0, y = this.gl.canvas.height;
-      vertex < vertices;
-      vertex++
-    ) {
-      rightSideCoordinates.push(x, y);
+        if (vertex > 1) {
+          leftIndices.push(vertex, vertex - 1, 0);
+        }
 
-      if (vertex > 1) {
-        rightIndices.push(vertex, vertex - 1, 0);
+        if (vertex < sideCount) {
+          y -= heightStep;
+        }
+
+        if (vertex >= sideCount) {
+          if (eagle) {
+            x += widthStep;
+          } else {
+            x -= widthStep;
+          }
+        }
       }
 
-      if (vertex < sideCount) {
-        y -= heightStep;
-      }
+      leftIndices.push(vertices, vertices - 1, 0);
 
-      if (vertex >= sideCount) {
-        x += widthStep;
-      }
+      leftSideCoordinates = new Float32Array(leftSideCoordinates);
+      leftIndices = new Uint16Array(leftIndices);
+
+      const leftSideVao = this.gl.createVertexArray();
+
+      this.gl.bindVertexArray(leftSideVao);
+
+      vaos.left = leftSideVao;
+
+      buffers.vertices.left = this.createAndBindVerticesBuffer(
+        this.#locations.position,
+        leftSideCoordinates,
+        { size: 2 },
+        this.gl.STATIC_READ
+      );
+
+      buffers.indices.left = this.createAndBindElementsBuffer(
+        leftIndices,
+        this.gl.STATIC_READ
+      );
     }
 
-    rightIndices.push(vertices, vertices - 1, 0);
+    if (renderRightSide) {
+      for (
+        let vertex = 0,
+          x = eagle ? this.gl.canvas.width : 0,
+          y = this.gl.canvas.height;
+        vertex < vertices;
+        vertex++
+      ) {
+        rightSideCoordinates.push(x, y);
 
-    leftSideCoordinates = new Float32Array(leftSideCoordinates);
-    rightSideCoordinates = new Float32Array(rightSideCoordinates);
+        if (vertex > 1) {
+          rightIndices.push(vertex, vertex - 1, 0);
+        }
 
-    leftIndices = new Uint16Array(leftIndices);
-    rightIndices = new Uint16Array(rightIndices);
+        if (vertex < sideCount) {
+          y -= heightStep;
+        }
 
-    const leftSideVao = this.gl.createVertexArray();
+        if (vertex >= sideCount) {
+          if (eagle) {
+            x -= widthStep;
+          } else {
+            x += widthStep;
+          }
+        }
+      }
 
-    this.gl.bindVertexArray(leftSideVao);
+      rightIndices.push(vertices, vertices - 1, 0);
 
-    const leftVertexBuffer = this.createAndBindVerticesBuffer(
-      this.#locations.position,
-      leftSideCoordinates,
-      { size: 2 },
-      this.gl.STATIC_READ
-    );
+      rightSideCoordinates = new Float32Array(rightSideCoordinates);
+      rightIndices = new Uint16Array(rightIndices);
 
-    const leftIndexBuffer = this.createAndBindElementsBuffer(
-      leftIndices,
-      this.gl.STATIC_READ
-    );
+      const rightSideVao = this.gl.createVertexArray();
 
-    const rightSideVao = this.gl.createVertexArray();
+      this.gl.bindVertexArray(rightSideVao);
 
-    this.gl.bindVertexArray(rightSideVao);
+      vaos.right = rightSideVao;
 
-    const rightVertexBuffer = this.createAndBindVerticesBuffer(
-      this.#locations.position,
-      rightSideCoordinates,
-      { size: 2 },
-      this.gl.STATIC_READ
-    );
+      buffers.vertices.right = this.createAndBindVerticesBuffer(
+        this.#locations.position,
+        rightSideCoordinates,
+        { size: 2 },
+        this.gl.STATIC_READ
+      );
 
-    const rightIndexBuffer = this.createAndBindElementsBuffer(
-      rightIndices,
-      this.gl.STATIC_READ
-    );
+      buffers.indices.right = this.createAndBindElementsBuffer(
+        rightIndices,
+        this.gl.STATIC_READ
+      );
+    }
 
     const tPercMult = 40;
-
-    const side = "both";
-    const lightness = side === "both" ? 0.5 : 1;
+    const lightness = !eagle && sides.length > 1 ? 0.5 : 1;
 
     this.#triangular = {
-      vaos: { left: leftSideVao, right: rightSideVao },
+      vaos,
       lines: vertices,
       coordinates: leftSideCoordinates,
       indices: leftIndices,
@@ -1057,57 +1100,51 @@ export default class Light extends Shader {
           triggerDimming: false,
           lightnessMult: (lightness / 100) * tPercMult,
           triangleMult: (triangles / 100) * tPercMult,
-          side,
+          sides,
         },
       ],
-      buffers: {
-        vertices: {
-          left: leftVertexBuffer,
-          right: rightVertexBuffer,
-        },
-        indices: {
-          left: leftIndexBuffer,
-          right: rightIndexBuffer,
-        },
-      },
+      buffers,
       anim: { deltaT: 0 },
     };
   }
 
   #renderTriangles() {
-    const { mode } = this.#triangular;
+    const { mat, mode } = this.#triangular;
+    const [modeName, modeConf] = mode;
 
-    this.gl.uniformMatrix3fv(this.#locations.mat, false, this.#triangular.mat);
+    if (modeConf.sides.length > 1) {
+      this.gl.enable(this.gl.BLEND);
+      this.gl.blendEquation(this.gl.FUNC_ADD);
+      this.gl.blendFunc(this.gl.ONE, this.gl.ONE);
+      this.gl.disable(this.gl.DEPTH_TEST);
+    }
 
-    switch (mode[0]) {
+    this.gl.uniformMatrix3fv(this.#locations.mat, false, mat);
+
+    let renderFunc;
+
+    switch (modeName) {
       case "forwards":
-        this.#renderTrianglesForwards(mode[1].side);
+        renderFunc = this.#renderTrianglesForwards;
         break;
 
       case "backwards":
-        this.#renderTrianglesBackwards(mode[1].side);
+        renderFunc = this.#renderTrianglesBackwards;
         break;
 
       case "pendulum":
-        switch (mode[1].side) {
-          case "both":
-            this.gl.enable(this.gl.BLEND);
-            this.gl.blendEquation(this.gl.FUNC_ADD);
-            this.gl.blendFunc(this.gl.ONE, this.gl.ONE);
-            this.gl.disable(this.gl.DEPTH_TEST);
+        renderFunc = this.#renderTrianglesPendulum;
+        break;
+    }
 
-            this.#renderTrianglesPendulum("left");
-            this.#renderTrianglesPendulum("right");
-            break;
-
-          default:
-            this.#renderTrianglesPendulum(mode[1].side);
-        }
+    for (const side of modeConf.sides) {
+      renderFunc(side);
     }
   }
 
-  #renderTrianglesForwards(side) {
-    const { triangles, lightnessStep } = this.#triangular;
+  #renderTrianglesForwards = (side) => {
+    const { triangles, lightnessStep, anim, mode } = this.#triangular;
+    const { lightnessMult } = mode[1];
 
     this.gl.bindVertexArray(this.#triangular.vaos[side]);
     this.gl.bindBuffer(
@@ -1123,7 +1160,7 @@ export default class Light extends Shader {
       let lightnessVal = lightness;
 
       if (this.#animate) {
-        lightnessVal -= this.animData.deltaTime / 10; // 1.25
+        lightnessVal -= anim.deltaT * lightnessMult;
       }
 
       this.gl.uniform1f(this.#locations.lightness, lightnessVal);
@@ -1135,10 +1172,14 @@ export default class Light extends Shader {
         triangle * 3 * 2
       );
     }
-  }
 
-  #renderTrianglesBackwards(side) {
-    const { triangles, lightnessStep } = this.#triangular;
+    anim.deltaT += this.animData.frameDeltaTime;
+  };
+
+  #renderTrianglesBackwards = (side) => {
+    const { triangles, lightnessBase, lightnessStep, anim, mode } =
+      this.#triangular;
+    const { lightnessMult } = mode[1];
 
     this.gl.bindVertexArray(this.#triangular.vaos[side]);
     this.gl.bindBuffer(
@@ -1147,14 +1188,14 @@ export default class Light extends Shader {
     );
 
     for (
-      let triangle = 0, lightness = 1;
+      let triangle = 0, lightness = lightnessBase;
       triangle < triangles;
       lightness -= lightnessStep, triangle++
     ) {
       let lightnessVal = lightness;
 
       if (this.#animate) {
-        lightnessVal -= this.animData.deltaTime / 10; // 1.25
+        lightnessVal -= anim.deltaT * lightnessMult;
       }
 
       this.gl.uniform1f(this.#locations.lightness, lightnessVal);
@@ -1166,19 +1207,16 @@ export default class Light extends Shader {
         triangle * 3 * 2
       );
     }
-  }
 
-  #renderTrianglesPendulum(side) {
+    anim.deltaT += this.animData.frameDeltaTime;
+  };
+
+  #renderTrianglesPendulum = (side) => {
     const { triangles, mode, lightnessBase, lightnessStep, anim } =
       this.#triangular;
 
-    const {
-      direction,
-      triggerDimming,
-      triangleMult,
-      lightnessMult,
-      side: confSide,
-    } = mode[1];
+    const { direction, triggerDimming, triangleMult, lightnessMult, sides } =
+      mode[1];
 
     if (!triggerDimming) {
       const roundedT = Math.round(anim.deltaT * triangleMult);
@@ -1261,7 +1299,8 @@ export default class Light extends Shader {
         case "forwards":
           if (
             frontTriangle === triangles - 1 &&
-            ((confSide === "both" && side === "right") || confSide !== "both")
+            ((sides.length > 1 && side === sides[sides.length - 1]) ||
+              sides.length === 1)
           ) {
             anim.deltaT = 0;
 
@@ -1272,7 +1311,8 @@ export default class Light extends Shader {
         case "backwards":
           if (
             frontTriangle === 0 &&
-            ((confSide === "both" && side === "right") || confSide !== "both")
+            ((sides.length > 1 && side === sides[sides.length - 1]) ||
+              sides.length === 1)
           ) {
             anim.deltaT = 0;
 
@@ -1283,7 +1323,7 @@ export default class Light extends Shader {
     }
 
     anim.deltaT += this.animData.frameDeltaTime;
-  }
+  };
 
   renderScene(timeNow) {
     super.renderScene(timeNow);
