@@ -112,7 +112,9 @@ export default class CuShader extends Shader {
   constructor(shaders) {
     super();
 
-    this.initShaders(shaders).then(([cube, crossChannel]) => {
+    this.initShaders(shaders).then((programs) => {
+      const [cube, crossChannel] = programs;
+
       this.#cube = {
         program: cube,
       };
@@ -121,37 +123,39 @@ export default class CuShader extends Shader {
         program: crossChannel,
       };
 
-      this.#initAttribLocations();
+      this.#initLocations(programs);
       this.#initObjectsData();
 
-      this.gl.canvas.dispatchEvent(new CustomEvent("cuInitCompleted"));
+      this.requestAnimationFrame();
     });
   }
 
+  #cu = {
+    projectionMat: ShaderUtils.initPerspectiveMat(
+      Math.PI / 2,
+      this.gl.canvas.clientWidth / this.gl.canvas.clientHeight,
+      0.1,
+      2000
+    ),
+  };
+
   #cube;
   #crossChannel;
+
   #animData = {
     sceneYRotation: 0,
   };
 
-  #initAttribLocations = () => {
-    this.#cube.attribLocations = {
-      position: this.gl.getAttribLocation(this.#cube.program, "a_position"),
-      projection: this.gl.getUniformLocation(
-        this.#cube.program,
-        "u_projectionMat"
-      ),
+  #initLocations = (programs) => {
+    const [cubeLocations, crossChannelLocations] =
+      this.initCommonLocations(programs);
+
+    this.#cube.locations = {
+      ...cubeLocations,
     };
 
-    this.#crossChannel.attribLocations = {
-      position: this.gl.getAttribLocation(
-        this.#crossChannel.program,
-        "a_position"
-      ),
-      projection: this.gl.getUniformLocation(
-        this.#crossChannel.program,
-        "u_projectionMat"
-      ),
+    this.#crossChannel.locations = {
+      ...crossChannelLocations,
     };
   };
 
@@ -167,7 +171,7 @@ export default class CuShader extends Shader {
     this.#cube.indices = cubeIndices;
     this.#cube.buffers = {
       vertices: this.createAndBindVerticesBuffer(
-        this.#cube.attribLocations.position,
+        this.#cube.locations.position,
         cubeVertices,
         { size: 3 }
       ),
@@ -182,7 +186,7 @@ export default class CuShader extends Shader {
     this.#crossChannel.vertices = crossChannelVertices;
     this.#crossChannel.buffers = {
       vertices: this.createAndBindVerticesBuffer(
-        this.#crossChannel.attribLocations.position,
+        this.#crossChannel.locations.position,
         crossChannelVertices,
         { size: 3 }
       ),
@@ -203,7 +207,37 @@ export default class CuShader extends Shader {
     // ShaderUtils.scale(this.#crossChannel.topRightMat, { d: 1.5, });
   };
 
-  #renderCrossChannel = cubeMat => {
+  #renderCube = () => {
+    let lookAtMat = ShaderUtils.lookAtMat([0, 0, -1.75]);
+
+    ShaderUtils.translate3d(lookAtMat, { y: 0 });
+
+    // this.#animData.sceneYRotation += this.animData.deltaTime / 10;
+    ShaderUtils.rotate3d(lookAtMat, "y", Math.PI / 6); // this.#animData.sceneYRotation
+
+    const mat = ShaderUtils.mult3dMats(this.#cu.projectionMat, [
+      lookAtMat,
+      this.#cube.mat,
+    ]);
+
+    this.#crossChannel.cubeMat = mat;
+
+    this.gl.useProgram(this.#cube.program);
+    this.gl.bindVertexArray(this.#cube.vao);
+    this.gl.uniformMatrix4fv(this.#cube.locations.mat, false, mat);
+
+    this.gl.drawElements(
+      this.gl.LINES,
+      this.#cube.indices.length,
+      this.gl.UNSIGNED_SHORT,
+      0
+    );
+  };
+
+  #renderCrossChannel = () => {
+    this.gl.useProgram(this.#crossChannel.program);
+    this.gl.bindVertexArray(this.#crossChannel.vao);
+
     const singleCrossChannelCurveVerticesCount =
       this.#crossChannel.vertices.length /
       CuShader.#cubeCorners.length /
@@ -211,14 +245,20 @@ export default class CuShader extends Shader {
       3;
 
     const cornerMats = [
-      ShaderUtils.mult3dMats(cubeMat, this.#crossChannel.mats[0]),
-      ShaderUtils.mult3dMats(cubeMat, this.#crossChannel.mats[1]),
+      ShaderUtils.mult3dMats(
+        this.#crossChannel.cubeMat,
+        this.#crossChannel.mats[0]
+      ),
+      ShaderUtils.mult3dMats(
+        this.#crossChannel.cubeMat,
+        this.#crossChannel.mats[1]
+      ),
     ];
 
     for (let corner = 0; corner < CuShader.#cubeCorners.length; corner++) {
       for (let curve = 0; curve < CuShader.#curvesPerCorner; curve++) {
         this.gl.uniformMatrix4fv(
-          this.#crossChannel.attribLocations.projection,
+          this.#crossChannel.locations.mat,
           false,
           cornerMats[corner]
         );
@@ -233,71 +273,8 @@ export default class CuShader extends Shader {
     }
   };
 
-  renderScene = timeNow => {
-    const timeInSecs = timeNow / 1000;
-    const deltaTime = timeInSecs - this.#animData.prevAnimTime;
-
-    this.#animData.prevAnimTime = timeInSecs;
-
-    if (!Number.isNaN(deltaTime)) {
-      this.#animData.sceneYRotation += deltaTime / 10;
-    }
-
-    const projectionMat = ShaderUtils.initPerspectiveMat(
-      Math.PI / 2,
-      this.gl.canvas.clientWidth / this.gl.canvas.clientHeight,
-      0.1,
-      2000
-    );
-
-    let lookAtMat = ShaderUtils.lookAtMat([0, 0, -1.75]);
-
-    ShaderUtils.translate3d(lookAtMat, { y: 0 });
-    ShaderUtils.rotate3d(lookAtMat, "y", Math.PI / 6); // this.#animData.sceneYRotation
-
-    const cubeMat = ShaderUtils.mult3dMats(
-      ShaderUtils.mult3dMats(projectionMat, lookAtMat),
-      this.#cube.mat
-    );
-
-    this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
-    this.gl.clearColor(0, 0, 0, 1);
-    this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
-
-    this.gl.useProgram(this.#cube.program);
-    this.gl.bindVertexArray(this.#cube.vao);
-    this.gl.uniformMatrix4fv(
-      this.#cube.attribLocations.projection,
-      false,
-      cubeMat
-    );
-
-    this.gl.drawElements(
-      this.gl.LINES,
-      this.#cube.indices.length,
-      this.gl.UNSIGNED_SHORT,
-      0
-    );
-
-    this.gl.useProgram(this.#crossChannel.program);
-    this.gl.bindVertexArray(this.#crossChannel.vao);
-    this.#renderCrossChannel(cubeMat);
-
-    // window.requestAnimationFrame(this.renderScene);
+  computeScene = () => {
+    this.#renderCube();
+    this.#renderCrossChannel();
   };
 }
-
-// const cuShader = new CuShader({
-//   cube: {
-//     vShader: "shaders/cu/cube/cube.vert",
-//     fShader: "shaders/cu/cube/cube.frag",
-//   },
-//   crossChannel: {
-//     vShader: "shaders/cu/cross-channel/cross-channel.vert",
-//     fShader: "shaders/cu/cross-channel/cross-channel.frag",
-//   },
-// });
-
-// cuShader.gl.canvas.addEventListener("cuInitCompleted", () => {
-//   window.requestAnimationFrame(cuShader.renderScene);
-// });

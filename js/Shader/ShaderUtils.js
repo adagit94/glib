@@ -148,24 +148,32 @@ export default class ShaderUtils {
     return new Float32Array(matToMult);
   };
 
-  static mult3dMats = (firstMat, secondMat) => {
-    let newMat = [];
+  static mult3dMats = (baseMat, multMats) => {
+    if (!Array.isArray(multMats)) multMats = [multMats];
 
-    for (let r = 0; r < secondMat.length; r += 4) {
-      const secondMatRow = secondMat.slice(r, r + 4);
+    let matToMult = baseMat;
+    
+    for (const multMat of multMats) {
+      let newMat = [];
 
-      for (let c = 0; c < 4; c++) {
-        let newVal = 0;
+      for (let r = 0; r < multMat.length; r += 4) {
+        const multMatRow = multMat.slice(r, r + 4);
 
-        for (let i = c, rI = 0; i < firstMat.length; i += 4, rI++) {
-          newVal += firstMat[i] * secondMatRow[rI];
+        for (let c = 0; c < 4; c++) {
+          let newVal = 0;
+
+          for (let i = c, rc = 0; i < matToMult.length; i += 4, rc++) {
+            newVal += matToMult[i] * multMatRow[rc];
+          }
+
+          newMat.push(newVal);
         }
-
-        newMat.push(newVal);
       }
-    }
 
-    return new Float32Array(newMat);
+      matToMult = newMat;
+   }
+
+    return new Float32Array(matToMult);
   };
 
   static translate3d = (mat, positionOffsets) => {

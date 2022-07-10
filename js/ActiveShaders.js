@@ -1,14 +1,15 @@
 import Light from "./Light/Light.js";
 import CircShader from "./Shader/CircShader.js";
+import CuShader from "./Shader/CuShader.js";
 import CircleGrid from "./CircleGrid/CircleGrid.js";
 import CirclesChain from "./CirclesChain/CirclesChain.js";
 
-new Light({
-  light: {
-    fShader: "shaders/light/light.frag",
-    vShader: "shaders/light/light.vert",
-  },
-});
+// new Light({
+//   light: {
+//     fShader: "shaders/light/light.frag",
+//     vShader: "shaders/light/light.vert",
+//   },
+// });
 
 // new CircShader({
 //   circ: {
@@ -30,3 +31,14 @@ new Light({
 //     fShader: "shaders/circles-chain/circle.frag",
 //   },
 // });
+
+new CuShader({
+  cube: {
+    vShader: "shaders/cu/cube/cube.vert",
+    fShader: "shaders/cu/cube/cube.frag",
+  },
+  crossChannel: {
+    vShader: "shaders/cu/cross-channel/cross-channel.vert",
+    fShader: "shaders/cu/cross-channel/cross-channel.frag",
+  },
+});
