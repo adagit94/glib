@@ -152,7 +152,7 @@ export default class ShaderUtils {
     if (!Array.isArray(multMats)) multMats = [multMats];
 
     let matToMult = baseMat;
-    
+
     for (const multMat of multMats) {
       let newMat = [];
 
@@ -289,22 +289,10 @@ export default class ShaderUtils {
     const yVec = ShaderUtils.normalizeVec(ShaderUtils.crossProduct(zVec, xVec));
 
     return new Float32Array([
-      xVec[0],
-      xVec[1],
-      xVec[2],
-      0,
-      yVec[0],
-      yVec[1],
-      yVec[2],
-      0,
-      zVec[0],
-      zVec[1],
-      zVec[2],
-      0,
-      eye[0],
-      eye[1],
-      eye[2],
-      1,
+      xVec[0], xVec[1], xVec[2], 0,
+      yVec[0], yVec[1], yVec[2], 0,
+      zVec[0], zVec[1], zVec[2], 0,
+      eye[0], eye[1], eye[2], 1,
     ]);
   };
 

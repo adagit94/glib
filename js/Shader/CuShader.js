@@ -2,7 +2,7 @@ import Shader from "./Shader.js";
 import ShaderUtils from "./ShaderUtils.js";
 
 export default class CuShader extends Shader {
-  static #cubeCorners = ["bottomLeft", "topRight"]; // , , "bottomRight", "topLeft"
+  static #cubeCorners = ["bottomLeft"]; // "topRight" , "bottomRight", "topLeft"
   static #curvesPerCorner = 5; // , "topRight", "bottomRight", "topLeft"
 
   static #getCubeData = () => {
@@ -48,9 +48,9 @@ export default class CuShader extends Shader {
       for (
         let curve = 0, r = baseRadius;
         curve < CuShader.#curvesPerCorner;
-        r /= 2, curve++
+        r /= 1.25, curve++
       ) {
-        const o = curve === 0 ? origin : origin - curve / 100;
+        const o = origin;
 
         for (
           let i = 0, rad = 0, secondHalfMult = 1;
@@ -78,26 +78,10 @@ export default class CuShader extends Shader {
           if (rad > Math.PI / 2) {
             const mult = 1 - secondHalfMult / 1000;
 
-            if (curve === 0) {
-              z *= mult;
+            z *= mult;
 
-              secondHalfMult *= 1.1632;
-            } else {
-              z *= mult;
+            if (curve !== 0) {
               x *= mult;
-
-              switch (curve) {
-                case 1:
-                  secondHalfMult *= 1.11;
-                  break;
-
-                case 2:
-                  secondHalfMult *= 1.12;
-                  break;
-
-                default:
-                  secondHalfMult *= 1.122;
-              }
             }
           }
 
@@ -192,33 +176,40 @@ export default class CuShader extends Shader {
       ),
     };
     this.#crossChannel.mats = [
-      ShaderUtils.init3dTranslationMat(-0.2, 0, -0.5),
+      ShaderUtils.init3dTranslationMat(0.75, -0.75, 0.75),
       ShaderUtils.init3dTranslationMat(0.2, 0, 0.5),
     ];
 
-    ShaderUtils.rotate3d(this.#crossChannel.mats[0], "y", -Math.PI / 6.4);
-    ShaderUtils.rotate3d(this.#crossChannel.mats[0], "x", -Math.PI / 3.42);
-    ShaderUtils.rotate3d(this.#crossChannel.mats[0], "z", Math.PI / 16);
-    ShaderUtils.rotate3d(this.#crossChannel.mats[1], "y", -Math.PI / 6.4);
-    ShaderUtils.rotate3d(this.#crossChannel.mats[1], "x", -Math.PI / 3.42);
-    ShaderUtils.rotate3d(this.#crossChannel.mats[1], "z", Math.PI / 16);
+    ShaderUtils.rotate3d(this.#crossChannel.mats[0], "y", -Math.PI);
+    // ShaderUtils.rotate3d(this.#crossChannel.mats[0], "x", -Math.PI / 2);
+    // ShaderUtils.rotate3d(this.#crossChannel.mats[0], "z", Math.PI / 16);
+    // ShaderUtils.rotate3d(this.#crossChannel.mats[1], "y", -Math.PI / 2);
+    // ShaderUtils.rotate3d(this.#crossChannel.mats[1], "x", -Math.PI / 3.42);
+    // ShaderUtils.rotate3d(this.#crossChannel.mats[1], "z", Math.PI / 16);
 
     // ShaderUtils.scale(this.#crossChannel.bottomLeftMat, { d: 1.5, });
     // ShaderUtils.scale(this.#crossChannel.topRightMat, { d: 1.5, });
   };
 
-  #renderCube = () => {
-    let lookAtMat = ShaderUtils.lookAtMat([0, 0, -1.75]);
+  #computeView() {
+    let lookAtMat = ShaderUtils.lookAtMat(
+      [0.75, 0.5, -0.5],
+      [0.75, -0.75, 0.75]
+    );
 
     ShaderUtils.translate3d(lookAtMat, { y: 0 });
 
     // this.#animData.sceneYRotation += this.animData.deltaTime / 10;
-    ShaderUtils.rotate3d(lookAtMat, "y", Math.PI / 6); // this.#animData.sceneYRotation
+    ShaderUtils.rotate3d(lookAtMat, "y", Math.PI / 1.8); // this.#animData.sceneYRotation
 
-    const mat = ShaderUtils.mult3dMats(this.#cu.projectionMat, [
-      lookAtMat,
-      this.#cube.mat,
-    ]);
+    this.#cu.viewMat = ShaderUtils.mult3dMats(
+      this.#cu.projectionMat,
+      lookAtMat
+    );
+  }
+
+  #renderCube = () => {
+    const mat = ShaderUtils.mult3dMats(this.#cu.viewMat, this.#cube.mat);
 
     this.#crossChannel.cubeMat = mat;
 
@@ -246,11 +237,11 @@ export default class CuShader extends Shader {
 
     const cornerMats = [
       ShaderUtils.mult3dMats(
-        this.#crossChannel.cubeMat,
+        this.#crossChannel.cubeMat ?? this.#cu.viewMat,
         this.#crossChannel.mats[0]
       ),
       ShaderUtils.mult3dMats(
-        this.#crossChannel.cubeMat,
+        this.#crossChannel.cubeMat ?? this.#cu.viewMat,
         this.#crossChannel.mats[1]
       ),
     ];
@@ -274,7 +265,8 @@ export default class CuShader extends Shader {
   };
 
   computeScene = () => {
-    this.#renderCube();
+    this.#computeView();
+    // this.#renderCube();
     this.#renderCrossChannel();
   };
 }

@@ -3,6 +3,7 @@ import CircShader from "./Shader/CircShader.js";
 import CuShader from "./Shader/CuShader.js";
 import CircleGrid from "./CircleGrid/CircleGrid.js";
 import CirclesChain from "./CirclesChain/CirclesChain.js";
+import Archivist from "./Archivist/Archivist.js";
 
 // new Light({
 //   light: {
@@ -32,13 +33,20 @@ import CirclesChain from "./CirclesChain/CirclesChain.js";
 //   },
 // });
 
-new CuShader({
-  cube: {
-    vShader: "shaders/cu/cube/cube.vert",
-    fShader: "shaders/cu/cube/cube.frag",
-  },
-  crossChannel: {
-    vShader: "shaders/cu/cross-channel/cross-channel.vert",
-    fShader: "shaders/cu/cross-channel/cross-channel.frag",
+// new CuShader({
+//   cube: {
+//     vShader: "shaders/cu/cube/cube.vert",
+//     fShader: "shaders/cu/cube/cube.frag",
+//   },
+//   crossChannel: {
+//     vShader: "shaders/cu/cross-channel/cross-channel.vert",
+//     fShader: "shaders/cu/cross-channel/cross-channel.frag",
+//   },
+// });
+
+new Archivist({
+  archivist: {
+    vShader: "shaders/archivist/archivist.vert",
+    fShader: "shaders/archivist/archivist.frag",
   },
 });

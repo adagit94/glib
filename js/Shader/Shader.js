@@ -6,19 +6,34 @@ export default class Shader {
     method: "GET",
   };
 
-  static setCanvasDimensions() {
-    const gl = document.querySelector("#glFrame").getContext("webgl2");
+  constructor(mode = "2d") {
+    this.gl.canvas.width = this.gl.canvas.clientWidth;
+    this.gl.canvas.height = this.gl.canvas.clientHeight;
 
-    gl.canvas.width = gl.canvas.clientWidth;
-    gl.canvas.height = gl.canvas.clientHeight;
+    this.aspectRatio = this.gl.canvas.width / this.gl.canvas.height;
+
+    switch (mode) {
+      case "2d":
+        this.projectionMat = ShaderUtils.init2dProjectionMat(
+          this.gl.canvas.width,
+          this.gl.canvas.height
+        );
+        break;
+
+      case "3d":
+        this.projectionMat = ShaderUtils.initPerspectiveMat(
+          Math.PI / 2,
+          this.aspectRatio,
+          0.1,
+          2000
+        );
+        break;
+    }
   }
 
+  projectionMat;
+  aspectRatio;
   gl = document.querySelector("#glFrame").getContext("webgl2");
-  projectionMat = ShaderUtils.init2dProjectionMat(
-    this.gl.canvas.width,
-    this.gl.canvas.height
-  );
-  aspectRatio = this.gl.canvas.width / this.gl.canvas.height;
   animate = false;
   animData = {
     frameDeltaTime: 0,
@@ -133,5 +148,3 @@ export default class Shader {
     if (this.animate) this.requestAnimationFrame();
   }
 }
-
-Shader.setCanvasDimensions();
