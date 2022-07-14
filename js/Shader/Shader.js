@@ -6,7 +6,7 @@ export default class Shader {
     method: "GET",
   };
 
-  constructor(mode = "2d") {
+  constructor(mode = "2d", conf) {
     this.gl.canvas.width = this.gl.canvas.clientWidth;
     this.gl.canvas.height = this.gl.canvas.clientHeight;
 
@@ -22,10 +22,10 @@ export default class Shader {
 
       case "3d":
         this.projectionMat = ShaderUtils.initPerspectiveMat(
-          Math.PI / 2,
+          conf.fov,
           this.aspectRatio,
-          0.1,
-          2000
+          conf.near,
+          conf.far
         );
         break;
     }
@@ -88,6 +88,7 @@ export default class Shader {
       locations.push({
         position: this.gl.getAttribLocation(program, "a_position"),
         mat: this.gl.getUniformLocation(program, "u_mat"),
+        color: this.gl.getUniformLocation(program, "u_color"),
       });
     }
 
@@ -117,7 +118,7 @@ export default class Shader {
     return buffer;
   }
 
-  createAndBindElementsBuffer(bufferData, drawMethod = this.gl.STATIC_DRAW) {
+  createAndBindIndicesBuffer(bufferData, drawMethod = this.gl.STATIC_DRAW) {
     const buffer = this.gl.createBuffer();
 
     this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, buffer);

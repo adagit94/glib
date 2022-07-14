@@ -607,7 +607,7 @@ export default class Light extends Shader {
           coords,
           { size: 2 }
         ),
-        index: this.createAndBindElementsBuffer(indices, this.gl.STATIC_READ),
+        index: this.createAndBindIndicesBuffer(indices, this.gl.STATIC_READ),
       },
       inversedMode: { active: true },
       lStepMult: 1,
@@ -1023,7 +1023,7 @@ export default class Light extends Shader {
         this.gl.STATIC_READ
       );
 
-      buffers.indices.left = this.createAndBindElementsBuffer(
+      buffers.indices.left = this.createAndBindIndicesBuffer(
         leftIndices,
         this.gl.STATIC_READ
       );
@@ -1074,7 +1074,7 @@ export default class Light extends Shader {
         this.gl.STATIC_READ
       );
 
-      buffers.indices.right = this.createAndBindElementsBuffer(
+      buffers.indices.right = this.createAndBindIndicesBuffer(
         rightIndices,
         this.gl.STATIC_READ
       );

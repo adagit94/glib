@@ -159,7 +159,7 @@ export default class CuShader extends Shader {
         cubeVertices,
         { size: 3 }
       ),
-      elements: this.createAndBindElementsBuffer(cubeIndices),
+      elements: this.createAndBindIndicesBuffer(cubeIndices),
     };
     this.#cube.mat = ShaderUtils.init3dPureMat();
 

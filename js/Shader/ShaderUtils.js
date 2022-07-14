@@ -97,22 +97,10 @@ export default class ShaderUtils {
     const rangeInv = 1 / (near - far);
 
     return new Float32Array([
-      f / aspectRatio,
-      0,
-      0,
-      0,
-      0,
-      f,
-      0,
-      0,
-      0,
-      0,
-      (near + far) * rangeInv,
-      -1,
-      0,
-      0,
-      near * far * rangeInv * 2,
-      0,
+      f / aspectRatio, 0, 0, 0,
+      0, f, 0, 0,
+      0, 0, (near + far) * rangeInv, -1,
+      0, 0, near * far * rangeInv * 2, 0,
     ]);
   };
 
