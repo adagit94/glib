@@ -2,27 +2,27 @@ class ArchivistUtils {
   static getHeadData() {
     // PYRAMIDS
 
-    const coordinates = [
+    const coordinates = new Float32Array([
       // TRIANGLE TOP MIDDLE VERTEX
-      -0.5, 0.9, 0.3,
+      0, 0.6, 0,
 
       // TRIANGLE BOTTOM MIDDLE VERTEX
-      -0.5, -0.3, 0.3,
+      0, -0.6, 0,
       
       // SQUARE FRONT LEFT VERTEX
-      -0.8, 0.3, 0,
+      -0.3, 0, 0.3,
 
       // SQUARE FRONT RIGHT VERTEX
-      -0.2, 0.3, 0,
+      0.3, 0, 0.3,
 
       // SQUARE BACK RIGHT VERTEX
-      -0.2, 0.3, 0.6,
+      0.3, 0, -0.3,
 
       // SQUARE BACK LEFT VERTEX
-      -0.8, 0.3, 0.6,
-    ];
+      -0.3, 0, -0.3,
+    ]);
 
-    const indices = [
+    const indices = new Uint16Array([
       // TOP FRONT TRIANGLE
       0, 2, 3,
 
@@ -47,11 +47,19 @@ class ArchivistUtils {
 
       // BOTTOM LEFT TRIANGLE
       1, 2, 5,
-    ]
+    ])
 
     return {
       coordinates,
       indices
+    }
+  }
+
+  static getTentaclesData() {
+    const coordinates = [];
+
+    return {
+      coordinates,
     }
   }
 }
