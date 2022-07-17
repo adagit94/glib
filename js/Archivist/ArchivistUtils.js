@@ -56,11 +56,68 @@ class ArchivistUtils {
   }
 
   static getTentaclesData() {
-    const coordinates = [];
+    const longerTentacleVerticesCount = 100
+    const shorterTentacleVerticesCount = longerTentacleVerticesCount / 2
 
-    return {
-      coordinates,
+    const longerTentacleAngle = Math.PI / 8
+    const shorterTentacleAngle = Math.PI / 4
+    
+    let tentacles = {
+      topLeftTentacle: {
+        coordinates: [],
+        vertices: shorterTentacleVerticesCount,
+        angle: shorterTentacleAngle,
+      },
+      topRightTentacle: {
+        coordinates: [],
+        vertices: shorterTentacleVerticesCount,
+        angle: shorterTentacleAngle,
+      },
+      bottomLeftTentacle: {
+        coordinates: [],
+        vertices: longerTentacleVerticesCount,
+        angle: longerTentacleAngle,
+      },
+      bottomRightTentacle: {
+        coordinates: [],
+        vertices: longerTentacleVerticesCount,
+        angle: longerTentacleAngle,
+      }
     }
+
+    tentacles = Object.entries(tentacles)
+
+    const xPowDivider = 100
+    const xPowResultDivider = 75
+    const yPowDivider = 100
+    const yPowResultDivider = 100
+    
+    for (const tentacle of tentacles) {
+      const [location, data]  = tentacle
+      const {coordinates, vertices, angle} = data
+      const isLeftTentacle = location.includes("Left")
+      
+      for (
+        let vertex = 1, poweredX = Math.exp((vertices - vertex + 1) / xPowDivider) / xPowResultDivider,
+        poweredY = Math.exp(vertex / yPowDivider) / yPowResultDivider;
+        vertex <= vertices;
+        vertex++,
+        poweredX += Math.exp((vertices - vertex + 1) / xPowDivider) / xPowResultDivider,
+        poweredY += Math.exp(vertex / yPowDivider) / yPowResultDivider
+        ) {
+        let x = Math.cos(angle) * poweredX;
+        const y = Math.sin(angle) * poweredY;
+        const z = poweredY / 3;
+
+        if (isLeftTentacle) x *= -1
+
+        coordinates.push(x, y, z);
+      }
+    }
+
+    tentacles = tentacles.map(([_, data]) => data)
+
+    return tentacles
   }
 }
 

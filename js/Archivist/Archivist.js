@@ -9,17 +9,13 @@ class Archivist extends Shader {
     this.initShaders(shaders).then((programs) => {
       const [archivist] = programs;
 
-      let mat = ShaderUtils.mult3dMats(this.projectionMat, [
-        ShaderUtils.lookAtMat([0, 0, -1.3], [0, 0, 0]),
-        ShaderUtils.init3dTranslationMat(0.8, 0, 0),
-        ShaderUtils.init3dRotationMat("y", Math.PI / 40),
-      ]);
-
-      //   ShaderUtils.translate3d(mat, { x: 0.25, y: 0 });
-
       this.#archivist = {
         program: archivist,
-        mat,
+        mat: ShaderUtils.mult3dMats(this.projectionMat, [
+          ShaderUtils.lookAtMat([0, 0, -1.45]),
+          ShaderUtils.init3dTranslationMat(1.1, 0, 0),
+          ShaderUtils.init3dRotationMat("y", -Math.PI / 6.5),
+        ]),
       };
 
       this.#initLocations(programs);
@@ -75,9 +71,17 @@ class Archivist extends Shader {
     this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
 
     this.gl.uniformMatrix4fv(locations.mat, false, mat);
-    this.gl.uniform3f(locations.color, 0, 0, 0.75);
 
     for (let triangle = 0; triangle < 8; triangle++) {
+      this.gl.uniform3f(locations.color, 0.05, 0.05, 0.05);
+      this.gl.drawElements(
+        this.gl.TRIANGLES,
+        3,
+        this.gl.UNSIGNED_SHORT,
+        triangle * 3 * 2
+      );
+
+      this.gl.uniform3f(locations.color, 0.5, 0.5, 0.5);
       this.gl.drawElements(
         this.gl.LINE_LOOP,
         3,
@@ -89,13 +93,26 @@ class Archivist extends Shader {
 
   #initTentacles() {
     const { locations } = this.#archivist;
-    const { coordinates } = ArchivistUtils.getTentaclesData();
+    let { mat } = this.#archivist;
+
+    const tentacles = ArchivistUtils.getTentaclesData();
+    const coordinates = new Float32Array(
+      tentacles.flatMap((tentacle) => tentacle.coordinates)
+    );
+
+    mat = ShaderUtils.mult3dMats(
+      mat,
+      ShaderUtils.init3dTranslationMat(0, -0.8, 0)
+    );
+
     const vao = this.gl.createVertexArray();
 
     this.gl.bindVertexArray(vao);
 
     this.#tentacles = {
       vao,
+      tentacles,
+      mat,
       buffers: {
         vertices: this.createAndBindVerticesBuffer(
           locations.position,
@@ -106,10 +123,30 @@ class Archivist extends Shader {
     };
   }
 
+  #renderTentacles() {
+    const { locations } = this.#archivist;
+    const { tentacles, vao, mat } = this.#tentacles;
+
+    this.gl.bindVertexArray(vao);
+    this.gl.uniformMatrix4fv(locations.mat, false, mat);
+    this.gl.uniform3f(locations.color, 0.5, 0.5, 0.5);
+
+    for (
+      let tentacle = 0, verticesOffset = 0;
+      tentacle < tentacles.length;
+      verticesOffset += tentacles[tentacle].vertices, tentacle++
+    ) {
+      const { vertices } = tentacles[tentacle];
+
+      this.gl.drawArrays(this.gl.LINE_STRIP, verticesOffset, vertices);
+    }
+  }
+
   computeScene() {
     this.gl.useProgram(this.#archivist.program);
 
     this.#renderHead();
+    this.#renderTentacles();
   }
 }
 
