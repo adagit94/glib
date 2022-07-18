@@ -82,6 +82,15 @@ class ArchivistUtils {
         coordinates: [],
         vertices: longerTentacleVerticesCount,
         angle: longerTentacleAngle,
+        anims: {
+          move: {
+            power: 0.001,
+            powerLimit: 0.1,
+            x: 0,
+            y: 0,
+            z: 0,
+          }
+        }
       }
     }
 
@@ -89,7 +98,7 @@ class ArchivistUtils {
 
     const xPowDivider = 100
     const xPowResultDivider = 75
-    const yPowDivider = 100
+    const yPowDivider = 75
     const yPowResultDivider = 100
     
     for (const tentacle of tentacles) {

@@ -12,9 +12,8 @@ class Archivist extends Shader {
       this.#archivist = {
         program: archivist,
         mat: ShaderUtils.mult3dMats(this.projectionMat, [
-          ShaderUtils.lookAtMat([0, 0, -1.45]),
+          ShaderUtils.lookAtMat([0, 0, -1.45], [-0.6, 0, 0]),
           ShaderUtils.init3dTranslationMat(1.1, 0, 0),
-          ShaderUtils.init3dRotationMat("y", -Math.PI / 6.5),
         ]),
       };
 
@@ -136,17 +135,32 @@ class Archivist extends Shader {
       tentacle < tentacles.length;
       verticesOffset += tentacles[tentacle].vertices, tentacle++
     ) {
-      const { vertices } = tentacles[tentacle];
+      const { vertices, anims } = tentacles[tentacle];
+
+      if (this.animate) mat = this.#animateTentacle(anims, mat);
 
       this.gl.drawArrays(this.gl.LINE_STRIP, verticesOffset, vertices);
     }
   }
 
+  #animateTentacle(anims, mat) {
+    const { move } = anims;
+    const { power } = move;
+
+    move.x = Math.exp(power);
+    move.y = Math.exp(power / 2);
+    move.z = Math.exp(power / 4);
+
+    const borderReached = currentBorder;
+
+    move.power += this.animData.frameDeltaTime;
+  }
+
   computeScene() {
     this.gl.useProgram(this.#archivist.program);
 
-    this.#renderHead();
     this.#renderTentacles();
+    this.#renderHead();
   }
 }
 
