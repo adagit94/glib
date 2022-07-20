@@ -20,7 +20,7 @@ class Archivist extends Shader {
       this.#initLocations(programs);
       this.#initObjectsData();
 
-      // this.animate = true;
+      this.animate = true;
 
       this.requestAnimationFrame();
     });
@@ -38,7 +38,6 @@ class Archivist extends Shader {
 
   #initObjectsData() {
     this.#initHead();
-    this.#initTentacles();
   }
 
   #initHead() {
@@ -94,7 +93,10 @@ class Archivist extends Shader {
     const { locations } = this.#archivist;
     let { mat } = this.#archivist;
 
-    const tentacles = ArchivistUtils.getTentaclesData();
+    const tentacles = ArchivistUtils.getTentaclesData(
+      this.animate,
+      this.animData
+    );
     const coordinates = new Float32Array(
       tentacles.flatMap((tentacle) => tentacle.coordinates)
     );
@@ -116,7 +118,8 @@ class Archivist extends Shader {
         vertices: this.createAndBindVerticesBuffer(
           locations.position,
           coordinates,
-          { size: 3 }
+          { size: 3 },
+          this.gl.STREAM_DRAW
         ),
       },
     };
@@ -127,39 +130,29 @@ class Archivist extends Shader {
     const { tentacles, vao, mat } = this.#tentacles;
 
     this.gl.bindVertexArray(vao);
-    this.gl.uniformMatrix4fv(locations.mat, false, mat);
     this.gl.uniform3f(locations.color, 0.5, 0.5, 0.5);
+    this.gl.uniformMatrix4fv(locations.mat, false, mat);
 
     for (
       let tentacle = 0, verticesOffset = 0;
       tentacle < tentacles.length;
       verticesOffset += tentacles[tentacle].vertices, tentacle++
     ) {
-      const { vertices, anims } = tentacles[tentacle];
-
-      if (this.animate) mat = this.#animateTentacle(anims, mat);
+      const { vertices } = tentacles[tentacle];
 
       this.gl.drawArrays(this.gl.LINE_STRIP, verticesOffset, vertices);
     }
   }
 
-  #animateTentacle(anims, mat) {
-    const { move } = anims;
-    const { power } = move;
-
-    move.x = Math.exp(power);
-    move.y = Math.exp(power / 2);
-    move.z = Math.exp(power / 4);
-
-    const borderReached = currentBorder;
-
-    move.power += this.animData.frameDeltaTime;
+  #computeTentacles() {
+    this.#initTentacles();
+    this.#renderTentacles();
   }
 
   computeScene() {
     this.gl.useProgram(this.#archivist.program);
 
-    this.#renderTentacles();
+    this.#computeTentacles();
     this.#renderHead();
   }
 }

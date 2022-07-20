@@ -55,7 +55,7 @@ class ArchivistUtils {
     }
   }
 
-  static getTentaclesData() {
+  static getTentaclesData(animate, animData) {
     const longerTentacleVerticesCount = 100
     const shorterTentacleVerticesCount = longerTentacleVerticesCount / 2
 
@@ -67,52 +67,82 @@ class ArchivistUtils {
         coordinates: [],
         vertices: shorterTentacleVerticesCount,
         angle: shorterTentacleAngle,
+        xPowDivider: 100,
+        xPowResultDivider: 95,
+        yPowDivider: 100,
+        yPowResultDivider: 100,
       },
       topRightTentacle: {
         coordinates: [],
         vertices: shorterTentacleVerticesCount,
         angle: shorterTentacleAngle,
-      },
-      bottomLeftTentacle: {
-        coordinates: [],
-        vertices: longerTentacleVerticesCount,
-        angle: longerTentacleAngle,
+        xPowDivider: 100,
+        xPowResultDivider: 95,
+        yPowDivider: 100,
+        yPowResultDivider: 100,
       },
       bottomRightTentacle: {
         coordinates: [],
         vertices: longerTentacleVerticesCount,
         angle: longerTentacleAngle,
+        xPowDivider: 100,
+        xPowResultDivider: 95,
+        yPowDivider: 100,
+        yPowResultDivider: 100,
+      },
+      bottomLeftTentacle: {
+        coordinates: [],
+        vertices: longerTentacleVerticesCount,
+        angle: longerTentacleAngle,
+        xPowDivider: 100,
+        xPowResultDivider: 95,
+        yPowDivider: 100,
+        yPowResultDivider: 100,
         anims: {
           move: {
-            power: 0.001,
-            powerLimit: 0.1,
-            x: 0,
-            y: 0,
-            z: 0,
+            xResultDividerTMult: 16,
+            yResultDividerTMult: 32, 
+            limit: ["x", ">", 200]
           }
         }
       }
     }
-
+    
     tentacles = Object.entries(tentacles)
 
-    const xPowDivider = 100
-    const xPowResultDivider = 75
-    const yPowDivider = 75
-    const yPowResultDivider = 100
-    
     for (const tentacle of tentacles) {
-      const [location, data]  = tentacle
-      const {coordinates, vertices, angle} = data
+      const [location, data] = tentacle
+      const {coordinates, vertices, angle, anims} = data
       const isLeftTentacle = location.includes("Left")
+
+      let dividers = {
+        xPowResultDivider: data.xPowResultDivider,
+        xPowDivider: data.xPowDivider,
+        yPowResultDivider: data.yPowResultDivider,
+        yPowDivider: data.yPowDivider
+      }
+      
+      if (animate) {
+        if (anims) {
+          dividers.xPowResultDivider += animData.deltaTime * anims.move.xResultDividerTMult; // With changing mult changing speed can be accomplished
+          dividers.yPowResultDivider += animData.deltaTime * anims.move.yResultDividerTMult;
+
+          const [limitAxis, limitOperator, limitValue] = anims.move.limit
+          const currentAxisValue = dividers[`${limitAxis}PowResultDivider`]
+          const limitReached = Function("val", "limit", `return val ${limitOperator} limit`)
+
+          if (limitReached(currentAxisValue, limitValue)) {
+          }
+        }
+      }
       
       for (
-        let vertex = 1, poweredX = Math.exp((vertices - vertex + 1) / xPowDivider) / xPowResultDivider,
-        poweredY = Math.exp(vertex / yPowDivider) / yPowResultDivider;
+        let vertex = 1, poweredX = Math.exp((vertices - vertex + 1) / dividers.xPowDivider) / dividers.xPowResultDivider,
+        poweredY = Math.exp(vertex / dividers.yPowDivider) / dividers.yPowResultDivider;
         vertex <= vertices;
         vertex++,
-        poweredX += Math.exp((vertices - vertex + 1) / xPowDivider) / xPowResultDivider,
-        poweredY += Math.exp(vertex / yPowDivider) / yPowResultDivider
+        poweredX += Math.exp((vertices - vertex + 1) / dividers.xPowDivider) / dividers.xPowResultDivider,
+        poweredY += Math.exp(vertex / dividers.yPowDivider) / dividers.yPowResultDivider
         ) {
         let x = Math.cos(angle) * poweredX;
         const y = Math.sin(angle) * poweredY;
