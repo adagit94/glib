@@ -28,7 +28,42 @@ class Archivist extends Shader {
 
   #archivist;
   #head;
-  #tentacles;
+  #tentacles = {
+    move: {
+      topLeftTentacle: {
+        xPowDivider: 100,
+        yPowDivider: 100,
+        xPowResultDivider: 95,
+        yPowResultDivider: 100,
+        xResultDividerTMult: 16,
+        yResultDividerTMult: 32,
+      },
+      topRightTentacle: {
+        xPowDivider: 100,
+        yPowDivider: 100,
+        xPowResultDivider: 95,
+        yPowResultDivider: 100,
+        xResultDividerTMult: 16,
+        yResultDividerTMult: 32,
+      },
+      bottomRightTentacle: {
+        xPowDivider: 100,
+        yPowDivider: 100,
+        xPowResultDivider: 95,
+        yPowResultDivider: 100,
+        xResultDividerTMult: 16,
+        yResultDividerTMult: 32,
+      },
+      bottomLeftTentacle: {
+        xPowDivider: 100,
+        yPowDivider: 100,
+        xPowResultDivider: 95,
+        yPowResultDivider: 100,
+        xResultDividerTMult: 16,
+        yResultDividerTMult: 32,
+      },
+    },
+  };
 
   #initLocations(programs) {
     const [archivistLocs] = this.initCommonLocations(programs);
@@ -94,6 +129,7 @@ class Archivist extends Shader {
     let { mat } = this.#archivist;
 
     const tentacles = ArchivistUtils.getTentaclesData(
+      this.#tentacles,
       this.animate,
       this.animData
     );
@@ -110,18 +146,16 @@ class Archivist extends Shader {
 
     this.gl.bindVertexArray(vao);
 
-    this.#tentacles = {
-      vao,
-      tentacles,
-      mat,
-      buffers: {
-        vertices: this.createAndBindVerticesBuffer(
-          locations.position,
-          coordinates,
-          { size: 3 },
-          this.gl.STREAM_DRAW
-        ),
-      },
+    this.#tentacles.tentacles = tentacles;
+    this.#tentacles.vao = vao;
+    this.#tentacles.mat = mat;
+    this.#tentacles.buffers = {
+      vertices: this.createAndBindVerticesBuffer(
+        locations.position,
+        coordinates,
+        { size: 3 },
+        this.gl.STREAM_DRAW
+      ),
     };
   }
 

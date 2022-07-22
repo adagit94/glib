@@ -55,7 +55,7 @@ class ArchivistUtils {
     }
   }
 
-  static getTentaclesData(animate, animData) {
+  static getTentaclesData(tentaclesData, animate, animData) {
     const longerTentacleVerticesCount = 100
     const shorterTentacleVerticesCount = longerTentacleVerticesCount / 2
 
@@ -67,43 +67,42 @@ class ArchivistUtils {
         coordinates: [],
         vertices: shorterTentacleVerticesCount,
         angle: shorterTentacleAngle,
-        xPowDivider: 100,
-        xPowResultDivider: 95,
-        yPowDivider: 100,
-        yPowResultDivider: 100,
       },
       topRightTentacle: {
         coordinates: [],
         vertices: shorterTentacleVerticesCount,
         angle: shorterTentacleAngle,
-        xPowDivider: 100,
-        xPowResultDivider: 95,
-        yPowDivider: 100,
-        yPowResultDivider: 100,
       },
       bottomRightTentacle: {
         coordinates: [],
         vertices: longerTentacleVerticesCount,
         angle: longerTentacleAngle,
-        xPowDivider: 100,
-        xPowResultDivider: 95,
-        yPowDivider: 100,
-        yPowResultDivider: 100,
       },
       bottomLeftTentacle: {
         coordinates: [],
         vertices: longerTentacleVerticesCount,
         angle: longerTentacleAngle,
-        xPowDivider: 100,
-        xPowResultDivider: 95,
-        yPowDivider: 100,
-        yPowResultDivider: 100,
-        anims: {
-          move: {
-            xResultDividerTMult: 16,
-            yResultDividerTMult: 32, 
-            limit: ["x", ">", 200]
-          }
+        move: {
+          tMults: [
+            {
+              valToChangeName: "xPowResultDivider",
+              tMultName: "xResultDividerTMult",
+              startChangeBorder: 95,
+              tMultStep: 0.001,
+              valOp: "+",
+              tMultOp: "+",
+              borderOp: "<=",
+            },
+            {
+              valToChangeName: "yPowResultDivider",
+              tMultName: "yResultDividerTMult",
+              startChangeBorder: 100,
+              tMultStep: 0.001,
+              valOp: "+",
+              tMultOp: "+",
+              borderOp: "<=",
+            }
+          ]
         }
       }
     }
@@ -112,37 +111,18 @@ class ArchivistUtils {
 
     for (const tentacle of tentacles) {
       const [location, data] = tentacle
-      const {coordinates, vertices, angle, anims} = data
+      const {coordinates, vertices, angle, move, tMults} = data
       const isLeftTentacle = location.includes("Left")
-
-      let dividers = {
-        xPowResultDivider: data.xPowResultDivider,
-        xPowDivider: data.xPowDivider,
-        yPowResultDivider: data.yPowResultDivider,
-        yPowDivider: data.yPowDivider
-      }
       
-      if (animate) {
-        if (anims) {
-          dividers.xPowResultDivider += animData.deltaTime * anims.move.xResultDividerTMult; // With changing mult changing speed can be accomplished
-          dividers.yPowResultDivider += animData.deltaTime * anims.move.yResultDividerTMult;
+      let moveData = tentaclesData.move[location]
 
-          const [limitAxis, limitOperator, limitValue] = anims.move.limit
-          const currentAxisValue = dividers[`${limitAxis}PowResultDivider`]
-          const limitReached = Function("val", "limit", `return val ${limitOperator} limit`)
-
-          if (limitReached(currentAxisValue, limitValue)) {
-          }
-        }
-      }
-      
       for (
-        let vertex = 1, poweredX = Math.exp((vertices - vertex + 1) / dividers.xPowDivider) / dividers.xPowResultDivider,
-        poweredY = Math.exp(vertex / dividers.yPowDivider) / dividers.yPowResultDivider;
+        let vertex = 1, poweredX = Math.exp((vertices - vertex + 1) / moveData.xPowDivider) / moveData.xPowResultDivider,
+        poweredY = Math.exp(vertex / moveData.yPowDivider) / moveData.yPowResultDivider;
         vertex <= vertices;
         vertex++,
-        poweredX += Math.exp((vertices - vertex + 1) / dividers.xPowDivider) / dividers.xPowResultDivider,
-        poweredY += Math.exp(vertex / dividers.yPowDivider) / dividers.yPowResultDivider
+        poweredX += Math.exp((vertices - vertex + 1) / moveData.xPowDivider) / moveData.xPowResultDivider,
+        poweredY += Math.exp(vertex / moveData.yPowDivider) / moveData.yPowResultDivider
         ) {
         let x = Math.cos(angle) * poweredX;
         const y = Math.sin(angle) * poweredY;
@@ -151,6 +131,22 @@ class ArchivistUtils {
         if (isLeftTentacle) x *= -1
 
         coordinates.push(x, y, z);
+      }
+
+      if (animate && move) {
+        for (const tMult of tMults) {
+          const shouldChangeTMult = Function("currentVal", "borderVal", `return currentVal ${tMult.borderOp} borderVal`)
+
+          if (shouldChangeTMult(moveData[tMult.valToChangeName], tMult.startChangeBorder)) {
+            const getChangedTMult = Function("tMult", "tMultStep", `return tMult ${tMult.tMultOp} tMultStep`)
+
+            moveData[tMult.tMultName] = getChangedTMult(moveData[tMult.tMultName], tMult.tMultStep)
+          }
+          
+          const getNewVal = Function("frameDeltaT", "valToChange", "tMult", `return valToChange ${tMult.valOp} frameDeltaT * tMult`)
+          
+          moveData[tMult.valToChangeName] = getNewVal(animData.frameDeltaTime, moveData[tMult.valToChangeName], moveData[tMult.tMultName])
+        }
       }
     }
 
