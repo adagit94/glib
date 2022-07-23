@@ -55,74 +55,130 @@ class ArchivistUtils {
     }
   }
 
-  static getTentaclesData(tentaclesData, animate, animData) {
-    const longerTentacleVerticesCount = 100
-    const shorterTentacleVerticesCount = longerTentacleVerticesCount / 2
+  static initTentaclesData() {
+    const longerTentacleVerticesCount = 100;
+    const shorterTentacleVerticesCount = longerTentacleVerticesCount / 2;
 
-    const longerTentacleAngle = Math.PI / 8
-    const shorterTentacleAngle = Math.PI / 4
+    const longerTentacleAngle = Math.PI / 8;
+    const shorterTentacleAngle = Math.PI / 4;
     
-    let tentacles = {
+    let data = {
       topLeftTentacle: {
         coordinates: [],
         vertices: shorterTentacleVerticesCount,
         angle: shorterTentacleAngle,
+        xPowDivider: 100,
+        yPowDivider: 100,
+        xPowResultDivider: 95,
+        yPowResultDivider: 100,
+        xResultDividerTMult: 16,
+        yResultDividerTMult: 32,
+        currentMove: 0,
+        moves: []
       },
       topRightTentacle: {
         coordinates: [],
         vertices: shorterTentacleVerticesCount,
         angle: shorterTentacleAngle,
+        xPowDivider: 100,
+        yPowDivider: 100,
+        xPowResultDivider: 95,
+        yPowResultDivider: 100,
+        xResultDividerTMult: 16,
+        yResultDividerTMult: 32,
+        currentMove: 0,
+        moves: []
       },
       bottomRightTentacle: {
         coordinates: [],
         vertices: longerTentacleVerticesCount,
         angle: longerTentacleAngle,
+        xPowDivider: 100,
+        yPowDivider: 100,
+        xPowResultDivider: 95,
+        yPowResultDivider: 100,
+        xResultDividerTMult: 16,
+        yResultDividerTMult: 32,
+        currentMove: 0,
+        moves: []
       },
       bottomLeftTentacle: {
         coordinates: [],
         vertices: longerTentacleVerticesCount,
         angle: longerTentacleAngle,
-        move: {
-          tMults: [
-            {
-              valToChangeName: "xPowResultDivider",
-              tMultName: "xResultDividerTMult",
-              startChangeBorder: 95,
-              tMultStep: 0.001,
-              valOp: "+",
-              tMultOp: "+",
-              borderOp: "<=",
-            },
-            {
-              valToChangeName: "yPowResultDivider",
-              tMultName: "yResultDividerTMult",
-              startChangeBorder: 100,
-              tMultStep: 0.001,
-              valOp: "+",
-              tMultOp: "+",
-              borderOp: "<=",
-            }
-          ]
+        xPowDivider: 100,
+        yPowDivider: 100,
+        xPowResultDivider: 95,
+        yPowResultDivider: 100,
+        xResultDividerTMult: 64,
+        yResultDividerTMult: 128,
+        currentMove: 0,
+        moves: [
+          {
+            tMults: [
+              {
+                valToChangeName: "xPowResultDivider",
+                tMultName: "xResultDividerTMult",
+                startChangeBorder: 145,
+                tMultFinish: 0.1,
+                tFactor: 1.0175,
+                valOp: "+",
+                tMultOp: "/",
+                borderOp: ">",
+                finishOp: "<=",
+              },
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 150,
+                tMultFinish: 0.1,
+                tFactor: 1.0175,
+                valOp: "+",
+                tMultOp: "/",
+                borderOp: ">",
+                finishOp: "<=",
+              },
+            ],
+          },
+        ],
+      },
+    };
+
+    data = Object.entries(data)
+
+    let tentaclesMoves = data.map(tentacle => tentacle[1].moves)
+
+    for (const tentacleMoves of tentaclesMoves) {
+      for (const tentacleMove of tentacleMoves) {
+        let { tMults } = tentacleMove
+
+        for (let tMult of tMults) {
+          tMult.shouldChangeTMult = Function("currentVal", "borderVal", `return currentVal ${tMult.borderOp} borderVal`)
+          tMult.getChangedTMult = Function("tMult", "tFactor", `return tMult ${tMult.tMultOp} tFactor`)
+          tMult.getNewVal = Function("frameDeltaT", "valToChange", "tMult", `return valToChange ${tMult.valOp} frameDeltaT * tMult`)
+          tMult.tMultFinishReached = Function("tMult", "tMultFinish", `return tMult ${tMult.finishOp} tMultFinish`)
         }
       }
     }
-    
-    tentacles = Object.entries(tentacles)
 
-    for (const tentacle of tentacles) {
+    return data
+  }
+  
+  static computeTentaclesData(tentacles, animate, animData) {
+    for (let tentacle of tentacles) {
       const [location, data] = tentacle
-      const {coordinates, vertices, angle, move, tMults} = data
+      const {vertices, angle, currentMove, moves} = data
       const isLeftTentacle = location.includes("Left")
-      
-      let moveData = tentaclesData.move[location]
 
+      let coordinates = data.coordinates = []
+      
       for (
-        let vertex = 1, poweredX = Math.exp((vertices - vertex + 1) / moveData.xPowDivider) / moveData.xPowResultDivider,
-        poweredY = Math.exp(vertex / moveData.yPowDivider) / moveData.yPowResultDivider;
+        let vertex = 1, poweredX = Math.exp((vertices - vertex + 1) / data.xPowDivider) / data.xPowResultDivider,
+        poweredY = Math.exp(vertex / data.yPowDivider) / data.yPowResultDivider;
         vertex <= vertices;
         vertex++,
-        poweredX += Math.exp((vertices - vertex + 1) / moveData.xPowDivider) / moveData.xPowResultDivider,
-        poweredY += Math.exp(vertex / moveData.yPowDivider) / moveData.yPowResultDivider
+        poweredX += Math.exp((vertices - vertex + 1) / data.xPowDivider) / data.xPowResultDivider,
+        poweredY += Math.exp(vertex / data.yPowDivider) / data.yPowResultDivider
         ) {
         let x = Math.cos(angle) * poweredX;
         const y = Math.sin(angle) * poweredY;
@@ -133,19 +189,27 @@ class ArchivistUtils {
         coordinates.push(x, y, z);
       }
 
-      if (animate && move) {
-        for (const tMult of tMults) {
-          const shouldChangeTMult = Function("currentVal", "borderVal", `return currentVal ${tMult.borderOp} borderVal`)
+      if (animate) {
+        const move = moves?.[currentMove]
 
-          if (shouldChangeTMult(moveData[tMult.valToChangeName], tMult.startChangeBorder)) {
-            const getChangedTMult = Function("tMult", "tMultStep", `return tMult ${tMult.tMultOp} tMultStep`)
+        if (move) {
+          let shouldAdvanceResults = [];
+          
+          for (const tMult of move.tMults) {
+            if (tMult.shouldChangeTMult(data[tMult.valToChangeName], tMult.startChangeBorder)) {
+              data[tMult.tMultName] = Math.max(tMult.getChangedTMult(data[tMult.tMultName], tMult.tFactor), 0)
+            }
+            
+            data[tMult.valToChangeName] = Math.max(tMult.getNewVal(animData.frameDeltaTime, data[tMult.valToChangeName], data[tMult.tMultName]), 0)
 
-            moveData[tMult.tMultName] = getChangedTMult(moveData[tMult.tMultName], tMult.tMultStep)
+            if (Object.prototype.hasOwnProperty.call(tMult, "tMultFinish")) {
+              shouldAdvanceResults.push(tMult.tMultFinishReached(data[tMult.tMultName], tMult.tMultFinish))
+            }
           }
+
+          const shouldAdvance = shouldAdvanceResults.length && shouldAdvanceResults.every(res => res)
           
-          const getNewVal = Function("frameDeltaT", "valToChange", "tMult", `return valToChange ${tMult.valOp} frameDeltaT * tMult`)
-          
-          moveData[tMult.valToChangeName] = getNewVal(animData.frameDeltaTime, moveData[tMult.valToChangeName], moveData[tMult.tMultName])
+          if (shouldAdvance) data.currentMove++
         }
       }
     }

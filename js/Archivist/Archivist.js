@@ -28,42 +28,7 @@ class Archivist extends Shader {
 
   #archivist;
   #head;
-  #tentacles = {
-    move: {
-      topLeftTentacle: {
-        xPowDivider: 100,
-        yPowDivider: 100,
-        xPowResultDivider: 95,
-        yPowResultDivider: 100,
-        xResultDividerTMult: 16,
-        yResultDividerTMult: 32,
-      },
-      topRightTentacle: {
-        xPowDivider: 100,
-        yPowDivider: 100,
-        xPowResultDivider: 95,
-        yPowResultDivider: 100,
-        xResultDividerTMult: 16,
-        yResultDividerTMult: 32,
-      },
-      bottomRightTentacle: {
-        xPowDivider: 100,
-        yPowDivider: 100,
-        xPowResultDivider: 95,
-        yPowResultDivider: 100,
-        xResultDividerTMult: 16,
-        yResultDividerTMult: 32,
-      },
-      bottomLeftTentacle: {
-        xPowDivider: 100,
-        yPowDivider: 100,
-        xPowResultDivider: 95,
-        yPowResultDivider: 100,
-        xResultDividerTMult: 16,
-        yResultDividerTMult: 32,
-      },
-    },
-  };
+  #tentacles = ArchivistUtils.initTentaclesData();
 
   #initLocations(programs) {
     const [archivistLocs] = this.initCommonLocations(programs);
@@ -128,7 +93,7 @@ class Archivist extends Shader {
     const { locations } = this.#archivist;
     let { mat } = this.#archivist;
 
-    const tentacles = ArchivistUtils.getTentaclesData(
+    const tentacles = ArchivistUtils.computeTentaclesData(
       this.#tentacles,
       this.animate,
       this.animData
