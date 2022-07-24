@@ -80,7 +80,7 @@ class ArchivistUtils {
         yResultDividerTMult: 32,
         currentMove: 0,
         moves: [],
-        performPressureOnMoves: [],
+        pressureTriggerMove: undefined,
         pressureCircles: ArchivistUtils.#initPressureCirclesData()
       },
       topRightTentacle: {
@@ -95,7 +95,7 @@ class ArchivistUtils {
         yResultDividerTMult: 32,
         currentMove: 0,
         moves: [],
-        performPressureOnMoves: [],
+        pressureTriggerMove: undefined,
         pressureCircles: ArchivistUtils.#initPressureCirclesData()
       },
       bottomRightTentacle: {
@@ -110,7 +110,7 @@ class ArchivistUtils {
         yResultDividerTMult: 32,
         currentMove: 0,
         moves: [],
-        performPressureOnMoves: [],
+        pressureTriggerMove: undefined,
         pressureCircles: ArchivistUtils.#initPressureCirclesData()
       },
       bottomLeftTentacle: {
@@ -124,7 +124,6 @@ class ArchivistUtils {
         xResultDividerTMult: 64,
         yResultDividerTMult: 128,
         currentMove: 0,
-        performPressureOnMoves: [2, 3],
         moves: [
           {
             tMults: [
@@ -183,6 +182,7 @@ class ArchivistUtils {
             ],
           },
         ],
+        pressureTriggerMove: 2,
         pressureCircles: ArchivistUtils.#initPressureCirclesData()
       },
     };
@@ -268,68 +268,31 @@ class ArchivistUtils {
     colors = structuredClone(colors)
     
     return {
-      colors,
-      ...commonDataRest,
       lightnessOperation: "increase",
       lightnessHandlerActive: false,
-      lightnessHandler(t) {
-        const lFactor = t / 10
-        const operation = this.ligthnessOperation
-        
-        switch (operation) {
-          case "increase": {
-            for (const color of this.colors) {
-              color[0] += lFactor
-              color[1] += lFactor // Math.min(commonVal, commonVal * lightness)
-            }
-
-            const fullLightness = this.colors[this.colors.length - 1][0] >= 1;
-
-            if (fullLightness) {
-              this.ligthnessOperation = "decrease"
-            }
-
-            break
-          }
-
-          case "decrease": {
-            for (const color of this.colors) {
-              color[0] -= lFactor
-              color[1] -= lFactor
-            }
-
-            const noLightness = this.colors[0][0] <= 0;
-
-            if (noLightness) {
-              this.ligthnessOperation = "increase"
-              this.lightnessHandlerActive = false
-            }
-
-            break
-          }
-        }
-      }
+      colors,
+      ...commonDataRest,
     }
   }
 
-  static initPressureCirclesCommonData(archivist) {
+  static initPressureCirclesCommonData(archivist, tentaclesMat, locations) {
     const circles = 5
     const r = 150
     const rx = r / archivist.gl.canvas.width
     const ry = r / archivist.gl.canvas.height
 
     const circle = new Ellipse3d(0, 0, 0, rx, ry, Math.PI * 2, 100)
+    const circleMat = ShaderUtils.mult3dMats(tentaclesMat, circle.mat)
 
     let mats = []
     let colors = []
-    const commonStep = 1 / circles
+    const colorIntensityStep = 1 / circles
     
-    for (let circle = 0, commonVal = commonStep; circle < circles; commonVal += commonStep, circle++) {
-      mats.push(ShaderUtils.mult3dMats(circle.mat, ShaderUtils.init3dScaleMat(commonVal, commonVal, 1)))
+    for (let c = 0, colorIntensity = colorIntensityStep; c < circles; colorIntensity += colorIntensityStep, c++) {
+      const lightness = -colorIntensity + colorIntensityStep
 
-      const lightness = -commonVal + commonStep
-      
-      colors.push([lightness, commonVal * lightness, 0]) // Consider change of lightness (through opacity)
+      colors.push([lightness, colorIntensity * lightness, 0]) // Consider change of lightness (through opacity)
+      mats.push(circleMat)
     }
 
     const vao = archivist.gl.createVertexArray();
@@ -343,11 +306,48 @@ class ArchivistUtils {
       mats,
       colors,
       buffers: {
-        vertices: this.createAndBindVerticesBuffer(
-          archivist.locations.position,
+        vertices: archivist.createAndBindVerticesBuffer(
+          locations.position,
           circle.coordinates,
           { size: 3 }
         ),
+      },
+      lightnessHandler(t, sourceData) {
+        const lFactor = t / 10
+        const operation = sourceData.lightnessOperation
+        
+        switch (operation) {
+          case "increase": {
+            for (const color of sourceData.colors) {
+              color[0] += lFactor
+              color[1] += lFactor // Math.min(commonVal, commonVal * lightness)
+            }
+
+            const fullLightness = sourceData.colors[sourceData.colors.length - 1][0] >= 1;
+
+            if (fullLightness) {
+              sourceData.ligthnessOperation = "decrease"
+            }
+
+            break
+          }
+
+          case "decrease": {
+            for (const color of sourceData.colors) {
+              color[0] -= lFactor
+              color[1] -= lFactor
+            }
+
+            const noLightness = sourceData.colors[0][0] <= 0;
+
+            if (noLightness) {
+              sourceData.ligthnessOperation = "increase"
+              sourceData.lightnessHandlerActive = false
+            }
+
+            break
+          }
+        }
       }
     }
   }

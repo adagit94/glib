@@ -20,7 +20,7 @@ class Archivist extends Shader {
       this.#initLocations(programs);
       this.#initObjectsData();
 
-      this.animate = false;
+      this.animate = true;
 
       this.requestAnimationFrame();
     });
@@ -37,9 +37,21 @@ class Archivist extends Shader {
   }
 
   #initObjectsData() {
-    ArchivistUtils.initPressureCirclesCommonData(this);
-    this.#tentacles = ArchivistUtils.initTentaclesData();
+    const tentaclesMat = ShaderUtils.mult3dMats(
+      this.#archivist.mat,
+      ShaderUtils.init3dTranslationMat(0, -0.8, 0)
+    );
+
     this.#initHead();
+
+    ArchivistUtils.initPressureCirclesCommonData(
+      this,
+      tentaclesMat,
+      this.#archivist.locations
+    );
+
+    this.#tentacles = ArchivistUtils.initTentaclesData();
+    this.#tentacles.mat = tentaclesMat;
   }
 
   #initHead() {
@@ -93,7 +105,6 @@ class Archivist extends Shader {
 
   #initTentacles() {
     const { locations } = this.#archivist;
-    let { mat } = this.#archivist;
 
     const tentacles = ArchivistUtils.computeTentaclesData(
       this.#tentacles,
@@ -104,10 +115,9 @@ class Archivist extends Shader {
       tentacles.flatMap((tentacle) => tentacle.coordinates)
     );
 
-    mat = ShaderUtils.mult3dMats(
-      mat,
-      ShaderUtils.init3dTranslationMat(0, -0.8, 0)
-    );
+    if (this.gl.isVertexArray(this.#tentacles.vao)) {
+      this.gl.deleteVertexArray(this.#tentacles.vao);
+    }
 
     const vao = this.gl.createVertexArray();
 
@@ -115,7 +125,6 @@ class Archivist extends Shader {
 
     this.#tentacles.tentacles = tentacles;
     this.#tentacles.vao = vao;
-    this.#tentacles.mat = mat;
     this.#tentacles.buffers = {
       vertices: this.createAndBindVerticesBuffer(
         locations.position,
@@ -129,7 +138,7 @@ class Archivist extends Shader {
   #renderTentacles() {
     const { locations } = this.#archivist;
     const { tentacles, vao, mat } = this.#tentacles;
-    g;
+
     this.gl.uniform3f(locations.color, 0.5, 0.5, 0.5);
     this.gl.uniformMatrix4fv(locations.mat, false, mat);
 
@@ -143,27 +152,30 @@ class Archivist extends Shader {
         coordinates,
         currentMove,
         pressureCircles,
-        performPressureOnMoves,
+        pressureTriggerMove,
       } = tentacles[tentacle];
 
       this.gl.bindVertexArray(vao);
 
       this.gl.drawArrays(this.gl.LINE_STRIP, verticesOffset, vertices);
 
-      const triggerPressure = currentMove === performPressureOnMoves[0];
+      const triggerPressure = currentMove === pressureTriggerMove;
 
-      if (triggerPressure || lightnessHandlerActive) {
+      if (triggerPressure || pressureCircles.lightnessHandlerActive) {
         this.#renderPressureCircles(triggerPressure, pressureCircles, [
-          coordinates.length - 3,
-          coordinates.length - 2,
-          coordinates.length - 1,
+          coordinates[coordinates.length - 3],
+          coordinates[coordinates.length - 2],
+          coordinates[coordinates.length - 1],
         ]);
       }
     }
   }
 
   #renderPressureCircles(triggerPressure, pressureCircles, coordinates) {
-    const { vao, mats, circles, colors, lightnessHandler } = pressureCircles;
+    const { locations } = this.#archivist;
+    const { vao, mats, circles, colors, lightnessHandler, circle } =
+      pressureCircles;
+    const vertices = circle.verticesCount + 1;
 
     this.gl.bindVertexArray(vao);
 
@@ -171,20 +183,32 @@ class Archivist extends Shader {
       pressureCircles.lightnessHandlerActive = true;
 
       const translationMat = ShaderUtils.init3dTranslationMat(...coordinates);
+      const scaleStep = 1 / circles;
 
-      pressureCircles.positionedMats = mats.map((mat) =>
-        ShaderUtils.mult3dMats(mat, translationMat)
-      );
+      pressureCircles.positionedMats = mats.map((mat, i) => {
+        const scale = scaleStep * (i + 1);
+
+        return ShaderUtils.mult3dMats(mat, [
+          translationMat,
+          ShaderUtils.init3dScaleMat(scale, scale, 1),
+        ]);
+      });
     }
 
-    for (let circle = 0; circle < circles; circles++) {
+    for (let circle = 0; circle < circles; circle++) {
       const color = colors[circle];
       const mat = pressureCircles.positionedMats[circle];
 
-      // perform draw
+      console.log("color", color);
+      console.log("mat", mat);
+
+      this.gl.uniform3f(locations.color, ...color);
+      this.gl.uniformMatrix4fv(locations.mat, false, mat);
+
+      this.gl.drawArrays(this.gl.LINE_STRIP, circle * vertices, vertices);
     }
 
-    lightnessHandler(this.animData.frameDeltaTime);
+    lightnessHandler(this.animData.frameDeltaTime, pressureCircles);
   }
 
   #computeTentacles() {
