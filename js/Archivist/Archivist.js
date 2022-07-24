@@ -20,7 +20,7 @@ class Archivist extends Shader {
       this.#initLocations(programs);
       this.#initObjectsData();
 
-      this.animate = true;
+      this.animate = false;
 
       this.requestAnimationFrame();
     });
@@ -28,7 +28,7 @@ class Archivist extends Shader {
 
   #archivist;
   #head;
-  #tentacles = ArchivistUtils.initTentaclesData();
+  #tentacles;
 
   #initLocations(programs) {
     const [archivistLocs] = this.initCommonLocations(programs);
@@ -37,6 +37,8 @@ class Archivist extends Shader {
   }
 
   #initObjectsData() {
+    ArchivistUtils.initPressureCirclesCommonData(this);
+    this.#tentacles = ArchivistUtils.initTentaclesData();
     this.#initHead();
   }
 
@@ -127,8 +129,7 @@ class Archivist extends Shader {
   #renderTentacles() {
     const { locations } = this.#archivist;
     const { tentacles, vao, mat } = this.#tentacles;
-
-    this.gl.bindVertexArray(vao);
+    g;
     this.gl.uniform3f(locations.color, 0.5, 0.5, 0.5);
     this.gl.uniformMatrix4fv(locations.mat, false, mat);
 
@@ -137,10 +138,53 @@ class Archivist extends Shader {
       tentacle < tentacles.length;
       verticesOffset += tentacles[tentacle].vertices, tentacle++
     ) {
-      const { vertices } = tentacles[tentacle];
+      const {
+        vertices,
+        coordinates,
+        currentMove,
+        pressureCircles,
+        performPressureOnMoves,
+      } = tentacles[tentacle];
+
+      this.gl.bindVertexArray(vao);
 
       this.gl.drawArrays(this.gl.LINE_STRIP, verticesOffset, vertices);
+
+      const triggerPressure = currentMove === performPressureOnMoves[0];
+
+      if (triggerPressure || lightnessHandlerActive) {
+        this.#renderPressureCircles(triggerPressure, pressureCircles, [
+          coordinates.length - 3,
+          coordinates.length - 2,
+          coordinates.length - 1,
+        ]);
+      }
     }
+  }
+
+  #renderPressureCircles(triggerPressure, pressureCircles, coordinates) {
+    const { vao, mats, circles, colors, lightnessHandler } = pressureCircles;
+
+    this.gl.bindVertexArray(vao);
+
+    if (triggerPressure) {
+      pressureCircles.lightnessHandlerActive = true;
+
+      const translationMat = ShaderUtils.init3dTranslationMat(...coordinates);
+
+      pressureCircles.positionedMats = mats.map((mat) =>
+        ShaderUtils.mult3dMats(mat, translationMat)
+      );
+    }
+
+    for (let circle = 0; circle < circles; circles++) {
+      const color = colors[circle];
+      const mat = pressureCircles.positionedMats[circle];
+
+      // perform draw
+    }
+
+    lightnessHandler(this.animData.frameDeltaTime);
   }
 
   #computeTentacles() {

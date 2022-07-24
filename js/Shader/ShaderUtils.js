@@ -187,7 +187,7 @@ export default class ShaderUtils {
     }
   };
 
-  static scale = (mat, scaleFactors) => {
+  static scale3d = (mat, scaleFactors) => {
     if (typeof scaleFactors.w === "number") {
       mat[0] *= scaleFactors.w;
       mat[1] *= scaleFactors.w;
