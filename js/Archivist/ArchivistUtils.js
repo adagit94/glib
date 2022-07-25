@@ -172,12 +172,12 @@ class ArchivistUtils {
                 valToChangeName: "yPowResultDivider",
                 tMultName: "yResultDividerTMult",
                 startChangeBorder: 0,
-                tMultFinish: 256,
+                tMultFinish: 6.4,
                 tFactor: 1.05,
                 valOp: "-",
                 tMultOp: "/",
                 borderOp: ">",
-                finishOp: ">=",
+                finishOp: "<=",
               },
             ],
           },
@@ -288,10 +288,8 @@ class ArchivistUtils {
     let colors = []
     const colorIntensityStep = 1 / circles
     
-    for (let c = 0, colorIntensity = colorIntensityStep; c < circles; colorIntensity += colorIntensityStep, c++) {
-      const lightness = -colorIntensity + colorIntensityStep
-
-      colors.push([lightness, colorIntensity * lightness, 0]) // Consider change of lightness (through opacity)
+    for (let c = 0, colorIntensity = 0; c < circles; colorIntensity -= colorIntensityStep, c++) {
+      colors.push([colorIntensity, colorIntensity, 0]) // Consider change of lightness (through opacity)
       mats.push(circleMat)
     }
 
@@ -313,35 +311,41 @@ class ArchivistUtils {
         ),
       },
       lightnessHandler(t, sourceData) {
-        const lFactor = t / 10
+        const r = t / 5
         const operation = sourceData.lightnessOperation
         
         switch (operation) {
           case "increase": {
-            for (const color of sourceData.colors) {
-              color[0] += lFactor
-              color[1] += lFactor // Math.min(commonVal, commonVal * lightness)
+            for (let circle = 0; circle < sourceData.circles; circle++) {
+              const color = sourceData.colors[circle]
+              const gFactor = r / (sourceData.circles - circle) * 2
+
+              color[0] += r
+              color[1] += gFactor
             }
 
             const fullLightness = sourceData.colors[sourceData.colors.length - 1][0] >= 1;
 
             if (fullLightness) {
-              sourceData.ligthnessOperation = "decrease"
+              sourceData.lightnessOperation = "decrease"
             }
 
             break
           }
 
           case "decrease": {
-            for (const color of sourceData.colors) {
-              color[0] -= lFactor
-              color[1] -= lFactor
+            for (let circle = 0; circle < sourceData.circles; circle++) {
+              const color = sourceData.colors[circle]
+              const g = r / (sourceData.circles - circle)
+
+              color[0] -= r
+              color[1] -= g
             }
 
             const noLightness = sourceData.colors[0][0] <= 0;
 
             if (noLightness) {
-              sourceData.ligthnessOperation = "increase"
+              sourceData.lightnessOperation = "increase"
               sourceData.lightnessHandlerActive = false
             }
 

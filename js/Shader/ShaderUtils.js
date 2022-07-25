@@ -11,10 +11,22 @@ export default class ShaderUtils {
   new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, x, y, z, 1]);
 
   static init2dScaleMat = (w, h) =>
-    new Float32Array([w, 0, 0, 0, h, 0, 0, 0, 1]);
+    new Float32Array(
+      [
+        w, 0, 0,
+        0, h, 0,
+        0, 0, 1
+      ]);
 
   static init3dScaleMat = (wS, hS, dS) =>
-    new Float32Array([wS, 0, 0, 0, 0, hS, 0, 0, 0, 0, dS, 0, 0, 0, 0, 1]);
+    new Float32Array(
+      [
+        wS, 0, 0, 0,
+        0, hS, 0, 0,
+        0, 0, dS, 0,
+        0, 0, 0, 1
+      ]
+    );
 
   static init2dRotationMat = (rad) => {
     const cos = Math.cos(rad);

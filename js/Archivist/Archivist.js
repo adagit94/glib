@@ -159,7 +159,9 @@ class Archivist extends Shader {
 
       this.gl.drawArrays(this.gl.LINE_STRIP, verticesOffset, vertices);
 
-      const triggerPressure = currentMove === pressureTriggerMove;
+      const triggerPressure =
+        currentMove === pressureTriggerMove &&
+        !pressureCircles.lightnessHandlerActive;
 
       if (triggerPressure || pressureCircles.lightnessHandlerActive) {
         this.#renderPressureCircles(triggerPressure, pressureCircles, [
@@ -199,13 +201,10 @@ class Archivist extends Shader {
       const color = colors[circle];
       const mat = pressureCircles.positionedMats[circle];
 
-      console.log("color", color);
-      console.log("mat", mat);
-
       this.gl.uniform3f(locations.color, ...color);
       this.gl.uniformMatrix4fv(locations.mat, false, mat);
 
-      this.gl.drawArrays(this.gl.LINE_STRIP, circle * vertices, vertices);
+      this.gl.drawArrays(this.gl.LINE_STRIP, 0, vertices);
     }
 
     lightnessHandler(this.animData.frameDeltaTime, pressureCircles);
