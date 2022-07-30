@@ -201,7 +201,7 @@ class Archivist extends Shader {
       const color = colors[circle];
       const mat = pressureCircles.positionedMats[circle];
 
-      this.gl.uniform3f(locations.color, ...color);
+      this.gl.uniform3f(locations.color, ...color.val);
       this.gl.uniformMatrix4fv(locations.mat, false, mat);
 
       this.gl.drawArrays(this.gl.LINE_STRIP, 0, vertices);

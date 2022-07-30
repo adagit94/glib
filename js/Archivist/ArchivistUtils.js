@@ -182,7 +182,7 @@ class ArchivistUtils {
             ],
           },
         ],
-        pressureTriggerMove: 2,
+        pressureTriggerMove: 0,
         pressureCircles: ArchivistUtils.#initPressureCirclesData()
       },
     };
@@ -286,10 +286,15 @@ class ArchivistUtils {
 
     let mats = []
     let colors = []
+    
     const colorIntensityStep = 1 / circles
     
-    for (let c = 0, colorIntensity = 0; c < circles; colorIntensity -= colorIntensityStep, c++) {
-      colors.push([colorIntensity, colorIntensity, 0]) // Consider change of lightness (through opacity)
+    for (let c = 0, colorIntensity = colorIntensityStep; c < circles; colorIntensity += colorIntensityStep, c++) {
+      colors.push({
+        colorIntensity,
+        val: [-colorIntensity, -colorIntensity / (circles - c), 0],
+      }) // Consider change of lightness (through opacity)
+
       mats.push(circleMat)
     }
 
@@ -303,6 +308,7 @@ class ArchivistUtils {
       circles,
       mats,
       colors,
+      gFactor: 1,
       buffers: {
         vertices: archivist.createAndBindVerticesBuffer(
           locations.position,
@@ -311,20 +317,21 @@ class ArchivistUtils {
         ),
       },
       lightnessHandler(t, sourceData) {
-        const r = t / 5
+        t /= 5
+        
         const operation = sourceData.lightnessOperation
         
         switch (operation) {
           case "increase": {
             for (let circle = 0; circle < sourceData.circles; circle++) {
               const color = sourceData.colors[circle]
-              const gFactor = r / (sourceData.circles - circle) * 2
 
-              color[0] += r
-              color[1] += gFactor
+              color.val[0] += t
+              color.val[1] += t / (sourceData.circles - circle)
             }
 
-            const fullLightness = sourceData.colors[sourceData.colors.length - 1][0] >= 1;
+            const [sourceR, sourceG] = sourceData.colors[sourceData.colors.length - 1].val
+            const fullLightness = sourceR >= 1 && sourceG >= 1;
 
             if (fullLightness) {
               sourceData.lightnessOperation = "decrease"
@@ -336,13 +343,13 @@ class ArchivistUtils {
           case "decrease": {
             for (let circle = 0; circle < sourceData.circles; circle++) {
               const color = sourceData.colors[circle]
-              const g = r / (sourceData.circles - circle)
 
-              color[0] -= r
-              color[1] -= g
+              color.val[0] -= t
+              color.val[1] -= t / (sourceData.circles - circle)
             }
 
-            const noLightness = sourceData.colors[0][0] <= 0;
+            const [sourceR, sourceG] = sourceData.colors[0].val
+            const noLightness = sourceR <= 0 && sourceG <= 0;
 
             if (noLightness) {
               sourceData.lightnessOperation = "increase"
