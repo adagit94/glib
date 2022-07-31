@@ -67,6 +67,8 @@ class ArchivistUtils {
     const longerTentacleAngle = Math.PI / 8;
     const shorterTentacleAngle = Math.PI / 4;
     
+    // possible approach to triggering move sequence: triggerOnTentacleMove: ["bottomRightTentacle", ],
+    
     let data = {
       topLeftTentacle: {
         coordinates: [],
@@ -91,14 +93,41 @@ class ArchivistUtils {
         yPowDivider: 100,
         xPowResultDivider: 95,
         yPowResultDivider: 100,
-        xResultDividerTMult: 16,
-        yResultDividerTMult: 32,
+        xResultDividerTMult: 24,
+        yResultDividerTMult: 24,
         currentMove: 0,
-        moves: [],
-        pressureTriggerMove: undefined,
+        moves: [
+          {
+            tMults: [
+              {
+                valToChangeName: "xPowResultDivider",
+                tMultName: "xResultDividerTMult",
+                startChangeBorder: 65,
+                tMultFinish: 0.1,
+                tFactor: 1.05,
+                valOp: "-",
+                tMultOp: "/",
+                borderOp: "<=",
+                finishOp: "<=",
+              },
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 70,
+                tMultFinish: 0.1,
+                tFactor: 1.05,
+                valOp: "-",
+                tMultOp: "/",
+                borderOp: "<=",
+                finishOp: "<=",
+              },
+            ],
+          }
+        ],
+        pressureTriggerMove: 1,
         pressureCircles: ArchivistUtils.#initPressureCirclesData()
       },
-      bottomRightTentacle: {
+      bottomLeftTentacle: {
         coordinates: [],
         vertices: longerTentacleVerticesCount,
         angle: longerTentacleAngle,
@@ -106,14 +135,14 @@ class ArchivistUtils {
         yPowDivider: 100,
         xPowResultDivider: 95,
         yPowResultDivider: 100,
-        xResultDividerTMult: 16,
-        yResultDividerTMult: 32,
+        xResultDividerTMult: 8,
+        yResultDividerTMult: 8,
         currentMove: 0,
         moves: [],
         pressureTriggerMove: undefined,
         pressureCircles: ArchivistUtils.#initPressureCirclesData()
       },
-      bottomLeftTentacle: {
+      bottomRightTentacle: {
         coordinates: [],
         vertices: longerTentacleVerticesCount,
         angle: longerTentacleAngle,
@@ -157,7 +186,7 @@ class ArchivistUtils {
                 valToChangeName: "yPowResultDivider",
                 tMultName: "yResultDividerTMult",
                 startChangeBorder: 0,
-                tMultFinish: 25,
+                tMultFinish: 30,
                 tFactor: 1.03,
                 valOp: "-",
                 tMultOp: "*",
@@ -172,9 +201,39 @@ class ArchivistUtils {
                 valToChangeName: "yPowResultDivider",
                 tMultName: "yResultDividerTMult",
                 startChangeBorder: 0,
-                tMultFinish: 0.1,
+                tMultFinish: 0.5,
                 tFactor: 1.03,
                 valOp: "-",
+                tMultOp: "/",
+                borderOp: ">",
+                finishOp: "<=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 30,
+                tFactor: 1.03,
+                valOp: "+",
+                tMultOp: "*",
+                borderOp: ">",
+                finishOp: ">=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 0.1,
+                tFactor: 1.03,
+                valOp: "+",
                 tMultOp: "/",
                 borderOp: ">",
                 finishOp: "<=",
@@ -211,7 +270,7 @@ class ArchivistUtils {
     for (let tentacle of tentacles) {
       const [location, data] = tentacle
       const {vertices, angle, currentMove, moves} = data
-      const isLeftTentacle = location.includes("Left")
+      const isRightTentacle = location.includes("Right")
 
       let coordinates = data.coordinates = []
       
@@ -227,7 +286,7 @@ class ArchivistUtils {
         const y = Math.sin(angle) * poweredY;
         const z = poweredY / 3;
 
-        if (isLeftTentacle) x *= -1
+        if (isRightTentacle) x *= -1
 
         coordinates.push(x, y, z);
       }
@@ -308,8 +367,7 @@ class ArchivistUtils {
       circles,
       mats,
       colors,
-      tMult: 0.5,
-      gFactor: 1,
+      tMult: 0.7,
       buffers: {
         vertices: archivist.createAndBindVerticesBuffer(
           locations.position,

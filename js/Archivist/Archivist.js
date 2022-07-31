@@ -142,9 +142,6 @@ class Archivist extends Shader {
     const { locations } = this.#archivist;
     const { tentacles, vao, mat } = this.#tentacles;
 
-    this.gl.uniform3f(locations.color, 0.5, 0.5, 0.5);
-    this.gl.uniformMatrix4fv(locations.mat, false, mat);
-
     for (
       let tentacle = 0, verticesOffset = 0;
       tentacle < tentacles.length;
@@ -159,6 +156,8 @@ class Archivist extends Shader {
       } = tentacles[tentacle];
 
       this.gl.bindVertexArray(vao);
+      this.gl.uniform3f(locations.color, 0.5, 0.5, 0.5);
+      this.gl.uniformMatrix4fv(locations.mat, false, mat);
 
       this.gl.drawArrays(this.gl.LINE_STRIP, verticesOffset, vertices);
 
