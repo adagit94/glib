@@ -142,7 +142,7 @@ class ArchivistUtils {
                 valToChangeName: "yPowResultDivider",
                 tMultName: "yResultDividerTMult",
                 startChangeBorder: 150,
-                tMultFinish: 6.4,
+                tMultFinish: 15,
                 tFactor: 1.0175,
                 valOp: "+",
                 tMultOp: "/",
@@ -157,8 +157,8 @@ class ArchivistUtils {
                 valToChangeName: "yPowResultDivider",
                 tMultName: "yResultDividerTMult",
                 startChangeBorder: 0,
-                tMultFinish: 128,
-                tFactor: 1.05,
+                tMultFinish: 25,
+                tFactor: 1.03,
                 valOp: "-",
                 tMultOp: "*",
                 borderOp: ">",
@@ -172,8 +172,8 @@ class ArchivistUtils {
                 valToChangeName: "yPowResultDivider",
                 tMultName: "yResultDividerTMult",
                 startChangeBorder: 0,
-                tMultFinish: 6.4,
-                tFactor: 1.05,
+                tMultFinish: 0.1,
+                tFactor: 1.03,
                 valOp: "-",
                 tMultOp: "/",
                 borderOp: ">",
@@ -182,7 +182,7 @@ class ArchivistUtils {
             ],
           },
         ],
-        pressureTriggerMove: 0,
+        pressureTriggerMove: 2,
         pressureCircles: ArchivistUtils.#initPressureCirclesData()
       },
     };
@@ -308,6 +308,7 @@ class ArchivistUtils {
       circles,
       mats,
       colors,
+      tMult: 0.5,
       gFactor: 1,
       buffers: {
         vertices: archivist.createAndBindVerticesBuffer(
@@ -317,7 +318,7 @@ class ArchivistUtils {
         ),
       },
       lightnessHandler(t, sourceData) {
-        t /= 5
+        t *= sourceData.tMult
         
         const operation = sourceData.lightnessOperation
         

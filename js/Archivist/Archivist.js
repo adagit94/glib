@@ -22,6 +22,9 @@ class Archivist extends Shader {
 
       this.animate = true;
 
+      this.gl.enable(this.gl.DEPTH_TEST);
+      this.gl.depthFunc(this.gl.ALWAYS);
+
       this.requestAnimationFrame();
     });
   }
@@ -164,11 +167,16 @@ class Archivist extends Shader {
         !pressureCircles.lightnessHandlerActive;
 
       if (triggerPressure || pressureCircles.lightnessHandlerActive) {
+        this.gl.depthFunc(this.gl.GREATER);
+        this.gl.clearDepth(0);
+
         this.#renderPressureCircles(triggerPressure, pressureCircles, [
           coordinates[coordinates.length - 3],
           coordinates[coordinates.length - 2],
           coordinates[coordinates.length - 1],
         ]);
+
+        this.gl.depthFunc(this.gl.ALWAYS);
       }
     }
   }
