@@ -23,7 +23,6 @@ class Archivist extends Shader {
       this.animate = true;
 
       this.gl.enable(this.gl.DEPTH_TEST);
-      this.gl.depthFunc(this.gl.ALWAYS);
 
       this.requestAnimationFrame();
     });
@@ -84,7 +83,7 @@ class Archivist extends Shader {
 
     this.gl.bindVertexArray(vao);
     this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
-
+    this.gl.depthFunc(this.gl.ALWAYS);
     this.gl.uniformMatrix4fv(locations.mat, false, mat);
 
     for (let triangle = 0; triangle < 8; triangle++) {
@@ -156,6 +155,7 @@ class Archivist extends Shader {
       } = tentacles[tentacle];
 
       this.gl.bindVertexArray(vao);
+      this.gl.depthFunc(this.gl.ALWAYS);
       this.gl.uniform3f(locations.color, 0.5, 0.5, 0.5);
       this.gl.uniformMatrix4fv(locations.mat, false, mat);
 
@@ -174,8 +174,6 @@ class Archivist extends Shader {
           coordinates[coordinates.length - 2],
           coordinates[coordinates.length - 1],
         ]);
-
-        this.gl.depthFunc(this.gl.ALWAYS);
       }
     }
   }
