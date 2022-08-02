@@ -20,7 +20,7 @@ class Archivist extends Shader {
       this.#initLocations(programs);
       this.#initObjectsData();
 
-      this.animate = true;
+      this.animate = false;
 
       this.gl.enable(this.gl.DEPTH_TEST);
 
@@ -151,7 +151,8 @@ class Archivist extends Shader {
         coordinates,
         currentMove,
         pressureCircles,
-        pressureTriggerMove,
+        triggerPressureOnMoves,
+        pressurePerformedOnMoves,
       } = tentacles[tentacle];
 
       this.gl.bindVertexArray(vao);
@@ -162,10 +163,14 @@ class Archivist extends Shader {
       this.gl.drawArrays(this.gl.LINE_STRIP, verticesOffset, vertices);
 
       const triggerPressure =
-        currentMove === pressureTriggerMove &&
-        !pressureCircles.lightnessHandlerActive;
+        triggerPressureOnMoves.includes(currentMove) &&
+        !pressurePerformedOnMoves.includes(currentMove);
 
       if (triggerPressure || pressureCircles.lightnessHandlerActive) {
+        if (triggerPressure) {
+          pressurePerformedOnMoves.push(currentMove);
+        }
+
         this.gl.depthFunc(this.gl.GREATER);
         this.gl.clearDepth(0);
 

@@ -67,8 +67,6 @@ class ArchivistUtils {
     const longerTentacleAngle = Math.PI / 8;
     const shorterTentacleAngle = Math.PI / 4;
     
-    // possible approach to triggering move sequence: triggerOnTentacleMove: ["bottomRightTentacle", ],
-    
     let data = {
       topLeftTentacle: {
         coordinates: [],
@@ -82,7 +80,8 @@ class ArchivistUtils {
         yResultDividerTMult: 32,
         currentMove: 0,
         moves: [],
-        pressureTriggerMove: undefined,
+        triggerPressureOnMoves: [],
+        pressurePerformedOnMoves: [],
         pressureCircles: ArchivistUtils.#initPressureCirclesData()
       },
       topRightTentacle: {
@@ -122,9 +121,48 @@ class ArchivistUtils {
                 finishOp: "<=",
               },
             ],
-          }
+          },
+          {
+            delay: {
+              limit: 3,
+              elapsed: 0,
+            },
+            tMults: [
+              {
+                valToChangeName: "xPowResultDivider",
+                tMultName: "xResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 50,
+                tFactor: 1.05,
+                valOp: "+",
+                tMultOp: "*",
+                borderOp: ">=",
+                finishOp: ">=",
+              },
+            ],
+          },
+          {
+            // delay: {
+            //   limit: 4,
+            //   elapsed: 0,
+            // },
+            tMults: [
+              {
+                valToChangeName: "xPowResultDivider",
+                tMultName: "xResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 50,
+                tFactor: 1.05,
+                valOp: "+",
+                tMultOp: "*",
+                borderOp: ">=",
+                finishOp: ">=",
+              },
+            ],
+          },
         ],
-        pressureTriggerMove: 1,
+        triggerPressureOnMoves: [1, 2],
+        pressurePerformedOnMoves: [],
         pressureCircles: ArchivistUtils.#initPressureCirclesData()
       },
       bottomLeftTentacle: {
@@ -139,7 +177,8 @@ class ArchivistUtils {
         yResultDividerTMult: 8,
         currentMove: 0,
         moves: [],
-        pressureTriggerMove: undefined,
+        triggerPressureOnMoves: [],
+        pressurePerformedOnMoves: [],
         pressureCircles: ArchivistUtils.#initPressureCirclesData()
       },
       bottomRightTentacle: {
@@ -241,7 +280,8 @@ class ArchivistUtils {
             ],
           },
         ],
-        pressureTriggerMove: 2,
+        triggerPressureOnMoves: [2],
+        pressurePerformedOnMoves: [],
         pressureCircles: ArchivistUtils.#initPressureCirclesData()
       },
     };
@@ -293,25 +333,42 @@ class ArchivistUtils {
 
       if (animate) {
         const move = moves?.[currentMove]
-
+        
         if (move) {
-          let shouldAdvanceResults = [];
-          
-          for (const tMult of move.tMults) {
-            if (tMult.shouldChangeTMult(data[tMult.valToChangeName], tMult.startChangeBorder)) {
-              data[tMult.tMultName] = Math.max(tMult.getChangedTMult(data[tMult.tMultName], tMult.tFactor), 0)
-            }
-            
-            data[tMult.valToChangeName] = Math.max(tMult.getNewVal(animData.frameDeltaTime, data[tMult.valToChangeName], data[tMult.tMultName]), 0)
+          const delayMove = Object.prototype.hasOwnProperty.call(move, "delay")
+          let ready = true
+  
+          if (delayMove) {
+            const { limit, elapsed } = move.delay
 
-            if (Object.prototype.hasOwnProperty.call(tMult, "tMultFinish")) {
-              shouldAdvanceResults.push(tMult.tMultFinishReached(data[tMult.tMultName], tMult.tMultFinish))
-            }
+            move.delay.elapsed += animData.frameDeltaTime
+            
+            ready = elapsed >= limit
           }
 
-          const shouldAdvance = shouldAdvanceResults.length && shouldAdvanceResults.every(res => res)
-          
-          if (shouldAdvance) data.currentMove++
+          if (ready) {
+            let shouldAdvanceResults = [];
+            
+            for (const tMult of move.tMults) {
+              if (tMult.shouldChangeTMult(data[tMult.valToChangeName], tMult.startChangeBorder)) {
+                data[tMult.tMultName] = Math.max(tMult.getChangedTMult(data[tMult.tMultName], tMult.tFactor), 0)
+              }
+              
+              data[tMult.valToChangeName] = Math.max(tMult.getNewVal(animData.frameDeltaTime, data[tMult.valToChangeName], data[tMult.tMultName]), 0)
+
+              const tMultFinishPresent = Object.prototype.hasOwnProperty.call(tMult, "tMultFinish")
+              
+              if (tMultFinishPresent) {
+                const tMultFinishReached = tMult.tMultFinishReached(data[tMult.tMultName], tMult.tMultFinish) 
+                
+                shouldAdvanceResults.push(tMultFinishReached)
+              }
+            }
+
+            const shouldAdvance = shouldAdvanceResults.length && shouldAdvanceResults.every(res => res)
+            
+            if (shouldAdvance) data.currentMove++
+          }
         }
       }
     }
