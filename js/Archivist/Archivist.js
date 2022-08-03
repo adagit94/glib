@@ -20,7 +20,7 @@ class Archivist extends Shader {
       this.#initLocations(programs);
       this.#initObjectsData();
 
-      this.animate = false;
+      this.animate = true;
 
       this.gl.enable(this.gl.DEPTH_TEST);
 
