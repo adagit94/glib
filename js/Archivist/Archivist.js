@@ -202,6 +202,7 @@ class Archivist extends Shader {
 
         return ShaderUtils.mult3dMats(mat, [
           translationMat,
+          ShaderUtils.init3dRotationMat("y", -Math.PI / 3),
           ShaderUtils.init3dScaleMat(scale, scale, 1),
         ]);
       });

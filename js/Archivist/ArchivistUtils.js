@@ -123,10 +123,67 @@ class ArchivistUtils {
             ],
           },
           {
-            delay: {
-              limit: 3,
-              elapsed: 0,
-            },
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 4,
+                tFactor: 1.03,
+                valOp: "-",
+                tMultOp: "*",
+                borderOp: ">",
+                finishOp: ">=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 0.1,
+                tFactor: 1.03,
+                valOp: "-",
+                tMultOp: "/",
+                borderOp: ">",
+                finishOp: "<=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 4,
+                tFactor: 1.03,
+                valOp: "+",
+                tMultOp: "*",
+                borderOp: ">",
+                finishOp: ">=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 0.1,
+                tFactor: 1.03,
+                valOp: "+",
+                tMultOp: "/",
+                borderOp: ">",
+                finishOp: "<=",
+              },
+            ],
+          },
+
+          {
             tMults: [
               {
                 valToChangeName: "xPowResultDivider",
@@ -187,10 +244,67 @@ class ArchivistUtils {
             ],
           },
           {
-            delay: {
-              limit: 3,
-              elapsed: 0,
-            },
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 4,
+                tFactor: 1.03,
+                valOp: "-",
+                tMultOp: "*",
+                borderOp: ">",
+                finishOp: ">=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 0.1,
+                tFactor: 1.03,
+                valOp: "-",
+                tMultOp: "/",
+                borderOp: ">",
+                finishOp: "<=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 4,
+                tFactor: 1.03,
+                valOp: "+",
+                tMultOp: "*",
+                borderOp: ">",
+                finishOp: ">=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 0.1,
+                tFactor: 1.03,
+                valOp: "+",
+                tMultOp: "/",
+                borderOp: ">",
+                finishOp: "<=",
+              },
+            ],
+          },
+
+          {
             tMults: [
               {
                 valToChangeName: "xPowResultDivider",
@@ -295,10 +409,67 @@ class ArchivistUtils {
             ],
           },
           {
-            delay: {
-              limit: 3,
-              elapsed: 0,
-            },
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 4,
+                tFactor: 1.03,
+                valOp: "-",
+                tMultOp: "*",
+                borderOp: ">",
+                finishOp: ">=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 0.1,
+                tFactor: 1.03,
+                valOp: "-",
+                tMultOp: "/",
+                borderOp: ">",
+                finishOp: "<=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 4,
+                tFactor: 1.03,
+                valOp: "+",
+                tMultOp: "*",
+                borderOp: ">",
+                finishOp: ">=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 0.1,
+                tFactor: 1.03,
+                valOp: "+",
+                tMultOp: "/",
+                borderOp: ">",
+                finishOp: "<=",
+              },
+            ],
+          },
+
+          {
             tMults: [
               {
                 valToChangeName: "yPowResultDivider",
@@ -358,8 +529,68 @@ class ArchivistUtils {
               },
             ],
           },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 4,
+                tFactor: 1.03,
+                valOp: "-",
+                tMultOp: "*",
+                borderOp: ">",
+                finishOp: ">=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 0.1,
+                tFactor: 1.03,
+                valOp: "-",
+                tMultOp: "/",
+                borderOp: ">",
+                finishOp: "<=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 4,
+                tFactor: 1.03,
+                valOp: "+",
+                tMultOp: "*",
+                borderOp: ">",
+                finishOp: ">=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 0.1,
+                tFactor: 1.03,
+                valOp: "+",
+                tMultOp: "/",
+                borderOp: ">",
+                finishOp: "<=",
+              },
+            ],
+          },
         ],
-        triggerPressureOnMoves: [1, 5, 9, 13],
+        triggerPressureOnMoves: [2, 10, 18, 26],
         pressurePerformedOnMoves: [],
         pressureCircles: ArchivistUtils.#initPressureCirclesData()
       },
@@ -468,7 +699,280 @@ class ArchivistUtils {
                 valToChangeName: "yPowResultDivider",
                 tMultName: "yResultDividerTMult",
                 startChangeBorder: 0,
-                tMultFinish: 0.1,
+                tMultFinish: 8,
+                tFactor: 1.03,
+                valOp: "+",
+                tMultOp: "/",
+                borderOp: ">",
+                finishOp: "<=",
+              },
+            ],
+          },
+
+          {
+            tMults: [
+              {
+                valToChangeName: "xPowResultDivider",
+                tMultName: "xResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 75,
+                tFactor: 1.04,
+                valOp: "-",
+                tMultOp: "*",
+                borderOp: ">",
+                finishOp: ">=",
+              }
+            ]
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "xPowResultDivider",
+                tMultName: "xResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 8,
+                tFactor: 1.04,
+                valOp: "-",
+                tMultOp: "/",
+                borderOp: ">",
+                finishOp: "<=",
+              }
+            ]
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 30,
+                tFactor: 1.03,
+                valOp: "-",
+                tMultOp: "*",
+                borderOp: ">",
+                finishOp: ">=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 2,
+                tFactor: 1.03,
+                valOp: "-",
+                tMultOp: "/",
+                borderOp: ">",
+                finishOp: "<=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 30,
+                tFactor: 1.03,
+                valOp: "+",
+                tMultOp: "*",
+                borderOp: ">",
+                finishOp: ">=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 8,
+                tFactor: 1.03,
+                valOp: "+",
+                tMultOp: "/",
+                borderOp: ">",
+                finishOp: "<=",
+              },
+            ],
+          },
+
+          {
+            tMults: [
+              {
+                valToChangeName: "xPowResultDivider",
+                tMultName: "xResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 35,
+                tFactor: 1.04,
+                valOp: "-",
+                tMultOp: "*",
+                borderOp: ">",
+                finishOp: ">=",
+              }
+            ]
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "xPowResultDivider",
+                tMultName: "xResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 8,
+                tFactor: 1.04,
+                valOp: "-",
+                tMultOp: "/",
+                borderOp: ">",
+                finishOp: "<=",
+              }
+            ]
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 30,
+                tFactor: 1.03,
+                valOp: "-",
+                tMultOp: "*",
+                borderOp: ">",
+                finishOp: ">=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 2,
+                tFactor: 1.03,
+                valOp: "-",
+                tMultOp: "/",
+                borderOp: ">",
+                finishOp: "<=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 30,
+                tFactor: 1.03,
+                valOp: "+",
+                tMultOp: "*",
+                borderOp: ">",
+                finishOp: ">=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 8,
+                tFactor: 1.03,
+                valOp: "+",
+                tMultOp: "/",
+                borderOp: ">",
+                finishOp: "<=",
+              },
+            ],
+          },
+
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 125,
+                tFactor: 1.04,
+                valOp: "-",
+                tMultOp: "*",
+                borderOp: ">",
+                finishOp: ">=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 8,
+                tFactor: 1.04,
+                valOp: "-",
+                tMultOp: "/",
+                borderOp: ">",
+                finishOp: "<=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 25,
+                tFactor: 1.03,
+                valOp: "-",
+                tMultOp: "*",
+                borderOp: ">",
+                finishOp: ">=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 2,
+                tFactor: 1.03,
+                valOp: "-",
+                tMultOp: "/",
+                borderOp: ">",
+                finishOp: "<=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 25,
+                tFactor: 1.03,
+                valOp: "+",
+                tMultOp: "*",
+                borderOp: ">",
+                finishOp: ">=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 2,
                 tFactor: 1.03,
                 valOp: "+",
                 tMultOp: "/",
@@ -478,7 +982,7 @@ class ArchivistUtils {
             ],
           },
         ],
-        triggerPressureOnMoves: [2],
+        triggerPressureOnMoves: [2, 8, 14, 20],
         pressurePerformedOnMoves: [],
         pressureCircles: ArchivistUtils.#initPressureCirclesData()
       },
