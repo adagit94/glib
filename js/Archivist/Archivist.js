@@ -1,12 +1,12 @@
-import Shader from "../Shader/Shader.js";
-import ShaderUtils from "../Shader/ShaderUtils.js";
-import ArchivistUtils from "./ArchivistUtils.js";
+import Shader from '../Shader/Shader.js';
+import ShaderUtils from '../Shader/ShaderUtils.js';
+import ArchivistUtils from './ArchivistUtils.js';
 
 class Archivist extends Shader {
   constructor(shaders) {
-    super("3d", { fov: Math.PI / 2.5, near: 0, far: 2000 });
+    super('3d', { fov: Math.PI / 2.5, near: 0, far: 2000 });
 
-    this.initShaders(shaders).then((programs) => {
+    this.initShaders(shaders).then(programs => {
       const [archivist] = programs;
 
       this.#archivist = {
@@ -114,7 +114,7 @@ class Archivist extends Shader {
       this.animData
     );
     const coordinates = new Float32Array(
-      tentacles.flatMap((tentacle) => tentacle.coordinates)
+      tentacles.flatMap(tentacle => tentacle.coordinates)
     );
 
     if (this.gl.isVertexArray(this.#tentacles.vao)) {
@@ -149,6 +149,7 @@ class Archivist extends Shader {
       const {
         vertices,
         coordinates,
+        moves,
         currentMove,
         pressureCircles,
         triggerPressureOnMoves,
@@ -174,39 +175,53 @@ class Archivist extends Shader {
         this.gl.depthFunc(this.gl.GREATER);
         this.gl.clearDepth(0);
 
-        this.#renderPressureCircles(triggerPressure, pressureCircles, [
-          coordinates[coordinates.length - 3],
-          coordinates[coordinates.length - 2],
-          coordinates[coordinates.length - 1],
-        ]);
+        this.#renderPressureCircles(
+          triggerPressure,
+          pressureCircles,
+          moves[currentMove],
+          [
+            coordinates[coordinates.length - 3],
+            coordinates[coordinates.length - 2],
+            coordinates[coordinates.length - 1],
+          ]
+        );
       }
     }
   }
 
-  #renderPressureCircles(triggerPressure, pressureCircles, coordinates) {
+  #renderPressureCircles(triggerPressure, pressureCircles, move, coordinates) {
     const { locations } = this.#archivist;
-    const { vao, mats, circles, colors, lightnessHandler, circle } =
-      pressureCircles;
+    const { vao, circles, colors, lightnessHandler, circle } = pressureCircles;
+
     const vertices = circle.verticesCount + 1;
 
-    this.gl.bindVertexArray(vao);
-
     if (triggerPressure) {
-      pressureCircles.lightnessHandlerActive = true;
+      let { mat } = pressureCircles;
 
-      const translationMat = ShaderUtils.init3dTranslationMat(...coordinates);
+      pressureCircles.lightnessHandlerActive = true;
+      pressureCircles.positionedMats = [];
+      mat = ShaderUtils.mult3dMats(
+        mat,
+        ShaderUtils.init3dTranslationMat(...coordinates)
+      );
+
+      if (move?.mat) {
+        mat = ShaderUtils.mult3dMats(mat, move.mat);
+      }
+
       const scaleStep = 1 / circles;
 
-      pressureCircles.positionedMats = mats.map((mat, i) => {
-        const scale = scaleStep * (i + 1);
+      for (let c = 0, scale = scaleStep; c < circles; scale += scaleStep, c++) {
+        const scaledMat = ShaderUtils.mult3dMats(
+          mat,
+          ShaderUtils.init3dScaleMat(scale, scale, 1)
+        );
 
-        return ShaderUtils.mult3dMats(mat, [
-          translationMat,
-          ShaderUtils.init3dRotationMat("y", -Math.PI / 3),
-          ShaderUtils.init3dScaleMat(scale, scale, 1),
-        ]);
-      });
+        pressureCircles.positionedMats.push(scaledMat);
+      }
     }
+
+    this.gl.bindVertexArray(vao);
 
     for (let circle = 0; circle < circles; circle++) {
       const color = colors[circle];

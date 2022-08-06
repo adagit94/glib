@@ -74,13 +74,44 @@ class ArchivistUtils {
         angle: shorterTentacleAngle,
         xPowDivider: 100,
         yPowDivider: 100,
-        xPowResultDivider: 95,
+        xPowResultDivider: 100,
         yPowResultDivider: 100,
-        xResultDividerTMult: 16,
+        xResultDividerTMult: 32,
         yResultDividerTMult: 32,
         currentMove: 0,
-        moves: [],
-        triggerPressureOnMoves: [],
+        moves: [
+          {
+            delay: {
+              limit: 3,
+              elapsed: 0,
+            },
+            tMults: [
+              {
+                valToChangeName: "xPowResultDivider",
+                tMultName: "xResultDividerTMult",
+                startChangeBorder: 50,
+                tMultFinish: 8,
+                tFactor: 1.04,
+                valOp: "-",
+                tMultOp: "/",
+                borderOp: "<=",
+                finishOp: "<=",
+              },
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 50,
+                tMultFinish: 8,
+                tFactor: 1.04,
+                valOp: "-",
+                tMultOp: "/",
+                borderOp: "<=",
+                finishOp: "<=",
+              },
+            ],
+          },
+        ],
+        triggerPressureOnMoves: [1],
         pressurePerformedOnMoves: [],
         pressureCircles: ArchivistUtils.#initPressureCirclesData()
       },
@@ -937,6 +968,7 @@ class ArchivistUtils {
             ],
           },
           {
+            mat: ShaderUtils.init3dRotationMat('y', -Math.PI / 3),
             tMults: [
               {
                 valToChangeName: "yPowResultDivider",
@@ -1100,9 +1132,7 @@ class ArchivistUtils {
     const ry = r / archivist.gl.canvas.height
 
     const circle = new Ellipse3d(0, 0, 0, rx, ry, Math.PI * 2, 100)
-    const circleMat = ShaderUtils.mult3dMats(tentaclesMat, circle.mat)
 
-    let mats = []
     let colors = []
     
     const colorIntensityStep = 1 / circles
@@ -1112,8 +1142,6 @@ class ArchivistUtils {
         colorIntensity,
         val: [-colorIntensity, -colorIntensity / (circles - c), 0],
       }) // Consider change of lightness (through opacity)
-
-      mats.push(circleMat)
     }
 
     const vao = archivist.gl.createVertexArray();
@@ -1124,7 +1152,7 @@ class ArchivistUtils {
       vao,
       circle,
       circles,
-      mats,
+      mat: ShaderUtils.mult3dMats(tentaclesMat, circle.mat),
       colors,
       tMult: 0.7,
       buffers: {
