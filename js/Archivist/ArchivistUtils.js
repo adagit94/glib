@@ -79,39 +79,8 @@ class ArchivistUtils {
         xResultDividerTMult: 32,
         yResultDividerTMult: 32,
         currentMove: 0,
-        moves: [
-          {
-            delay: {
-              limit: 3,
-              elapsed: 0,
-            },
-            tMults: [
-              {
-                valToChangeName: "xPowResultDivider",
-                tMultName: "xResultDividerTMult",
-                startChangeBorder: 50,
-                tMultFinish: 8,
-                tFactor: 1.04,
-                valOp: "-",
-                tMultOp: "/",
-                borderOp: "<=",
-                finishOp: "<=",
-              },
-              {
-                valToChangeName: "yPowResultDivider",
-                tMultName: "yResultDividerTMult",
-                startChangeBorder: 50,
-                tMultFinish: 8,
-                tFactor: 1.04,
-                valOp: "-",
-                tMultOp: "/",
-                borderOp: "<=",
-                finishOp: "<=",
-              },
-            ],
-          },
-        ],
-        triggerPressureOnMoves: [1],
+        moves: [],
+        triggerPressureOnMoves: [],
         pressurePerformedOnMoves: [],
         pressureCircles: ArchivistUtils.#initPressureCirclesData()
       },
@@ -633,11 +602,110 @@ class ArchivistUtils {
         yPowDivider: 100,
         xPowResultDivider: 95,
         yPowResultDivider: 100,
-        xResultDividerTMult: 8,
-        yResultDividerTMult: 8,
+        xResultDividerTMult: 32,
+        yResultDividerTMult: 32,
         currentMove: 0,
-        moves: [],
-        triggerPressureOnMoves: [],
+        moves: [
+          {
+            delay: {
+              limit: 2,
+              elapsed: 0,
+            },
+            tMults: [
+              {
+                valToChangeName: "xPowResultDivider",
+                tMultName: "xResultDividerTMult",
+                startChangeBorder: 50,
+                tMultFinish: 0.1,
+                tFactor: 1.04,
+                valOp: "-",
+                tMultOp: "/",
+                borderOp: "<=",
+                finishOp: "<=",
+              },
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 50,
+                tMultFinish: 0.1,
+                tFactor: 1.04,
+                valOp: "-",
+                tMultOp: "/",
+                borderOp: "<=",
+                finishOp: "<=",
+              },
+            ],
+          },
+          {
+            delay: {
+              limit: 2,
+              elapsed: 0,
+            },
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 16,
+                tFactor: 1.04,
+                valOp: "+",
+                tMultOp: "*",
+                borderOp: ">=",
+                finishOp: ">=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 0.1,
+                tFactor: 1.04,
+                valOp: "+",
+                tMultOp: "/",
+                borderOp: ">=",
+                finishOp: "<=",
+              },
+            ],
+          },
+          {
+            delay: {
+              limit: 2,
+              elapsed: 0,
+            },
+            tMults: [
+              {
+                valToChangeName: "xPowResultDivider",
+                tMultName: "xResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 8,
+                tFactor: 1.04,
+                valOp: "-",
+                tMultOp: "*",
+                borderOp: ">=",
+                finishOp: ">=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "xPowResultDivider",
+                tMultName: "xResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 0.1,
+                tFactor: 1.04,
+                valOp: "-",
+                tMultOp: "/",
+                borderOp: ">=",
+                finishOp: "<=",
+              },
+            ],
+          },
+        ],
+        triggerPressureOnMoves: [1, 3, 5],
         pressurePerformedOnMoves: [],
         pressureCircles: ArchivistUtils.#initPressureCirclesData()
       },
@@ -968,7 +1036,7 @@ class ArchivistUtils {
             ],
           },
           {
-            mat: ShaderUtils.init3dRotationMat('y', -Math.PI / 3),
+            mat: ShaderUtils.init3dRotationMat('y', -Math.PI / 4),
             tMults: [
               {
                 valToChangeName: "yPowResultDivider",

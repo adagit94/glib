@@ -1,26 +1,27 @@
-import Shader from '../Shader/Shader.js';
-import ShaderUtils from '../Shader/ShaderUtils.js';
-import ArchivistUtils from './ArchivistUtils.js';
+import Shader from "../Shader/Shader.js";
+import ShaderUtils from "../Shader/ShaderUtils.js";
+import ArchivistUtils from "./ArchivistUtils.js";
 
 class Archivist extends Shader {
   constructor(shaders) {
-    super('3d', { fov: Math.PI / 2.5, near: 0, far: 2000 });
+    super("3d", { fov: Math.PI / 2.5, near: 0, far: 2000 });
 
-    this.initShaders(shaders).then(programs => {
+    this.initShaders(shaders).then((programs) => {
       const [archivist] = programs;
 
       this.#archivist = {
         program: archivist,
         mat: ShaderUtils.mult3dMats(this.projectionMat, [
-          ShaderUtils.lookAtMat([0, 0, -1.45], [-0.6, 0, 0]),
+          ShaderUtils.lookAtMat([0, 0, -1.75], [-0.6, 0, 0]),
           ShaderUtils.init3dTranslationMat(1.1, 0, 0),
+          ShaderUtils.init3dRotationMat("y", Math.PI / 16),
         ]),
       };
 
       this.#initLocations(programs);
       this.#initObjectsData();
 
-      this.animate = true;
+      this.animate = false;
 
       this.gl.enable(this.gl.DEPTH_TEST);
 
@@ -74,12 +75,24 @@ class Archivist extends Shader {
         ),
         indices: this.createAndBindIndicesBuffer(indices),
       },
+      rotation: {
+        active: true,
+        angle: 0,
+        tMult: 0.1,
+        tMultFactor: 1.01,
+        tMultOrigin: 0.1,
+        tMultPeak: 2,
+        direction: "up",
+      },
     };
   }
 
   #renderHead() {
     const { locations } = this.#archivist;
-    const { buffers, mat, vao } = this.#head;
+    const { buffers, vao, rotation } = this.#head;
+    let { mat } = this.#head;
+
+    if (rotation.active) mat = this.#rotateHead();
 
     this.gl.bindVertexArray(vao);
     this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, buffers.indices);
@@ -105,6 +118,35 @@ class Archivist extends Shader {
     }
   }
 
+  #rotateHead() {
+    const { rotation, mat } = this.#head;
+
+    const rotatedMat = ShaderUtils.mult3dMats(
+      mat,
+      ShaderUtils.init3dRotationMat("y", rotation.angle)
+    );
+
+    rotation.angle += this.animData.frameDeltaTime * rotation.tMult;
+
+    switch (rotation.direction) {
+      case "up":
+        rotation.tMult *= rotation.tMultFactor;
+
+        if (rotation.tMult >= rotation.tMultPeak) rotation.direction = "down";
+
+        break;
+
+      case "down":
+        rotation.tMult /= rotation.tMultFactor;
+
+        if (rotation.tMult <= rotation.tMultOrigin) rotation.direction = "up";
+
+        break;
+    }
+
+    return rotatedMat;
+  }
+
   #initTentacles() {
     const { locations } = this.#archivist;
 
@@ -114,7 +156,7 @@ class Archivist extends Shader {
       this.animData
     );
     const coordinates = new Float32Array(
-      tentacles.flatMap(tentacle => tentacle.coordinates)
+      tentacles.flatMap((tentacle) => tentacle.coordinates)
     );
 
     if (this.gl.isVertexArray(this.#tentacles.vao)) {
