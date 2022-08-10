@@ -76,11 +76,91 @@ class ArchivistUtils {
         yPowDivider: 100,
         xPowResultDivider: 100,
         yPowResultDivider: 100,
-        xResultDividerTMult: 32,
-        yResultDividerTMult: 32,
+        xResultDividerTMult: 256,
+        yResultDividerTMult: 1,
         currentMove: 0,
-        moves: [],
-        triggerPressureOnMoves: [],
+        moves: [
+          {
+            delay: {
+              limit: 0.5,
+              elapsed: 0,
+            },
+            tMults: [
+              {
+                valToChangeName: "xPowResultDivider",
+                tMultName: "xResultDividerTMult",
+                startChangeBorder: 175,
+                tMultFinish: 0.1,
+                tFactor: 1.04,
+                valOp: "+",
+                tMultOp: "/",
+                borderOp: ">=",
+                finishOp: "<=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 10,
+                tFactor: 1.03,
+                valOp: "-",
+                tMultOp: "*",
+                borderOp: ">",
+                finishOp: ">=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 0.1,
+                tFactor: 1.03,
+                valOp: "-",
+                tMultOp: "/",
+                borderOp: ">",
+                finishOp: "<=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 10,
+                tFactor: 1.03,
+                valOp: "+",
+                tMultOp: "*",
+                borderOp: ">",
+                finishOp: ">=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 0.1,
+                tFactor: 1.03,
+                valOp: "+",
+                tMultOp: "/",
+                borderOp: ">",
+                finishOp: "<=",
+              },
+            ],
+          },
+        ],
+        triggerPressureOnMoves: [2],
         pressurePerformedOnMoves: [],
         pressureCircles: ArchivistUtils.#initPressureCirclesData()
       },
@@ -1156,7 +1236,7 @@ class ArchivistUtils {
                 data[tMult.tMultName] = Math.max(tMult.getChangedTMult(data[tMult.tMultName], tMult.tFactor), 0)
               }
               
-              data[tMult.valToChangeName] = Math.max(tMult.getNewVal(animData.frameDeltaTime, data[tMult.valToChangeName], data[tMult.tMultName]), 0)
+              data[tMult.valToChangeName] = tMult.getNewVal(animData.frameDeltaTime, data[tMult.valToChangeName], data[tMult.tMultName])
 
               const tMultFinishPresent = Object.prototype.hasOwnProperty.call(tMult, "tMultFinish")
               
