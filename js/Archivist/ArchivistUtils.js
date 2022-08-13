@@ -77,7 +77,7 @@ class ArchivistUtils {
         xPowResultDivider: 100,
         yPowResultDivider: 100,
         xResultDividerTMult: 256,
-        yResultDividerTMult: 1,
+        yResultDividerTMult: 8,
         currentMove: 0,
         moves: [
           {
@@ -95,6 +95,16 @@ class ArchivistUtils {
                 valOp: "+",
                 tMultOp: "/",
                 borderOp: ">=",
+                finishOp: "<=",
+              },
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tFactor: 1.04,
+                valOp: "+",
+                tMultOp: "/",
+                borderOp: "<=",
                 finishOp: "<=",
               },
             ],
@@ -136,6 +146,299 @@ class ArchivistUtils {
                 tMultName: "yResultDividerTMult",
                 startChangeBorder: 0,
                 tMultFinish: 10,
+                tFactor: 1.03,
+                valOp: "+",
+                tMultOp: "*",
+                borderOp: ">",
+                finishOp: ">=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 0.1,
+                tFactor: 1.03,
+                valOp: "+",
+                tMultOp: "/",
+                borderOp: ">",
+                finishOp: "<=",
+              },
+            ],
+          },
+
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 64,
+                tFactor: 1.04,
+                valOp: "-",
+                tMultOp: "*",
+                borderOp: ">=",
+                finishOp: ">=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 0.1,
+                tFactor: 1.04,
+                valOp: "-",
+                tMultOp: "/",
+                borderOp: ">=",
+                finishOp: "<=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 2,
+                tFactor: 1.03,
+                valOp: "-",
+                tMultOp: "*",
+                borderOp: ">",
+                finishOp: ">=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 0.1,
+                tFactor: 1.03,
+                valOp: "-",
+                tMultOp: "/",
+                borderOp: ">",
+                finishOp: "<=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 2,
+                tFactor: 1.03,
+                valOp: "+",
+                tMultOp: "*",
+                borderOp: ">",
+                finishOp: ">=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 0.1,
+                tFactor: 1.03,
+                valOp: "+",
+                tMultOp: "/",
+                borderOp: ">",
+                finishOp: "<=",
+              },
+            ],
+          },
+
+          {
+            tMults: [
+              {
+                valToChangeName: "xPowResultDivider",
+                tMultName: "xResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 295,
+                tFactor: 1.04,
+                valOp: "-",
+                tMultOp: "*",
+                borderOp: ">=",
+                finishOp: ">=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "xPowResultDivider",
+                tMultName: "xResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 0.1,
+                tFactor: 1.04,
+                valOp: "-",
+                tMultOp: "/",
+                borderOp: ">=",
+                finishOp: "<=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 2,
+                tFactor: 1.03,
+                valOp: "-",
+                tMultOp: "*",
+                borderOp: ">",
+                finishOp: ">=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 0.1,
+                tFactor: 1.03,
+                valOp: "-",
+                tMultOp: "/",
+                borderOp: ">",
+                finishOp: "<=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 2,
+                tFactor: 1.03,
+                valOp: "+",
+                tMultOp: "*",
+                borderOp: ">",
+                finishOp: ">=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 0.1,
+                tFactor: 1.03,
+                valOp: "+",
+                tMultOp: "/",
+                borderOp: ">",
+                finishOp: "<=",
+              },
+            ],
+          },
+
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 144,
+                tFactor: 1.04,
+                valOp: "+",
+                tMultOp: "*",
+                borderOp: ">=",
+                finishOp: ">=",
+              },
+              {
+                valToChangeName: "xPowResultDivider",
+                tMultName: "xResultDividerTMult",
+                startChangeBorder: 0,
+                tFactor: 1.03,
+                valOp: "+",
+                tMultOp: "*",
+                borderOp: ">=",
+                finishOp: ">=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 0.1,
+                tFactor: 1.04,
+                valOp: "+",
+                tMultOp: "/",
+                borderOp: ">=",
+                finishOp: "<=",
+              },
+              {
+                valToChangeName: "xPowResultDivider",
+                tMultName: "xResultDividerTMult",
+                startChangeBorder: 0,
+                tFactor: 1.05,
+                valOp: "+",
+                tMultOp: "/",
+                borderOp: ">=",
+                finishOp: "<=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 2,
+                tFactor: 1.03,
+                valOp: "-",
+                tMultOp: "*",
+                borderOp: ">",
+                finishOp: ">=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 0.1,
+                tFactor: 1.03,
+                valOp: "-",
+                tMultOp: "/",
+                borderOp: ">",
+                finishOp: "<=",
+              },
+            ],
+          },
+          {
+            tMults: [
+              {
+                valToChangeName: "yPowResultDivider",
+                tMultName: "yResultDividerTMult",
+                startChangeBorder: 0,
+                tMultFinish: 2,
                 tFactor: 1.03,
                 valOp: "+",
                 tMultOp: "*",
@@ -160,7 +463,7 @@ class ArchivistUtils {
             ],
           },
         ],
-        triggerPressureOnMoves: [2],
+        triggerPressureOnMoves: [2, 8, 14, 20],
         pressurePerformedOnMoves: [],
         pressureCircles: ArchivistUtils.#initPressureCirclesData()
       },
@@ -1356,6 +1659,42 @@ class ArchivistUtils {
       }
     }
   }
+
+  static initLight(archivist) {
+    const height = 1
+    const circles = 10
+    const verticesPerCircle = 100
+    const radius = 0.25
+    const angle = Math.PI * 2
+
+    const yStep = height / (circles - 1)
+    const radiusStep = r / circles
+    const angleStep = angle / verticesPerCircle
+
+    let coordinates = []
+
+    for (let circle = 0, r = radius, y = 0; circle < circles; y += yStep, r -= radiusStep, circle++) {
+      for (let rad = 0; rad < angle; rad += angleStep) {
+        const x = Math.cos(rad) * r
+        const z = -Math.sin(rad) * r
+
+        coordinates.push(x, y, z)
+      }
+    }
+
+    const vao = this.gl.createVertexArray();
+
+    this.gl.bindVertexArray(vao);
+    
+    return {
+      vao,
+      circles,
+      verticesPerCircle,
+      buffer: archivist.gl.createAndBindVerticesBuffer(archivist.locations.position, new Float32Array(coordinates), {size: 3}),
+      mat: ShaderUtils.init3dTranslationMat(0, 0, 0)
+    }
+  }
 }
+
 
 export default ArchivistUtils;

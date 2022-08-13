@@ -31,6 +31,7 @@ class Archivist extends Shader {
     #archivist;
     #head;
     #tentacles;
+    #light;
 
     #initLocations(programs) {
         const [archivistLocs] = this.initCommonLocations(programs);
@@ -48,6 +49,8 @@ class Archivist extends Shader {
         this.#tentacles = ArchivistUtils.initTentaclesData();
         this.#tentacles.mat = tentaclesMat;
         this.#tentacles.color = [0.25, 0.25, 0.25];
+
+        this.#light = ArchivistUtils.initLight(this, "cone");
     }
 
     #initHead() {
@@ -60,7 +63,7 @@ class Archivist extends Shader {
         this.#head = {
             vao,
             color: [0.075, 0.075, 0.075],
-            mat: ShaderUtils.mult3dMats(mat, [ShaderUtils.init3dTranslationMat(0, -0.325, 0), ShaderUtils.init3dScaleMat(0.75, 0.75, 0.75)]),
+            mat: ShaderUtils.mult3dMats(mat, [ShaderUtils.init3dTranslationMat(0, -0.325, 0), ShaderUtils.init3dScaleMat(0.7, 0.7, 0.7)]),
             buffers: {
                 vertices: this.createAndBindVerticesBuffer(locations.position, coordinates, { size: 3 }),
                 indices: this.createAndBindIndicesBuffer(indices),
@@ -222,6 +225,10 @@ class Archivist extends Shader {
         lightnessHandler(this.animData.frameDeltaTime, pressureCircles);
     }
 
+    #renderLight() {
+        const { vao, circles, verticesPerCircle, buffer, mat } = this.#light;
+    }
+
     #computeTentacles() {
         this.#initTentacles();
         this.#renderTentacles();
@@ -232,6 +239,7 @@ class Archivist extends Shader {
 
         this.#computeTentacles();
         this.#renderHead();
+        this.#renderLight();
     }
 }
 
