@@ -54,9 +54,53 @@ class ArchivistUtils {
       1, 2, 5,
     ])
 
+    const normals = new Float32Array([
+      // TOP FRONT TRIANGLE
+      0, 0, 1,
+      0, 0, 1,
+      0, 0, 1,
+
+      // TOP RIGHT TRIANGLE
+      1, 0, 0,
+      1, 0, 0,
+      1, 0, 0,
+
+      // TOP BACK TRIANGLE
+      0, 0, -1,
+      0, 0, -1,
+      0, 0, -1,
+
+      // TOP LEFT TRIANGLE
+      -1, 0, 0,
+      -1, 0, 0,
+      -1, 0, 0,
+
+
+      // BOTTOM FRONT TRIANGLE
+      0, 0, 1,
+      0, 0, 1,
+      0, 0, 1,
+
+      // BOTTOM RIGHT TRIANGLE
+      1, 0, 0,
+      1, 0, 0,
+      1, 0, 0,
+
+      // BOTTOM BACK TRIANGLE
+      0, 0, -1,
+      0, 0, -1,
+      0, 0, -1,
+
+      // BOTTOM LEFT TRIANGLE
+      -1, 0, 0,
+      -1, 0, 0,
+      -1, 0, 0,
+    ]);
+
     return {
       coordinates,
-      indices
+      indices,
+      normals
     }
   }
 
@@ -1660,38 +1704,31 @@ class ArchivistUtils {
     }
   }
 
-  static initLight(archivist) {
-    const height = 1
-    const circles = 10
+  static initLight(instance, data) {
     const verticesPerCircle = 100
-    const radius = 0.25
+    const r = 0.25
     const angle = Math.PI * 2
+    const angleStep = angle / (verticesPerCircle - 1)
+    let coordinates = [0, 1, 0]
 
-    const yStep = height / (circles - 1)
-    const radiusStep = r / circles
-    const angleStep = angle / verticesPerCircle
+    for (let vertex = 0; vertex < verticesPerCircle; vertex++) {
+      const rad = angleStep * vertex
+      const x = Math.cos(rad) * r
+      const z = -Math.sin(rad) * r
 
-    let coordinates = []
-
-    for (let circle = 0, r = radius, y = 0; circle < circles; y += yStep, r -= radiusStep, circle++) {
-      for (let rad = 0; rad < angle; rad += angleStep) {
-        const x = Math.cos(rad) * r
-        const z = -Math.sin(rad) * r
-
-        coordinates.push(x, y, z)
-      }
+      coordinates.push(x, 0, z)
     }
 
-    const vao = this.gl.createVertexArray();
+    const vao = instance.gl.createVertexArray();
 
-    this.gl.bindVertexArray(vao);
+    instance.gl.bindVertexArray(vao);
     
     return {
       vao,
-      circles,
       verticesPerCircle,
-      buffer: archivist.gl.createAndBindVerticesBuffer(archivist.locations.position, new Float32Array(coordinates), {size: 3}),
-      mat: ShaderUtils.init3dTranslationMat(0, 0, 0)
+      color: [1, 1, 1],
+      buffer: instance.createAndBindVerticesBuffer(data.locations.position, new Float32Array(coordinates), {size: 3}),
+      mat: ShaderUtils.mult3dMats(data.mat, [ShaderUtils.init3dTranslationMat(-1, 0.25, 1), ShaderUtils.init3dRotationMat("z", -Math.PI / 2)])
     }
   }
 }

@@ -36,7 +36,7 @@ class Archivist extends Shader {
     #initLocations(programs) {
         const [archivistLocs] = this.initCommonLocations(programs);
 
-        this.#archivist.locations = archivistLocs;
+        this.#archivist.locations = { ...archivistLocs, normal: this.gl.getAttribLocation(programs[0], "a_normal") };
     }
 
     #initObjectsData() {
@@ -50,12 +50,12 @@ class Archivist extends Shader {
         this.#tentacles.mat = tentaclesMat;
         this.#tentacles.color = [0.25, 0.25, 0.25];
 
-        this.#light = ArchivistUtils.initLight(this, "cone");
+        this.#light = ArchivistUtils.initLight(this, this.#archivist);
     }
 
     #initHead() {
         const { locations, mat } = this.#archivist;
-        const { coordinates, indices } = ArchivistUtils.getHeadData();
+        const { coordinates, indices, normals } = ArchivistUtils.getHeadData();
         const vao = this.gl.createVertexArray();
 
         this.gl.bindVertexArray(vao);
@@ -67,6 +67,7 @@ class Archivist extends Shader {
             buffers: {
                 vertices: this.createAndBindVerticesBuffer(locations.position, coordinates, { size: 3 }),
                 indices: this.createAndBindIndicesBuffer(indices),
+                normals: this.createAndBindVerticesBuffer(locations.normal, normals, { size: 3 }),
             },
             rotation: {
                 active: true,
@@ -226,7 +227,15 @@ class Archivist extends Shader {
     }
 
     #renderLight() {
-        const { vao, circles, verticesPerCircle, buffer, mat } = this.#light;
+        const { locations } = this.#archivist;
+        const { vao, verticesPerCircle, mat, color } = this.#light;
+
+        this.gl.bindVertexArray(vao);
+        this.gl.depthFunc(this.gl.ALWAYS);
+        this.gl.uniform3f(locations.color, ...color);
+        this.gl.uniformMatrix4fv(locations.mat, false, mat);
+
+        this.gl.drawArrays(this.gl.TRIANGLE_FAN, 0, verticesPerCircle + 1);
     }
 
     #computeTentacles() {
