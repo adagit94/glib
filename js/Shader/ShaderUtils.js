@@ -116,18 +116,18 @@ export default class ShaderUtils {
     ]);
   };
 
-  static init3dInvertedMat = (matToInvert) => {
-    let invertedMat = []
+  static init3dTransposedMat = (matToTranspose) => {
+    let transposedMat = []
 
-    for (let rowStartI = 0, colStartI = 0; rowStartI < matToInvert.length; rowStartI += 4, colStartI++) {
-      const row = matToInvert.slice(rowStartI, rowStartI + 4)
+    for (let rowStartI = 0, colStartI = 0; rowStartI < matToTranspose.length; rowStartI += 4, colStartI++) {
+      const row = matToTranspose.slice(rowStartI, rowStartI + 4)
 
       for (let colI = colStartI, rowElI = 0; rowElI < row.length; colI += 4, rowElI++) {
-        invertedMat[colI] = row[rowElI]
+        transposedMat[colI] = row[rowElI]
       }
     }
 
-    return invertedMat
+    return transposedMat
   }
 
   static mult2dMats = (baseMat, multMats) => {

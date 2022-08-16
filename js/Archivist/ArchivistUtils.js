@@ -75,7 +75,6 @@ class ArchivistUtils {
       -1, 0, 0,
       -1, 0, 0,
 
-
       // BOTTOM FRONT TRIANGLE
       0, 0, 1,
       0, 0, 1,
@@ -1701,34 +1700,6 @@ class ArchivistUtils {
           }
         }
       }
-    }
-  }
-
-  static initLight(instance, data) {
-    const verticesPerCircle = 100
-    const r = 0.25
-    const angle = Math.PI * 2
-    const angleStep = angle / (verticesPerCircle - 1)
-    let coordinates = [0, 1, 0]
-
-    for (let vertex = 0; vertex < verticesPerCircle; vertex++) {
-      const rad = angleStep * vertex
-      const x = Math.cos(rad) * r
-      const z = -Math.sin(rad) * r
-
-      coordinates.push(x, 0, z)
-    }
-
-    const vao = instance.gl.createVertexArray();
-
-    instance.gl.bindVertexArray(vao);
-    
-    return {
-      vao,
-      verticesPerCircle,
-      color: [1, 1, 1],
-      buffer: instance.createAndBindVerticesBuffer(data.locations.position, new Float32Array(coordinates), {size: 3}),
-      mat: ShaderUtils.mult3dMats(data.mat, [ShaderUtils.init3dTranslationMat(-1, 0.25, 1), ShaderUtils.init3dRotationMat("z", -Math.PI / 2)])
     }
   }
 }
