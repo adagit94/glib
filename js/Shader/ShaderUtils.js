@@ -1,7 +1,7 @@
 export default class ShaderUtils {
-  static init2dPureMat = () => new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]);
+  static init2dIdentityMat = () => new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]);
 
-  static init3dPureMat = () =>
+  static init3dIdentityMat = () =>
     new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
 
   static init2dTranslationMat = (x, y) =>
@@ -128,6 +128,61 @@ export default class ShaderUtils {
     }
 
     return transposedMat
+  }
+
+  static init3dInvertedMat = (matToInvert) => {
+    let invertedMat = []
+
+    const a00 = matToInvert[0];
+    const a01 = matToInvert[1];
+    const a02 = matToInvert[2];
+    const a03 = matToInvert[3];
+    const a10 = matToInvert[4];
+    const a11 = matToInvert[5];
+    const a12 = matToInvert[6];
+    const a13 = matToInvert[7];
+    const a20 = matToInvert[8];
+    const a21 = matToInvert[9];
+    const a22 = matToInvert[10];
+    const a23 = matToInvert[11];
+    const a30 = matToInvert[12];
+    const a31 = matToInvert[13];
+    const a32 = matToInvert[14];
+    const a33 = matToInvert[15];
+
+    const b00 = a00 * a11 - a01 * a10
+    const b01 = a00 * a12 - a02 * a10
+    const b02 = a00 * a13 - a03 * a10
+    const b03 = a01 * a12 - a02 * a11
+    const b04 = a01 * a13 - a03 * a11
+    const b05 = a02 * a13 - a03 * a12
+    const b06 = a20 * a31 - a21 * a30
+    const b07 = a20 * a32 - a22 * a30
+    const b08 = a20 * a33 - a23 * a30
+    const b09 = a21 * a32 - a22 * a31
+    const b10 = a21 * a33 - a23 * a31
+    const b11 = a22 * a33 - a23 * a32
+
+    const d = 1 / (b00 * b11 - b01 * b10 + b02 * b09 + b03 * b08 - b04 * b07 + b05 * b06);
+
+    invertedMat[0] = (a11 * b11 - a12 * b10 + a13 * b09) * d;
+    invertedMat[1] = (a02 * b10 - a01 * b11 - a03 * b09) * d;
+    invertedMat[2] = (a31 * b05 - a32 * b04 + a33 * b03) * d;
+    invertedMat[3] = (a22 * b04 - a21 * b05 - a23 * b03) * d;
+    invertedMat[4] = (a12 * b08 - a10 * b11 - a13 * b07) * d;
+    invertedMat[5] = (a00 * b11 - a02 * b08 + a03 * b07) * d;
+    invertedMat[6] = (a32 * b02 - a30 * b05 - a33 * b01) * d;
+    invertedMat[7] = (a20 * b05 - a22 * b02 + a23 * b01) * d;
+    invertedMat[8] = (a10 * b10 - a11 * b08 + a13 * b06) * d;
+    invertedMat[9] = (a01 * b08 - a00 * b10 - a03 * b06) * d;
+    invertedMat[10] = (a30 * b04 - a31 * b02 + a33 * b00) * d;
+    invertedMat[11] = (a21 * b02 - a20 * b04 - a23 * b00) * d;
+    invertedMat[12] = (a11 * b07 - a10 * b09 - a12 * b06) * d;
+    invertedMat[13] = (a00 * b09 - a01 * b07 + a02 * b06) * d;
+    invertedMat[14] = (a31 * b01 - a30 * b03 - a32 * b00) * d;
+    invertedMat[15] = (a20 * b03 - a21 * b01 + a22 * b00) * d;
+
+    return invertedMat
   }
 
   static mult2dMats = (baseMat, multMats) => {

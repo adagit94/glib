@@ -40,7 +40,9 @@ class Archivist extends Shader {
             ...archivistLocs,
             normal: this.gl.getAttribLocation(programs[0], "a_normal"),
             reversedLight: this.gl.getUniformLocation(programs[0], "u_reversedLight"),
-            headMat: this.gl.getUniformLocation(programs[0], "u_headMat"),
+            normalMat: this.gl.getUniformLocation(programs[0], "u_normalMat"),
+            lightDirection: this.gl.getUniformLocation(programs[0], "u_lightDirection"),
+            lightAngleRange: this.gl.getUniformLocation(programs[0], "u_lightAngleRange"),
         };
     }
 
@@ -57,7 +59,7 @@ class Archivist extends Shader {
 
         this.#light = {
             color: [1, 1, 1],
-            vector: ShaderUtils.normalizeVec([1, 0, 1]),
+            vector: ShaderUtils.normalizeVec([-0.5, 0, 1]),
         };
     }
 
@@ -103,6 +105,7 @@ class Archivist extends Shader {
         this.gl.depthFunc(this.gl.ALWAYS);
 
         this.gl.uniformMatrix4fv(locations.mat, false, mat);
+        this.gl.uniformMatrix4fv(locations.normalMat, false, mat);
         this.gl.uniform3f(locations.reversedLight, ...this.#light.vector);
 
         for (let triangle = 0; triangle < 8; triangle++) {
@@ -115,8 +118,7 @@ class Archivist extends Shader {
     #rotateHead() {
         const { rotation, mat } = this.#head;
 
-        const rotationMat = ShaderUtils.init3dRotationMat("y", rotation.angle)
-        const rotatedMat = ShaderUtils.mult3dMats(mat, rotationMat);
+        const rotatedMat = ShaderUtils.mult3dMats(mat, ShaderUtils.init3dRotationMat("y", rotation.angle));
         const rotationPerFrame = this.animData.frameDeltaTime * rotation.tMult;
 
         rotation.angle = rotation.direction === "forward" ? rotation.angle + rotationPerFrame : rotation.angle - rotationPerFrame;
@@ -139,8 +141,6 @@ class Archivist extends Shader {
 
                 break;
         }
-
-        this.gl.uniformMatrix4fv(this.#archivist.locations.headMat, false, rotationMat);
 
         return rotatedMat;
     }
@@ -178,7 +178,6 @@ class Archivist extends Shader {
             this.gl.depthFunc(this.gl.ALWAYS);
             this.gl.uniform3f(locations.color, ...color);
             this.gl.uniformMatrix4fv(locations.mat, false, mat);
-
             this.gl.drawArrays(this.gl.LINE_STRIP, verticesOffset, vertices);
 
             const triggerPressure = triggerPressureOnMoves.includes(currentMove) && !pressurePerformedOnMoves.includes(currentMove);
