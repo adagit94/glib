@@ -27,7 +27,7 @@ class Archivist extends Shader {
             this.#initLocations(programs);
             this.#initObjectsData();
 
-            this.animate = true;
+            this.animate = false;
 
             this.gl.enable(this.gl.DEPTH_TEST);
 
@@ -49,16 +49,16 @@ class Archivist extends Shader {
             worldMat: this.gl.getUniformLocation(programs[0], "u_worldMat"),
             worldInversedTransposedMat: this.gl.getUniformLocation(programs[0], "u_worldInversedTransposedMat"),
             cameraPosition: this.gl.getUniformLocation(programs[0], "u_cameraPosition"),
+            lightActive: this.gl.getUniformLocation(programs[0], "u_lightActive"),
             lightPosition: this.gl.getUniformLocation(programs[0], "u_lightPosition"),
             lightDirection: this.gl.getUniformLocation(programs[0], "u_lightDirection"),
             lightInnerBorder: this.gl.getUniformLocation(programs[0], "u_lightInnerBorder"),
             lightOuterBorder: this.gl.getUniformLocation(programs[0], "u_lightOuterBorder"),
             lightColor: this.gl.getUniformLocation(programs[0], "u_lightColor"),
-            shininess: this.gl.getUniformLocation(programs[0], "u_shininess"),
+            lightShininess: this.gl.getUniformLocation(programs[0], "u_lightShininess"),
         };
 
-        this.gl.uniform3f(this.#archivist.locations.cameraPosition, false, ...this.#archivist.camera);
-        this.gl.uniform1f(this.#archivist.locations.shininess, false, 2);
+        this.gl.uniform3f(this.#archivist.locations.cameraPosition, ...this.#archivist.camera);
         this.gl.uniformMatrix4fv(this.#archivist.locations.worldMat, false, this.#archivist.worldMat);
         this.gl.uniformMatrix4fv(
             this.#archivist.locations.worldInversedTransposedMat,
@@ -82,31 +82,30 @@ class Archivist extends Shader {
     }
 
     #initLight() {
-        const position = [1, 0, 0];
+        const position = [0, 0, 1];
 
         this.#light = {
-            color: [0, 0, 1],
-            // color: ShaderUtils.normalizeVec([0, 0, 1]),
             position,
-            cos: Math.cos(Math.PI / 2),
-            vector: ShaderUtils.normalizeVec([-1, 0, 0]),
-            innerBorder: 2,
-            outerBorder: 10,
+            color: [0, 0, 1],
+            innerBorder: 0,
+            outerBorder: Math.cos(Math.PI / 8),
             lookAt: ShaderUtils.lookAtMat(position, this.#archivist.target),
+            shininess: 0,
         };
 
         this.#setLightUniforms()
     }
 
     #setLightUniforms() {
-        const { lightPosition, lightInnerBorder, lightOuterBorder, lightDirection, lightColor } = this.#archivist.locations;
-        const { position, color, innerBorder, outerBorder, lookAt } = this.#light;
+        const { lightPosition, lightInnerBorder, lightOuterBorder, lightDirection, lightColor, lightShininess } = this.#archivist.locations;
+        const { position, color, innerBorder, outerBorder, lookAt, shininess } = this.#light;
 
         this.gl.uniform3f(lightDirection, -lookAt[8], -lookAt[9], -lookAt[10]);
         this.gl.uniform3f(lightPosition, ...position);
         this.gl.uniform3f(lightColor, ...color);
         this.gl.uniform1f(lightInnerBorder, innerBorder);
         this.gl.uniform1f(lightOuterBorder, outerBorder);
+        this.gl.uniform1f(lightShininess, shininess);
     }
 
     #initHead() {
@@ -151,12 +150,14 @@ class Archivist extends Shader {
         this.gl.depthFunc(this.gl.ALWAYS);
 
         this.gl.uniformMatrix4fv(locations.mat, false, mat);
+        this.gl.uniform3f(locations.color, ...color);
+        this.gl.uniform1i(locations.lightActive, 1);
 
         for (let triangle = 0; triangle < 8; triangle++) {
-            this.gl.uniform3f(locations.color, ...color);
-
             this.gl.drawElements(this.gl.TRIANGLES, 3, this.gl.UNSIGNED_SHORT, triangle * 3 * 2);
         }
+
+        this.gl.uniform1i(locations.lightActive, 0);
     }
 
     #rotateHead() {
