@@ -14,8 +14,7 @@ out vec3 v_surfaceToLight;
 out vec3 v_surfaceToCamera;
 
 void main() {
-    mat3 worldMat3x3 = mat3(u_worldMat);
-    vec3 surfacePos = worldMat3x3 * a_position;
+    vec3 surfacePos = mat3(u_worldMat) * a_position;
     
     v_normal = mat3(u_worldInversedTransposedMat) * a_normal;
     v_surfaceToLight = u_lightPosition - surfacePos;
