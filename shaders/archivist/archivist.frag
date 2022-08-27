@@ -18,19 +18,25 @@ in vec3 v_surfaceToCamera;
 out vec4 color;
 
 void lightScene() {
+    // vec3 normal = normalize(v_normal);
+    // vec3 surfaceToLight = normalize(v_surfaceToLight);
+    // vec3 surfaceToCamera = normalize(v_surfaceToCamera);
+    // vec3 halfVector = normalize(surfaceToLight + surfaceToCamera);
+
+    // float dotFromDirection = dot(v_surfaceToLight, -u_lightDirection);
+    // float shouldLight = smoothstep(u_lightOuterBorder, u_lightInnerBorder, dotFromDirection);
+    // float light = shouldLight * dot(normal, surfaceToLight);
+    // float specular = shouldLight * pow(dot(normal, halfVector), u_lightShininess);
+
+    // color.rgb *= light;
+    // color.rgb += specular; // experiment with multiplication
+    // // color.rgb *= u_lightColor;
+
+
+
     vec3 normal = normalize(v_normal);
-    vec3 surfaceToLight = normalize(v_surfaceToLight);
-    vec3 surfaceToCamera = normalize(v_surfaceToCamera);
-    vec3 halfVector = normalize(surfaceToLight + surfaceToCamera);
-
-    float dotFromDirection = dot(v_surfaceToLight, -u_lightDirection);
-    float shouldLight = smoothstep(u_lightOuterBorder, u_lightInnerBorder, dotFromDirection);
-    float light = shouldLight * dot(normal, surfaceToLight);
-    float specular = shouldLight * pow(dot(normal, halfVector), u_lightShininess);
-
+    float light = dot(normal, -u_lightDirection);
     color.rgb *= light;
-    color.rgb += specular; // experiment with multiplication
-    // color.rgb *= u_lightColor;
 }
 
 void main() {

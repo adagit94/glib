@@ -9,17 +9,17 @@ class Archivist extends Shader {
         this.initShaders(shaders).then((programs) => {
             const [archivist] = programs;
 
-            const camera = [-1.5, 0, -2];
-            const target = [1.5, 0, 0];
+            const camera = [0, 0, 3];
+            const target = [2, 0, 0];
 
-            const worldMat = ShaderUtils.init3dRotationMat("y", Math.PI / 2);
+            const worldMat = ShaderUtils.init3dRotationMat("y", -(Math.PI - Math.PI / 4)); 
 
             this.#archivist = {
                 program: archivist,
                 camera,
                 target,
                 worldMat,
-                mat: ShaderUtils.mult3dMats(this.projectionMat, [ShaderUtils.lookAtMat(camera, target), worldMat]),
+                mat: ShaderUtils.mult3dMats(this.projectionMat, [ShaderUtils.init3dInvertedMat(ShaderUtils.lookAtMat(camera, target)), worldMat]),
             };
 
             this.gl.useProgram(programs[0]);
@@ -27,7 +27,7 @@ class Archivist extends Shader {
             this.#initLocations(programs);
             this.#initObjectsData();
 
-            this.animate = false;
+            this.animate = true;
 
             this.gl.enable(this.gl.DEPTH_TEST);
 
@@ -82,15 +82,15 @@ class Archivist extends Shader {
     }
 
     #initLight() {
-        const position = [0, 0, 1];
+        const position = [-3, 0, 3];
 
         this.#light = {
             position,
             color: [0, 0, 1],
             innerBorder: 0,
-            outerBorder: Math.cos(Math.PI / 8),
+            outerBorder: Math.cos(Math.PI / 4),
             lookAt: ShaderUtils.lookAtMat(position, this.#archivist.target),
-            shininess: 0,
+            shininess: 100,
         };
 
         this.#setLightUniforms()
@@ -100,7 +100,7 @@ class Archivist extends Shader {
         const { lightPosition, lightInnerBorder, lightOuterBorder, lightDirection, lightColor, lightShininess } = this.#archivist.locations;
         const { position, color, innerBorder, outerBorder, lookAt, shininess } = this.#light;
 
-        this.gl.uniform3f(lightDirection, -lookAt[8], -lookAt[9], -lookAt[10]);
+        this.gl.uniform3f(lightDirection, lookAt[8], lookAt[9], lookAt[10]);
         this.gl.uniform3f(lightPosition, ...position);
         this.gl.uniform3f(lightColor, ...color);
         this.gl.uniform1f(lightInnerBorder, innerBorder);
@@ -201,7 +201,7 @@ class Archivist extends Shader {
         }
 
         const vao = this.gl.createVertexArray();
-
+        
         this.gl.bindVertexArray(vao);
 
         this.#tentacles.tentacles = tentacles;
