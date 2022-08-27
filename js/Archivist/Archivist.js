@@ -9,10 +9,10 @@ class Archivist extends Shader {
         this.initShaders(shaders).then((programs) => {
             const [archivist] = programs;
 
-            const camera = [0, 0, 3];
+            const camera = [0, 0, 2];
             const target = [2, 0, 0];
 
-            const worldMat = ShaderUtils.init3dRotationMat("y", -(Math.PI - Math.PI / 4)); 
+            const worldMat = ShaderUtils.init3dRotationMat("y", -(Math.PI - Math.PI / 3));
 
             this.#archivist = {
                 program: archivist,
@@ -27,7 +27,7 @@ class Archivist extends Shader {
             this.#initLocations(programs);
             this.#initObjectsData();
 
-            this.animate = true;
+            this.animate = false;
 
             this.gl.enable(this.gl.DEPTH_TEST);
 
@@ -46,25 +46,11 @@ class Archivist extends Shader {
         this.#archivist.locations = {
             ...archivistLocs,
             normal: this.gl.getAttribLocation(programs[0], "a_normal"),
-            worldMat: this.gl.getUniformLocation(programs[0], "u_worldMat"),
-            worldInversedTransposedMat: this.gl.getUniformLocation(programs[0], "u_worldInversedTransposedMat"),
-            cameraPosition: this.gl.getUniformLocation(programs[0], "u_cameraPosition"),
+            inversedTransposedHeadMat: this.gl.getUniformLocation(programs[0], "u_inversedTransposedHeadMat"),
             lightActive: this.gl.getUniformLocation(programs[0], "u_lightActive"),
-            lightPosition: this.gl.getUniformLocation(programs[0], "u_lightPosition"),
             lightDirection: this.gl.getUniformLocation(programs[0], "u_lightDirection"),
-            lightInnerBorder: this.gl.getUniformLocation(programs[0], "u_lightInnerBorder"),
-            lightOuterBorder: this.gl.getUniformLocation(programs[0], "u_lightOuterBorder"),
             lightColor: this.gl.getUniformLocation(programs[0], "u_lightColor"),
-            lightShininess: this.gl.getUniformLocation(programs[0], "u_lightShininess"),
         };
-
-        this.gl.uniform3f(this.#archivist.locations.cameraPosition, ...this.#archivist.camera);
-        this.gl.uniformMatrix4fv(this.#archivist.locations.worldMat, false, this.#archivist.worldMat);
-        this.gl.uniformMatrix4fv(
-            this.#archivist.locations.worldInversedTransposedMat,
-            false,
-            ShaderUtils.init3dTransposedMat(ShaderUtils.init3dInvertedMat(this.#archivist.worldMat))
-        );
     }
 
     #initObjectsData() {
@@ -78,34 +64,24 @@ class Archivist extends Shader {
         this.#tentacles.mat = tentaclesMat;
         this.#tentacles.color = [0.25, 0.25, 0.25];
 
-        this.#initLight()
+        this.#initLight();
     }
 
     #initLight() {
-        const position = [-3, 0, 3];
-
         this.#light = {
-            position,
             color: [0, 0, 1],
-            innerBorder: 0,
-            outerBorder: Math.cos(Math.PI / 4),
-            lookAt: ShaderUtils.lookAtMat(position, this.#archivist.target),
-            shininess: 100,
+            direction: [-2, 0, -2],
         };
 
-        this.#setLightUniforms()
+        this.#setLightUniforms();
     }
 
     #setLightUniforms() {
-        const { lightPosition, lightInnerBorder, lightOuterBorder, lightDirection, lightColor, lightShininess } = this.#archivist.locations;
-        const { position, color, innerBorder, outerBorder, lookAt, shininess } = this.#light;
+        const { lightDirection, lightColor } = this.#archivist.locations;
+        const { direction, color } = this.#light;
 
-        this.gl.uniform3f(lightDirection, lookAt[8], lookAt[9], lookAt[10]);
-        this.gl.uniform3f(lightPosition, ...position);
+        this.gl.uniform3f(lightDirection, ...direction);
         this.gl.uniform3f(lightColor, ...color);
-        this.gl.uniform1f(lightInnerBorder, innerBorder);
-        this.gl.uniform1f(lightOuterBorder, outerBorder);
-        this.gl.uniform1f(lightShininess, shininess);
     }
 
     #initHead() {
@@ -163,8 +139,15 @@ class Archivist extends Shader {
     #rotateHead() {
         const { rotation, mat } = this.#head;
 
-        const rotatedMat = ShaderUtils.mult3dMats(mat, ShaderUtils.init3dRotationMat("y", rotation.angle));
+        const rotationMat = ShaderUtils.init3dRotationMat("y", rotation.angle)
+        const rotatedMat = ShaderUtils.mult3dMats(mat, rotationMat);
         const rotationPerFrame = this.animData.frameDeltaTime * rotation.tMult;
+
+        this.gl.uniformMatrix4fv(
+            this.#archivist.locations.inversedTransposedHeadMat,
+            false,
+            ShaderUtils.init3dTransposedMat(ShaderUtils.init3dInvertedMat(rotationMat))
+        );
 
         rotation.angle = rotation.direction === "forward" ? rotation.angle + rotationPerFrame : rotation.angle - rotationPerFrame;
 
@@ -201,7 +184,7 @@ class Archivist extends Shader {
         }
 
         const vao = this.gl.createVertexArray();
-        
+
         this.gl.bindVertexArray(vao);
 
         this.#tentacles.tentacles = tentacles;

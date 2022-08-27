@@ -3,8 +3,8 @@
 precision lowp int;
 
 uniform mat4 u_mat;
-uniform mat4 u_worldMat;
-uniform mat4 u_worldInversedTransposedMat;
+uniform mat4 u_objectToLightMat;
+uniform mat4 u_objectToLightInversedTransposedMat;
 uniform vec3 u_lightPosition;
 uniform vec3 u_cameraPosition;
 
@@ -16,9 +16,9 @@ out vec3 v_surfaceToLight;
 out vec3 v_surfaceToCamera;
 
 void main() {
-    vec3 surfacePos = mat3(u_worldMat) * a_position;
+    vec3 surfacePos = mat3(u_objectToLightMat) * a_position;
 
-    v_normal = mat3(u_worldInversedTransposedMat) * a_normal;
+    v_normal = mat3(u_objectToLightInversedTransposedMat) * a_normal;
     v_surfaceToLight = u_lightPosition - surfacePos;
     v_surfaceToCamera = u_cameraPosition - surfacePos;
     

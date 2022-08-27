@@ -11,8 +11,9 @@ class SpotLight {
         this.#locations = {
             position: gl.getAttribLocation(program, "a_position"),
             normal: gl.getAttribLocation(program, "a_normal"),
-            worldMat: gl.getUniformLocation(program, "u_worldMat"),
-            worldInversedTransposedMat: gl.getUniformLocation(program, "u_worldInversedTransposedMat"),
+            color: gl.getUniformLocation(program, "u_color"),
+            objectToLightMat: gl.getUniformLocation(program, "u_objectToLight"),
+            objectToLightInversedTransposedMat: gl.getUniformLocation(program, "u_objectToLightInversedTransposedMat"),
             cameraPosition: gl.getUniformLocation(program, "u_cameraPosition"),
             lightPosition: gl.getUniformLocation(program, "u_lightPosition"),
             lightDirection: gl.getUniformLocation(program, "u_lightDirection"),
@@ -23,8 +24,9 @@ class SpotLight {
         };
 
         this.#uniforms = {
-            worldMat: conf.worldMat,
-            worldInversedTransposedMat: conf.worldInversedTransposedMat,
+            color: conf.color,
+            objectToLightMat: conf.objectToLightMat,
+            objectToLightInversedTransposedMat: conf.objectToLightInversedTransposedMat,
             lightPosition: conf.ligthPosition,
             cameraPosition: conf.cameraPosition,
             lightLookAt: ShaderUtils.lookAtMat(conf.lightPosition, conf.lightTarget),
@@ -56,8 +58,8 @@ class SpotLight {
         this.#gl.uniform1f(this.#locations.lightOuterBorder, this.#uniforms.lightOuterBorder);
         this.#gl.uniform1f(this.#locations.lightShininess, this.#uniforms.lightShininess);
         this.#gl.uniform3f(this.#locations.cameraPosition, ...this.#uniforms.cameraPosition);
-        this.#gl.uniformMatrix4fv(this.#locations.worldMat, false, this.#uniforms.worldMat);
-        this.#gl.uniformMatrix4fv(this.#locations.worldInversedTransposedMat, false, this.#uniforms.worldInversedTransposedMat);
+        this.#gl.uniformMatrix4fv(this.#locations.objectToLightMat, false, this.#uniforms.objectToLightMat);
+        this.#gl.uniformMatrix4fv(this.#locations.objectToLightInversedTransposedMat, false, this.#uniforms.objectToLightInversedTransposedMat);
     }
 
     getPositionLocation() {
