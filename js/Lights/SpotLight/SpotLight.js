@@ -1,4 +1,4 @@
-import ShaderUtils from "../../Shader/ShaderUtils";
+import ShaderUtils from "../../Shader/ShaderUtils.js";
 
 class SpotLight {
     constructor(canvasSelector, conf, frameHandler) {

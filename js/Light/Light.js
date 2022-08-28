@@ -1,7 +1,7 @@
 import Shader from "../Shader/Shader.js";
 import ShaderUtils from "../Shader/ShaderUtils.js";
-import Ellipse from "../Shapes/Ellipse.js";
-import Circle from "../Shapes/Circle.js";
+import Ellipse from "../Shapes/2d/Ellipse.js";
+import Circle from "../Shapes/2d/Circle.js";
 import PulsingUtils from "./PulsingUtils.js";
 
 export default class Light extends Shader {

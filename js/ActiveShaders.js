@@ -4,6 +4,8 @@ import CuShader from "./Shader/CuShader.js";
 import CircleGrid from "./CircleGrid/CircleGrid.js";
 import CirclesChain from "./CirclesChain/CirclesChain.js";
 import Archivist from "./Archivist/Archivist.js";
+import Playground from "./Playground/Playground.js";
+import HexagonalSphere from "./Shapes/3d/cubes/Hexagonal.js";
 
 // new Light({
 //   light: {
@@ -44,9 +46,13 @@ import Archivist from "./Archivist/Archivist.js";
 //   },
 // });
 
-new Archivist({
-  archivist: {
-    vShader: "shaders/archivist/archivist.vert",
-    fShader: "shaders/archivist/archivist.frag",
-  },
-});
+// new Archivist({
+//   archivist: {
+//     vShader: "shaders/archivist/archivist.vert",
+//     fShader: "shaders/archivist/archivist.frag",
+//   },
+// });
+
+// new Playground();
+
+new HexagonalSphere({ squareSide: 0.5, wireframe: true });

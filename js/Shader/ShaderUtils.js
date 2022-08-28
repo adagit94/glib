@@ -172,7 +172,7 @@ export default class ShaderUtils {
     }
   };
 
-  static init2dProjectionMat = (w, h) => [2 / w, 0, 0, 0, -2 / h, 0, -1, 1, 1];
+  static init2dProjectionMat = (w, h) => new Float32Array([2 / w, 0, 0, 0, -2 / h, 0, -1, 1, 1]);
 
   static initPerspectiveMat = (fov, aspectRatio, near, far) => {
     const f = 1 / Math.tan(fov / 2);
@@ -197,7 +197,7 @@ export default class ShaderUtils {
       }
     }
 
-    return transposedMat
+    return new Float32Array(transposedMat)
   }
 
   static init3dInvertedMat = (matToInvert) => {
@@ -252,7 +252,7 @@ export default class ShaderUtils {
     invertedMat[14] = (a31 * b01 - a30 * b03 - a32 * b00) * d;
     invertedMat[15] = (a20 * b03 - a21 * b01 + a22 * b00) * d;
 
-    return invertedMat
+    return new Float32Array(invertedMat)
   }
 
   static mult2dMats = (baseMat, multMats) => {
@@ -361,7 +361,7 @@ export default class ShaderUtils {
     }
   };
 
-  static rotate3d = (mat, axis, rad) => {
+  static rotate3d = (mat, axis, rad) => { // maybe enable multiple rotations during one call with recursion and object
     const r0c0 = mat[0];
     const r0c1 = mat[1];
     const r0c2 = mat[2];

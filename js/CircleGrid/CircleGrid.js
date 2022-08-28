@@ -1,6 +1,6 @@
 import Shader from "../Shader/Shader.js";
 import ShaderUtils from "../Shader/ShaderUtils.js";
-import Circle from "../Shapes/Circle.js";
+import Circle from "../Shapes/2d/Circle.js";
 
 export default class CircleGrid extends Shader {
   constructor(shaders) {

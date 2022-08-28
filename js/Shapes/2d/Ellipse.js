@@ -1,4 +1,4 @@
-import ShaderUtils from "../Shader/ShaderUtils.js";
+import ShaderUtils from "../../Shader/ShaderUtils.js";
 
 export default class Ellipse {
   constructor(x, y, rx, ry, angle, verticesCount) {

@@ -87,6 +87,7 @@ export default class Shader {
     for (const program of programs) {
       locations.push({
         position: this.gl.getAttribLocation(program, "a_position"),
+        normal: this.gl.getAttribLocation(program, "a_normal"),
         mat: this.gl.getUniformLocation(program, "u_mat"),
         color: this.gl.getUniformLocation(program, "u_color"),
       });

@@ -1,5 +1,5 @@
 import Shader from "../Shader/Shader.js";
-import Circle from "../Shapes/Circle.js";
+import Circle from "../Shapes/2d/Circle.js";
 import ShaderUtils from "../Shader/ShaderUtils.js";
 
 export default class CirclesChain extends Shader {

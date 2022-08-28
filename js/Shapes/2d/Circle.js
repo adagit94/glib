@@ -1,4 +1,4 @@
-import ShaderUtils from './../Shader/ShaderUtils.js';
+import ShaderUtils from '../../Shader/ShaderUtils.js';
 
 export default class Circle {
   constructor(x, y, r, angle, verticesCount) {
