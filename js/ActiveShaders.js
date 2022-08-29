@@ -5,7 +5,7 @@ import CircleGrid from "./CircleGrid/CircleGrid.js";
 import CirclesChain from "./CirclesChain/CirclesChain.js";
 import Archivist from "./Archivist/Archivist.js";
 import Playground from "./Playground/Playground.js";
-import HexagonalSphere from "./Shapes/3d/cubes/Hexagonal.js";
+import HexagonalSphere from "./Shapes/3d/HexagonalSphere/HexagonalSphere.js";
 
 // new Light({
 //   light: {
@@ -55,4 +55,4 @@ import HexagonalSphere from "./Shapes/3d/cubes/Hexagonal.js";
 
 // new Playground();
 
-new HexagonalSphere({ squareSide: 0.5, wireframe: true });
+new HexagonalSphere({ squareSide: 0.25, wireframe: true });
