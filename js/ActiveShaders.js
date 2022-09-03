@@ -55,4 +55,4 @@ import HexagonalSphere from "./Shapes/3d/HexagonalSphere/HexagonalSphere.js";
 
 // new Playground();
 
-new HexagonalSphere({ squareSide: 0.25, wireframe: true });
+new HexagonalSphere({ squareSide: 0.25 });

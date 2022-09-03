@@ -4,7 +4,7 @@ import HexagonalSphereUtils from "./HexagonalSphereUtils.js";
 
 class HexagonalSphere extends Shader {
     constructor(settings) {
-        super("3d", { fov: Math.PI / 4, near: 0, far: 2000 });
+        super("3d", { fov: Math.PI / 4, near: 0.625, far: 40 });
 
         ShaderUtils.createShaderProgram(this.gl, {
             vShader: "js/Shapes/3d/HexagonalSphere/hexagonalSphere.vert",
@@ -18,7 +18,10 @@ class HexagonalSphere extends Shader {
                 color: [0, 0, 1],
             };
             this.#mats = {
-                scene: ShaderUtils.mult3dMats(this.projectionMat, ShaderUtils.init3dInvertedMat(ShaderUtils.lookAtMat([0, 0, 2.5]))),
+                scene: ShaderUtils.mult3dMats(this.projectionMat, [
+                    ShaderUtils.init3dInvertedMat(ShaderUtils.lookAtMat([0, 0, 2.5])),
+                    ShaderUtils.init3dTranslationMat(0, 0, 0),
+                ]),
             };
 
             const plateData = HexagonalSphereUtils.getHexagonalPlateData(settings);
@@ -34,6 +37,10 @@ class HexagonalSphere extends Shader {
                 indices: this.createAndBindIndicesBuffer(plateData.indices),
                 // normals: this.createAndBindVerticesBuffer(this.#locations.normal, hexagon.normals, { size: 3 }),
             };
+
+            this.gl.enable(this.gl.DEPTH_TEST);
+            this.gl.depthFunc(this.gl.LESS);
+            this.gl.clearDepth(1);
 
             this.#initPlatesMats();
             this.requestAnimationFrame();
@@ -76,47 +83,43 @@ class HexagonalSphere extends Shader {
             mats.push(plateMat);
         }
 
-        // const sideAngle = (Math.PI / 4) * side;
-        const sideMat = ShaderUtils.mult3dMats(ShaderUtils.init3dRotationMat("y",  Math.PI / 5), ShaderUtils.init3dRotationMat("x", angleStep / 2));
+        const rotationMat = ShaderUtils.init3dRotationMat("y", Math.PI / 4);
 
         for (let plate = 0, angle = angleStep; plate < plates; angle += angleStep, plate++) {
             const y = Math.sin(angle) * circleR;
             const z = -Math.cos(angle) * circleR;
 
-            const plateMat = ShaderUtils.mult3dMats(sideMat, [
+            const plateMat = ShaderUtils.mult3dMats(rotationMat, [
                 ShaderUtils.init3dTranslationMat(0, y, z),
                 ShaderUtils.init3dRotationMat("x", -angle),
                 scaleMat,
             ]);
-
-            // const plateMat = ShaderUtils.mult3dMats(ShaderUtils.init3dTranslationMat(0, y, z), [
-            //     ShaderUtils.init3dRotationMat("x", -angle),
-            //     scaleMat,
-            // ]);
-
 
             mats.push(plateMat);
         }
     }
 
     #renderPlates() {
+        ShaderUtils.rotate3d(this.#mats.scene, "y", 0); // - Math.PI / 4
         // ShaderUtils.rotate3d(this.#mats.scene, "x", Math.PI / 2);
-        ShaderUtils.rotate3d(this.#mats.scene, "y", Math.PI / 8);
         const { plates } = this.#conf;
         const { plateData } = this.#storage;
 
         this.gl.bindVertexArray(this.#vao);
         this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.#buffers.indices);
 
-        this.gl.uniform3f(this.#locations.color, ...this.#uniforms.color);
+        // this.gl.uniform3f(this.#locations.color, ...this.#uniforms.color);
 
         for (let side = 0; side < 2; side++) {
             for (let plate = 0; plate < plates; plate++) {
-                const plateMat = ShaderUtils.mult3dMats(this.#mats.scene, this.#mats.plates[side * plates + plate]);
+                let plateMat = ShaderUtils.mult3dMats(this.#mats.scene, this.#mats.plates[side * plates + plate]);
 
+                const color = side === 0 ? [0, 0, plate / plates] : [plate / plates, 0, 0];
+
+                this.gl.uniform3f(this.#locations.color, ...color);
                 this.gl.uniformMatrix4fv(this.#locations.mat, false, plateMat);
 
-                this.gl.drawElements(this.gl.LINES, plateData.indices.length, this.gl.UNSIGNED_SHORT, 0);
+                this.gl.drawElements(this.gl.TRIANGLES, plateData.indices.length, this.gl.UNSIGNED_SHORT, 0);
             }
         }
     }
