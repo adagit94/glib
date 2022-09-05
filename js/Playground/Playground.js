@@ -1,6 +1,6 @@
 import Shader from "../Shader/Shader.js";
 import ShaderUtils from "../Shader/ShaderUtils.js";
-import HexagonalSphere from "../Shapes/3d/HexagonalSphere/HexagonalSphere.js";
+import Hexagon from "../Shapes/3d/Hexagon/Hexagon.js";
 
 class Playground extends Shader {
     constructor() {
