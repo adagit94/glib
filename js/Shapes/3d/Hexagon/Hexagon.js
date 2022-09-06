@@ -19,7 +19,7 @@ class Hexagon extends Shader {
             };
             this.#mats = {
                 scene: ShaderUtils.mult3dMats(this.projectionMat, [
-                    ShaderUtils.init3dInvertedMat(ShaderUtils.lookAtMat([0, 0, 2.5])),
+                    ShaderUtils.init3dInvertedMat(ShaderUtils.lookAtMat([0, 0, 2])),
                     ShaderUtils.init3dTranslationMat(0, 0, 0),
                 ]),
             };
@@ -57,7 +57,7 @@ class Hexagon extends Shader {
     #storage;
 
     #renderPlates() {
-        // ShaderUtils.rotate3d(this.#mats.scene, "y", Math.PI / 1.99); // - Math.PI / 4
+        // ShaderUtils.rotate3d(this.#mats.scene, "y", Math.PI / 2); // - Math.PI / 4
         // ShaderUtils.rotate3d(this.#mats.scene, "x", -Math.PI / 3);
 
         this.gl.bindVertexArray(this.#vao);
