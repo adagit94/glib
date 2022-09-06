@@ -58,7 +58,7 @@ class Hexagon extends Shader {
 
     #renderPlates() {
         // ShaderUtils.rotate3d(this.#mats.scene, "y", Math.PI / 2); // - Math.PI / 4
-        // ShaderUtils.rotate3d(this.#mats.scene, "x", -Math.PI / 3);
+        // ShaderUtils.rotate3d(this.#mats.scene, "x", -Math.PI / 2);
 
         this.gl.bindVertexArray(this.#vao);
         this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.#buffers.indices);
