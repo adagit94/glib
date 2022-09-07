@@ -4,35 +4,45 @@ export default class HexagonUtils {
         
         return {
             vertices: new Float32Array([
-                -squareSide / 2, -squareSide, squareSide * 2, // 0
-                -squareSide / 2, squareSide, squareSide * 2, // 1
-                squareSide / 2, squareSide, squareSide * 2, // 2
-                squareSide / 2, -squareSide, squareSide * 2, // 3
-                -squareSide * 1.5, 0, squareSide * 2, // 4
-                squareSide * 1.5, 0, squareSide * 2, // 5
+                -squareSide / 2, -squareSide, squareSide * 3, // 0
+                -squareSide / 2, squareSide, squareSide * 3, // 1
+                squareSide / 2, squareSide, squareSide * 3, // 2
+                squareSide / 2, -squareSide, squareSide * 3, // 3
+                -squareSide * 1.5, 0, squareSide * 3, // 4
+                squareSide * 1.5, 0, squareSide * 3, // 5
 
-                -squareSide / 2, squareSide * 3, 0, // 6
-                squareSide / 2, squareSide * 3, 0,  // 7
-                -squareSide * 1.5, squareSide * 2, squareSide, // 8
-                squareSide * 1.5, squareSide * 2, squareSide, // 9
+                -squareSide / 2, squareSide * 3, squareSide, // 6
+                squareSide / 2, squareSide * 3, squareSide,  // 7
+                -squareSide * 1.5, squareSide * 2, squareSide * 2, // 8
+                squareSide * 1.5, squareSide * 2, squareSide * 2, // 9
 
-                -squareSide / 2, squareSide, -squareSide * 2, // 10
-                squareSide / 2, squareSide, -squareSide * 2,  // 11
-                -squareSide * 1.5, squareSide * 2, -squareSide, // 12
-                squareSide * 1.5, squareSide * 2, -squareSide, // 13
+                -squareSide / 2, squareSide * 3, -squareSide, // 10
+                squareSide / 2, squareSide * 3, -squareSide,  // 11
+                -squareSide * 1.5, squareSide * 3, 0, // 12
+                squareSide * 1.5, squareSide * 3, 0, // 13
 
-                -squareSide / 2, -squareSide, -squareSide * 2, // 14
-                squareSide / 2, -squareSide, -squareSide * 2, // 15
-                -squareSide * 1.5, 0, -squareSide * 2, // 16
-                squareSide * 1.5, 0, -squareSide * 2, // 17
+                -squareSide / 2, squareSide, -squareSide * 3, // 14
+                squareSide / 2, squareSide, -squareSide * 3,  // 15
+                -squareSide * 1.5, squareSide * 2, -squareSide * 2, // 16
+                squareSide * 1.5, squareSide * 2, -squareSide * 2, // 17
 
-                -squareSide / 2, -squareSide * 3, 0, // 18
-                squareSide / 2, -squareSide * 3, 0,  // 19
-                -squareSide * 1.5, -squareSide * 2, -squareSide, // 20
-                squareSide * 1.5, -squareSide * 2, -squareSide, // 21
+                -squareSide / 2, -squareSide, -squareSide * 3, // 18
+                squareSide / 2, -squareSide, -squareSide * 3, // 19
+                -squareSide * 1.5, 0, -squareSide * 3, // 20
+                squareSide * 1.5, 0, -squareSide * 3, // 21
 
-                -squareSide * 1.5, -squareSide * 2, squareSide, // 22
-                squareSide * 1.5, -squareSide * 2, squareSide, // 23
+                -squareSide / 2, -squareSide * 3, -squareSide, // 22
+                squareSide / 2, -squareSide * 3, -squareSide,  // 23
+                -squareSide * 1.5, -squareSide * 2, -squareSide * 2, // 24
+                squareSide * 1.5, -squareSide * 2, -squareSide * 2, // 25
+
+                -squareSide / 2, -squareSide * 3, squareSide, // 26
+                squareSide / 2, -squareSide * 3, squareSide,  // 27
+                -squareSide * 1.5, -squareSide * 3, 0, // 28
+                squareSide * 1.5, -squareSide * 3, 0, // 29
+
+                -squareSide * 1.5, -squareSide * 2, squareSide * 2, // 30
+                squareSide * 1.5, -squareSide * 2, squareSide * 2, // 31
             ]),
             indices: new Uint16Array([
                 0, 1, 3,
@@ -60,10 +70,20 @@ export default class HexagonUtils {
                 14, 20, 18,
                 15, 21, 19,
 
-                0, 18, 19,
-                0, 3, 19,
-                0, 22, 18,
-                3, 23, 19
+                18, 22, 19,
+                19, 23, 22,
+                18, 24, 22,
+                19, 25, 23,
+
+                22, 26, 23,
+                23, 27, 26,
+                22, 28, 26,
+                23, 29, 27,
+
+                0, 26, 3,
+                26, 27, 3,
+                0, 30, 26,
+                3, 31, 27,
             ]),
             normals: new Float32Array([
                 0, 0, 1,
