@@ -29,6 +29,12 @@ export default class HexagonUtils {
 
                 -squareSide * 2, squareSide, -squareSide * 2, // 18
                 -squareSide * 2, squareSide, squareSide * 2, // 19
+
+                -squareSide, 0, -squareSide * 3, // 20
+                squareSide, 0, -squareSide * 3, // 21
+
+                -squareSide, 0, squareSide * 3, // 22
+                squareSide, 0, squareSide * 3, // 23
             ]),
             indices: new Uint16Array([
                 0, 1, 2,
@@ -55,7 +61,27 @@ export default class HexagonUtils {
                 15, 18, 4,
                 16, 19, 7,
                 15, 4, 16,
-                4, 7, 16
+                4, 7, 16,
+
+                0, 14, 20,
+                1, 8, 21,
+                0, 20, 1,
+                1, 21, 20,
+
+                20, 18, 4,
+                21, 12, 5,
+                20, 21, 4,
+                21, 5, 4,
+
+                3, 17, 22, 
+                2, 11, 23,
+                3, 2, 22,
+                2, 23, 22,
+
+                22, 19, 7,
+                23, 13, 6,
+                22, 23, 7,
+                23, 6, 7
             ]),
             normals: new Float32Array([
                 0, 0, 1,
