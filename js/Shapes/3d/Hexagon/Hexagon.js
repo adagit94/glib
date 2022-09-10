@@ -36,12 +36,14 @@ class Hexagon extends Shader {
             this.#buffers = {
                 vertices: this.createAndBindVerticesBuffer(this.#locations.position, hexagonData.vertices, { size: 3 }),
                 indices: this.createAndBindIndicesBuffer(hexagonData.indices),
-                // normals: this.createAndBindVerticesBuffer(this.#locations.normal, hexagon.normals, { size: 3 }),
+                normals: this.createAndBindVerticesBuffer(this.#locations.normal, hexagonData.normals, { size: 3 }),
             };
 
             this.gl.enable(this.gl.DEPTH_TEST);
             this.gl.depthFunc(this.gl.LESS);
             this.gl.clearDepth(1);
+
+            this.animate = false
 
             this.requestAnimationFrame();
         });
@@ -57,8 +59,8 @@ class Hexagon extends Shader {
     #storage;
 
     #renderPlates() {
-        ShaderUtils.rotate3d(this.#mats.scene, "y", Math.PI / 8); // -Math.PI +
-        // ShaderUtils.rotate3d(this.#mats.scene, "x", -Math.PI / 8);
+        // ShaderUtils.rotate3d(this.#mats.scene, "y", this.animData.frameDeltaTime / 3)
+        // ShaderUtils.rotate3d(this.#mats.scene, "x", this.animData.frameDeltaTime / 5)
 
         this.gl.bindVertexArray(this.#vao);
         this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.#buffers.indices);
