@@ -1,0 +1,103 @@
+class Cube {
+    constructor(sideLength, wireframe) {
+        const sideHalfLength = sideLength / 2
+        
+        this.vertices = [
+            sideHalfLength, sideHalfLength, sideHalfLength, // 0
+            sideHalfLength, -sideHalfLength, sideHalfLength, // 1
+            -sideHalfLength, -sideHalfLength, sideHalfLength, // 2
+            -sideHalfLength, sideHalfLength, sideHalfLength, // 3
+
+            sideHalfLength, sideHalfLength, -sideHalfLength, // 4
+            sideHalfLength, -sideHalfLength, -sideHalfLength, // 5
+
+            -sideHalfLength, sideHalfLength, -sideHalfLength, // 6
+            -sideHalfLength, -sideHalfLength, -sideHalfLength, // 7
+        ]
+
+        this.indices = wireframe ? [
+            0, 1,
+            1, 2,
+            2, 3,
+            3, 0,
+            0, 4,
+            4, 5,
+            5, 1,
+            3, 6,
+            6, 7,
+            7, 2,
+            4, 6,
+            5, 7
+        ] : [
+            0, 1, 2,
+            2, 3, 0,
+
+            0, 4, 5,
+            5, 1, 0,
+
+            4, 6, 7,
+            7, 5, 4,
+
+            3, 2, 6,
+            2, 7, 6,
+
+            0, 1, 4,
+            4, 6, 3,
+
+            2, 5, 7,
+            2, 3, 7
+        ]
+
+        if (!wireframe) { 
+            this.normals = [
+                0, 0, 1,
+                0, 0, 1,
+                0, 0, 1,
+                0, 0, 1,
+                0, 0, 1,
+                0, 0, 1,
+
+                1, 0, 0,
+                1, 0, 0,
+                1, 0, 0,
+                1, 0, 0,
+                1, 0, 0,
+                1, 0, 0,
+
+                0, 0, -1,
+                0, 0, -1,
+                0, 0, -1,
+                0, 0, -1,
+                0, 0, -1,
+                0, 0, -1,
+
+                -1, 0, 0,
+                -1, 0, 0,
+                -1, 0, 0,
+                -1, 0, 0,
+                -1, 0, 0,
+                -1, 0, 0,
+
+                0, 1, 0,
+                0, 1, 0,
+                0, 1, 0,
+                0, 1, 0,
+                0, 1, 0,
+                0, 1, 0,
+
+                0, -1, 0,
+                0, -1, 0,
+                0, -1, 0,
+                0, -1, 0,
+                0, -1, 0,
+                0, -1, 0,
+            ]
+        }
+    }
+
+    vertices
+    indices
+    normals
+}
+
+export default Cube

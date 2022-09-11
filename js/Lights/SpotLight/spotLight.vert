@@ -1,8 +1,6 @@
 #version 300 es
 
-precision lowp int;
-
-uniform mat4 u_mat;
+uniform mat4 u_finalMat;
 uniform mat4 u_objectToLightMat;
 uniform mat4 u_objectToLightInversedTransposedMat;
 uniform vec3 u_lightPosition;
@@ -22,5 +20,5 @@ void main() {
     v_surfaceToLight = u_lightPosition - surfacePos;
     v_surfaceToCamera = u_cameraPosition - surfacePos;
     
-    gl_Position = u_mat * vec4(a_position, 1);
+    gl_Position = u_finalMat * vec4(a_position, 1);
 }

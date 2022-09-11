@@ -1,7 +1,5 @@
 export default class HexagonUtils {
-    static getHexagonalPlateData() {
-        const squareSide = 0.25
-        
+    static getHexagonData(squareSide) {
         return {
             vertices: new Float32Array([
                 -squareSide, -squareSide * 2, -squareSide, // 0
