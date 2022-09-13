@@ -31,9 +31,9 @@ export default class Shader {
     }
   }
 
-  projectionMat;
-  aspectRatio;
   gl = document.querySelector("#glFrame").getContext("webgl2");
+  aspectRatio;
+  projectionMat;
   animate = false;
   animData = {
     frameDeltaTime: 0,

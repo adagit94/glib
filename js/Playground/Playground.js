@@ -1,3 +1,4 @@
+import SpotLight from "../Lights/SpotLight/SpotLight.js";
 import Shader from "../Shader/Shader.js";
 import ShaderUtils from "../Shader/ShaderUtils.js";
 import Cube from "../Shapes/3d/Cube.js";
@@ -7,7 +8,7 @@ class Playground extends Shader {
     constructor() {
         super("3d", { fov: Math.PI / 4, near: 0, far: 20 });
 
-        this.animate = false;
+        this.animate = true;
 
         this.#init();
     }
@@ -16,6 +17,7 @@ class Playground extends Shader {
     #mats;
     #locations;
     #data;
+    #light;
 
     #init = async () => {
         this.#program = await ShaderUtils.createShaderProgram(this.gl, {
@@ -32,40 +34,11 @@ class Playground extends Shader {
         this.#locations = this.initCommonLocations([this.#program])[0];
 
         this.#initData();
-
-        this.requestAnimationFrame();
     };
 
-    #initData() {
-        const cube = new Cube(0.5, true)
-        const vao = this.gl.createVertexArray();
+    #initData() {}
 
-        this.gl.bindVertexArray(vao);
-
-        this.#data = {
-            cube,
-            vao,
-            color: [1, 1, 1],
-            buffers: {
-                vertices: this.createAndBindVerticesBuffer(this.#locations.position, cube.vertices, { size: 3 }),
-                indices: this.createAndBindIndicesBuffer(cube.indices),
-                normals: this.createAndBindVerticesBuffer(this.#locations.normal, cube.normals, { size: 3 }),
-            },
-        };
-    }
-
-    #render() {
-        this.gl.uniform3f(this.#locations.color, ...this.#data.color);
-
-        this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.#data.buffers.indices);
-        
-        this.gl.drawElemens(this.gl.LINES, this.#data.cube.indices.length, this.gl.UNSIGNED_SHORT, 0)
-    }
-
-    computeScene() {
-        this.gl.useProgram(this.#program);
-        this.#render();
-    }
+    computeScene = () => {};
 }
 
 export default Playground;

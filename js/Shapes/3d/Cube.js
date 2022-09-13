@@ -2,7 +2,7 @@ class Cube {
     constructor(sideLength, wireframe) {
         const sideHalfLength = sideLength / 2
         
-        this.vertices = [
+        this.vertices = new Float32Array([
             sideHalfLength, sideHalfLength, sideHalfLength, // 0
             sideHalfLength, -sideHalfLength, sideHalfLength, // 1
             -sideHalfLength, -sideHalfLength, sideHalfLength, // 2
@@ -13,9 +13,9 @@ class Cube {
 
             -sideHalfLength, sideHalfLength, -sideHalfLength, // 6
             -sideHalfLength, -sideHalfLength, -sideHalfLength, // 7
-        ]
+        ])
 
-        this.indices = wireframe ? [
+        this.indices = new Uint16Array(wireframe ? [
             0, 1,
             1, 2,
             2, 3,
@@ -41,15 +41,15 @@ class Cube {
             3, 2, 6,
             2, 7, 6,
 
-            0, 1, 4,
+            3, 0, 4,
             4, 6, 3,
 
-            2, 5, 7,
-            2, 3, 7
-        ]
+            1, 5, 7,
+            2, 7, 1
+        ])
 
         if (!wireframe) { 
-            this.normals = [
+            this.normals = new Float32Array([
                 0, 0, 1,
                 0, 0, 1,
                 0, 0, 1,
@@ -91,7 +91,7 @@ class Cube {
                 0, -1, 0,
                 0, -1, 0,
                 0, -1, 0,
-            ]
+            ])
         }
     }
 

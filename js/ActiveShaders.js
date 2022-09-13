@@ -6,6 +6,7 @@ import CirclesChain from "./CirclesChain/CirclesChain.js";
 import Archivist from "./Archivist/Archivist.js";
 import Playground from "./Playground/Playground.js";
 import Hexagon from "./Shapes/3d/Hexagon/Hexagon.js";
+import GoldenGrid from "./GoldenGrid/GoldenGrid.js";
 
 // new Light({
 //   light: {
@@ -53,6 +54,4 @@ import Hexagon from "./Shapes/3d/Hexagon/Hexagon.js";
 //   },
 // });
 
-// new Playground();
-
-new Hexagon();
+new GoldenGrid();

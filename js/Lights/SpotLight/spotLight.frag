@@ -5,7 +5,7 @@ precision highp float;
 uniform vec3 u_color;
 uniform vec3 u_lightColor;
 uniform vec3 u_lightDirection;
-// uniform float u_lightShininess;
+uniform float u_lightShininess;
 uniform float u_lightInnerBorder;
 uniform float u_lightOuterBorder;
 
@@ -24,7 +24,7 @@ void main() {
     float dotFromDirection = dot(v_surfaceToLight, -u_lightDirection);
     float shouldLight = smoothstep(u_lightOuterBorder, u_lightInnerBorder, dotFromDirection);
     float light = shouldLight * dot(normal, surfaceToLight);
-    // float specular = shouldLight * pow(dot(normal, halfVector), u_lightShininess);
+    float specular = shouldLight * pow(dot(normal, halfVector), u_lightShininess);
 
     color = vec4(u_color, 1);
     color.rgb *= light;
