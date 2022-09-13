@@ -4,7 +4,7 @@ import Cube from "../Shapes/3d/Cube.js";
 
 class GoldenGrid extends Shader {
     constructor() {
-        super("3d", { fov: Math.PI / 2, near: 0, far: 2000 });
+        super("3d", { fov: Math.PI / 2, near: 0, far: 20 });
 
         this.initShaders({
             goldenGrid: {
@@ -20,7 +20,7 @@ class GoldenGrid extends Shader {
 
             this.gl.useProgram(goldenGrid);
 
-            const cameraMat = ShaderUtils.lookAtMat();
+            const cameraMat = ShaderUtils.lookAtMat([0, 0, 1.5]);
             const viewMat = ShaderUtils.init3dInvertedMat(cameraMat);
             const sceneMat = ShaderUtils.mult3dMats(this.projectionMat, viewMat);
 
@@ -34,7 +34,7 @@ class GoldenGrid extends Shader {
 
             this.animate = false;
 
-            this.gl.enable(this.gl.DEPTH_TEST);
+            // this.gl.enable(this.gl.DEPTH_TEST);
 
             this.requestAnimationFrame();
         });
@@ -59,14 +59,12 @@ class GoldenGrid extends Shader {
                 for (let x = cubeOffset, xLayer = 0; xLayer < layers; x -= sideLength, xLayer++) {
                     const cubePositionMat = ShaderUtils.init3dTranslationMat(x, y, z);
 
-                    mats.push(ShaderUtils.mult3dMats(this.#mats.scene, cubePositionMat));
+                    mats.push(cubePositionMat);
                 }
             }
         }
 
-        this.#mats = {
-            cubes: mats,
-        };
+        this.#mats.cubes = mats
 
         const vao = (this.#vao = this.gl.createVertexArray());
 
@@ -87,16 +85,15 @@ class GoldenGrid extends Shader {
         this.gl.bindVertexArray(this.#vao);
         this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.#buffers.indices);
 
-        this.gl.uniformMatrix4fv(this.#locations.mat, false, this.#mats.scene);
-        this.gl.drawElements(this.gl.LINES, this.#cube.indices.length, this.gl.UNSIGNED_SHORT, 0);
+        const rotationMat = ShaderUtils.init3dRotationMat("y", this.animData.deltaTime / 2)
         
-        // for (let cube = 0; cube < cubesMats.length; cube++) {
-        //     const cubeMat = cubesMats[cube];
+        for (let cube = 0; cube < cubesMats.length; cube++) {
+            const cubeMat = ShaderUtils.mult3dMats(this.#mats.scene, [rotationMat, cubesMats[cube]]);
 
-        //     this.gl.uniformMatrix4fv(this.#locations.mat, false, cubeMat);
+            this.gl.uniformMatrix4fv(this.#locations.mat, false, cubeMat);
 
-        //     this.gl.drawElements(this.gl.LINES, this.#cube.indices.length, this.gl.UNSIGNED_SHORT, 0);
-        // }
+            this.gl.drawElements(this.gl.LINES, this.#cube.indices.length, this.gl.UNSIGNED_SHORT, 0);
+        }
     }
 
     computeScene = () => {
