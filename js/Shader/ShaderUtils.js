@@ -17,6 +17,8 @@ export default class ShaderUtils {
     const vShaderStr = shadersSources[0];
     const fShaderStr = shadersSources[1];
 
+    console.log("fShaderStr", fShaderStr)
+
     const vShader = gl.createShader(gl.VERTEX_SHADER);
     const fShader = gl.createShader(gl.FRAGMENT_SHADER);
 
