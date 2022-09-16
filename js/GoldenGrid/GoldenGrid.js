@@ -5,14 +5,52 @@ import Cube from "../Shapes/3d/Cube.js";
 
 class GoldenGrid extends Shader {
     constructor() {
-        super("3d", { fov: Math.PI / 2, near: 0, far: 20 });
+        super("#glFrame", "3d", { fov: Math.PI / 2, near: 0, far: 20 });
 
-        this.initShaders({
-            goldenGrid: {
-                vShader: "js/GoldenGrid/goldenGrid.vert",
-                fShader: "js/GoldenGrid/goldenGrid.frag",
+        this.#initGrid();
+    }
+
+    #cube;
+    #light;
+
+    #initGrid() {
+        const sideLength = 0.5;
+        const cubeOffset = sideLength * 2 - sideLength / 2;
+        const cubeData = (this.#cube = new Cube(sideLength, true));
+        const layers = 4;
+        let mats = [];
+
+        for (let z = cubeOffset, zLayer = 0; zLayer < layers; z -= sideLength, zLayer++) {
+            for (let y = cubeOffset, yLayer = 0; yLayer < layers; y -= sideLength, yLayer++) {
+                for (let x = cubeOffset, xLayer = 0; xLayer < layers; x -= sideLength, xLayer++) {
+                    const cubePositionMat = ShaderUtils.init3dTranslationMat(x, y, z);
+
+                    mats.push(cubePositionMat);
+                }
+            }
+        }
+
+        this.mats.cubes = mats;
+
+        this.#light = new SphericLight(this.gl, {
+            color: [1, 1, 0],
+            lightPosition: [0, 0, 0.25],
+            lightColor: [1, 1, 1],
+        });
+
+        this.init([
+            {
+                name: "goldenGrid",
+                paths: { vShader: "js/GoldenGrid/goldenGrid.vert", fShader: "js/GoldenGrid/goldenGrid.frag" },
+                buffersData: {
+                    cubes: {
+                        vertices: this.createAndBindVerticesBuffer(this.#light.getPositionLocation(), cubeData.vertices, { size: 3 }),
+                        indices: this.createAndBindIndicesBuffer(cubeData.indices),
+                        normals: this.createAndBindVerticesBuffer(this.#light.getNormalLocation(), cubeData.normals, { size: 3 }),
+                    },
+                },
             },
-        }).then((programs) => {
+        ]).then((programs) => {
             const [goldenGrid] = programs;
 
             this.#programs = {
@@ -48,44 +86,6 @@ class GoldenGrid extends Shader {
                 this.requestAnimationFrame();
             });
         });
-    }
-
-    #programs;
-    #locations;
-    #buffers;
-    #mats;
-    #vao;
-    #cube;
-    #light;
-
-    #initGrid() {
-        const sideLength = 0.5;
-        const cubeOffset = sideLength * 2 - sideLength / 2;
-        const cubeData = (this.#cube = new Cube(sideLength, true));
-        const layers = 4;
-        let mats = [];
-        
-        for (let z = cubeOffset, zLayer = 0; zLayer < layers; z -= sideLength, zLayer++) {
-            for (let y = cubeOffset, yLayer = 0; yLayer < layers; y -= sideLength, yLayer++) {
-                for (let x = cubeOffset, xLayer = 0; xLayer < layers; x -= sideLength, xLayer++) {
-                    const cubePositionMat = ShaderUtils.init3dTranslationMat(x, y, z);
-
-                    mats.push(cubePositionMat);
-                }
-            }
-        }
-
-        this.#mats.cubes = mats;
-
-        const vao = (this.#vao = this.gl.createVertexArray());
-
-        this.gl.bindVertexArray(vao);
-
-        this.#buffers = {
-            vertices: this.createAndBindVerticesBuffer(this.#light.getPositionLocation(), cubeData.vertices, { size: 3 }),
-            indices: this.createAndBindIndicesBuffer(cubeData.indices),
-            normals: this.createAndBindVerticesBuffer(this.#light.getNormalLocation(), cubeData.normals, { size: 3 }),
-        };
 
         // this.gl.uniform3f(this.#locations.color, 1, 1, 0);
     }

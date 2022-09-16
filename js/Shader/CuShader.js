@@ -86,7 +86,7 @@ export default class CuShader extends Shader {
     constructor(shaders) {
         super();
 
-        this.initShaders(shaders).then((programs) => {
+        this.init(shaders).then((programs) => {
             const [cube, crossChannel] = programs;
 
             this.#cube = {

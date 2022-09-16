@@ -6,11 +6,15 @@ export default class Shader {
         method: "GET",
     };
 
-    constructor(mode = "2d", conf) {
-        this.gl.canvas.width = this.gl.canvas.clientWidth;
-        this.gl.canvas.height = this.gl.canvas.clientHeight;
+    constructor(canvasSelector, mode = "2d", conf) {
+        const gl = (this.gl = document.querySelector(canvasSelector).getContext("webgl2"));
 
-        this.aspectRatio = this.gl.canvas.width / this.gl.canvas.height;
+        super(gl);
+
+        gl.canvas.width = gl.canvas.clientWidth;
+        gl.canvas.height = gl.canvas.clientHeight;
+
+        this.aspectRatio = gl.canvas.width / gl.canvas.height;
 
         this.mode = mode;
 
@@ -18,7 +22,7 @@ export default class Shader {
 
         switch (mode) {
             case "2d":
-                projectionMat = ShaderUtils.init2dProjectionMat(this.gl.canvas.width, this.gl.canvas.height);
+                projectionMat = ShaderUtils.init2dProjectionMat(gl.canvas.width, gl.canvas.height);
                 break;
 
             case "3d":
@@ -26,22 +30,16 @@ export default class Shader {
                 break;
         }
 
-        // remove in future and change affected code
-        this.projectionMat = projectionMat;
-
         this.mats = {
             projectionMat,
         };
     }
 
-    gl = document.querySelector("#glFrame").getContext("webgl2");
+    gl;
     aspectRatio;
     mode;
     programs;
-    locations;
-    buffers;
     mats;
-    projectionMat;
     animate = false;
     animData = {
         frameDeltaTime: 0,
@@ -49,23 +47,24 @@ export default class Shader {
         prevAnimTime: 0,
     };
 
-    initShaders = async (shadersData) => {
-        let shadersFetches = [];
-
-        Object.values(shadersData).forEach(({ vShader, fShader }) => {
-            shadersFetches.push(fetch(vShader, Shader.#shaderFetchConf));
-            shadersFetches.push(fetch(fShader, Shader.#shaderFetchConf));
-        });
+    init = async (programsConfs) => {
+        const shadersFetches = programsConfs.flatMap((programConf) => [
+            fetch(programConf.paths.vShader, Shader.#shaderFetchConf),
+            fetch(programConf.paths.fShader, Shader.#shaderFetchConf),
+        ]);
 
         let shadersSources = await Promise.all(shadersFetches);
-
         shadersSources = await Promise.all(shadersSources.map((res) => res.text()));
 
-        let programs = (this.programs = []);
+        let programs = (this.programs = {});
 
-        for (let i = 0; i < shadersSources.length; i += 2) {
-            const vShaderStr = shadersSources[i];
-            const fShaderStr = shadersSources[i + 1];
+        programsConfs.forEach((programConf, programI) => {
+            let programData = (programs[programConf.name] = {});
+
+            const shadersOffset = programI * 2;
+
+            const vShaderStr = shadersSources[shadersOffset];
+            const fShaderStr = shadersSources[shadersOffset + 1];
 
             const vShader = this.gl.createShader(this.gl.VERTEX_SHADER);
             const fShader = this.gl.createShader(this.gl.FRAGMENT_SHADER);
@@ -83,39 +82,18 @@ export default class Shader {
 
             this.gl.linkProgram(program);
 
-            // locations and buffers can be initialized here probably
-            programs.push(program);
-        }
-
-        this.initCommonLocations(programs);
-
-        return programs;
-    };
-
-    initCommonLocations(programs) {
-        let locations = (this.locations = []);
-
-        for (const program of programs) {
-            locations.push({
+            programData.program = program;
+            programData.locations = {
                 position: this.gl.getAttribLocation(program, "a_position"),
                 normal: this.gl.getAttribLocation(program, "a_normal"),
                 mat: this.gl.getUniformLocation(program, "u_mat"),
                 color: this.gl.getUniformLocation(program, "u_color"),
-            });
-        }
+            };
+            programData.buffers = {};
 
-        return locations;
-    }
+            const commonBuffersSettings = { size: this.mode === "3d" ? 3 : 2 };
 
-    initBuffers(programs) {
-        const settings = { size: this.mode === "3d" ? 3 : 2 };
-
-        let buffers = (this.buffers = []);
-
-        programs.forEach((program, i) => {
-            let programBuffers = (this.buffers[i] = {});
-
-            Object.entries(program).forEach(([setName, data]) => {
+            Object.entries(programConf.buffersData).forEach(([setName, data]) => {
                 const { vertices, indices, normals } = data;
                 const drawMethod = data.drawMethod ?? this.gl.STATIC_DRAW;
 
@@ -123,9 +101,9 @@ export default class Shader {
 
                 this.gl.bindVertexArray(vao);
 
-                let buffersSet = (programBuffers[setName] = {
+                let buffersSet = (programData.buffers[setName] = {
                     vao,
-                    vertices: this.createAndBindVerticesBuffer(vertices[0], new Float32Array(vertices[1]), settings, drawMethod),
+                    vertices: this.createAndBindVerticesBuffer(vertices[0], new Float32Array(vertices[1]), commonBuffersSettings, drawMethod),
                 });
 
                 if (indices) {
@@ -133,13 +111,16 @@ export default class Shader {
                 }
 
                 if (normals) {
-                    buffersSet.normals = this.createAndBindVerticesBuffer(normals[0], new Float32Array(normals[1]), settings, drawMethod);
+                    buffersSet.normals = this.createAndBindVerticesBuffer(
+                        normals[0],
+                        new Float32Array(normals[1]),
+                        commonBuffersSettings,
+                        drawMethod
+                    );
                 }
             });
         });
-
-        return buffers;
-    }
+    };
 
     createAndBindVerticesBuffer(attrLocation, bufferData, settings, drawMethod = this.gl.STATIC_DRAW) {
         const buffer = this.gl.createBuffer();

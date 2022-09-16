@@ -6,7 +6,7 @@ class Archivist extends Shader {
     constructor(shaders) {
         super("3d", { fov: Math.PI / 2.5, near: 0, far: 2000 });
 
-        this.initShaders(shaders).then((programs) => {
+        this.init(shaders).then((programs) => {
             const [archivist] = programs;
 
             const camera = [0, 0, 2];
@@ -139,7 +139,7 @@ class Archivist extends Shader {
     #rotateHead() {
         const { rotation, mat } = this.#head;
 
-        const rotationMat = ShaderUtils.init3dRotationMat("y", rotation.angle)
+        const rotationMat = ShaderUtils.init3dRotationMat("y", rotation.angle);
         const rotatedMat = ShaderUtils.mult3dMats(mat, rotationMat);
         const rotationPerFrame = this.animData.frameDeltaTime * rotation.tMult;
 
