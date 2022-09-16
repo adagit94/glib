@@ -54,4 +54,4 @@ import GoldenGrid from "./GoldenGrid/GoldenGrid.js";
 //   },
 // });
 
-new GoldenGrid();
+// new GoldenGrid();
