@@ -31,7 +31,7 @@ export default class Shader {
         }
 
         this.mats = {
-            projectionMat,
+          projection: projectionMat,
         };
     }
 

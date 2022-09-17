@@ -2,8 +2,8 @@ class Light {
     constructor(gl, conf) {
         this.gl = gl;
         this.uniformsSources = {
-            finalMat: conf.finalMat,
             color: conf.color,
+            finalMat: conf.finalMat,
             objectToLightMat: conf.objectToLightMat,
             lightPosition: conf.lightPosition,
             lightColor: conf.lightColor,
@@ -53,8 +53,8 @@ class Light {
         this.locations = {
             position: this.gl.getAttribLocation(program, "a_position"),
             normal: this.gl.getAttribLocation(program, "a_normal"),
-            finalMat: this.gl.getUniformLocation(program, "u_finalMat"),
             color: this.gl.getUniformLocation(program, "u_color"),
+            finalMat: this.gl.getUniformLocation(program, "u_finalMat"),
             objectToLightMat: this.gl.getUniformLocation(program, "u_objectToLightMat"),
             lightPosition: this.gl.getUniformLocation(program, "u_lightPosition"),
             lightColor: this.gl.getUniformLocation(program, "u_lightColor"),
@@ -77,7 +77,7 @@ class Light {
         return this.locations.normal;
     }
 
-    renderLight = () => {
+    setLight = () => {
         this.gl.useProgram(this.program);
         this.setUniforms();
     };
