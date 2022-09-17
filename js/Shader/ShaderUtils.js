@@ -291,7 +291,7 @@ export default class ShaderUtils {
     }
   };
 
-  static rotate3d = (mat, axis, rad) => { // maybe enable multiple rotations during one call with recursion and object
+  static rotate3d = (mat, axis, rad) => { // maybe enable multiple rotations during one call with recursion and object parameter
     const r0c0 = mat[0];
     const r0c1 = mat[1];
     const r0c2 = mat[2];

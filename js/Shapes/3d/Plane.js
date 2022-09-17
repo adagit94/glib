@@ -1,7 +1,9 @@
-import ShaderUtils from "../../Shader/ShaderUtils"
+import ShaderUtils from "../../Shader/ShaderUtils.js"
 
 class Plane {
-    contructor(squareLength, rows, columns, wireframe) {
+    constructor(squareLength, rows, columns, wireframe) {
+        console.log("plane constructor")
+        
         let vertices = [], indices = [], normals = []
 
         const lastColOffsetForRow = squareLength * columns
@@ -33,8 +35,8 @@ class Plane {
             vertices.push(0, 0, lastRowOffsetForCol)   
             vertices.push(lastColOffsetForRow, 0, lastRowOffsetForCol)   
 
-            indices.push(0, 1, 1, 3, 3, 0)
-            indices.push(0, 2, 2, 3, 3, 0)
+            indices.push(0, 1, 3)
+            indices.push(0, 2, 3)
 
             for (let normal = 0; normal < indices.length; normal++) {
                 normals.push(0, 1, 0)

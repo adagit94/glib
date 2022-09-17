@@ -1,32 +1,35 @@
-import SpotLight from "../Lights/SpotLight/SpotLight.js";
+import SphericLight from "../Lights/SphericLight/SphericLight.js";
 import Shader from "../Shader/Shader.js";
 import ShaderUtils from "../Shader/ShaderUtils.js";
-import Cube from "../Shapes/3d/Cube.js";
-import Hexagon from "../Shapes/3d/Hexagon/Hexagon.js";
 import Plane from "../Shapes/3d/Plane.js";
 
 class Playground extends Shader {
     constructor() {
-        super("3d", { fov: Math.PI / 4, near: 0, far: 20 });
-
-        this.animate = true;
+        super("#glFrame", "3d", { fov: Math.PI / 4, near: 0, far: 20 });
 
         this.#initData();
     }
 
     #light;
-    #storage;
+    #plane;
 
     async #initData() {
         const wireframe = false;
         const plane = new Plane(0.1, 4, 4, wireframe);
 
-        this.#storage = { plane };
+        this.#plane = plane;
 
+        const cameraPosition = [0, 0, 1]
+        const viewMat = ShaderUtils.init3dInvertedMat(ShaderUtils.lookAtMat(cameraPosition));
+
+        this.mats.scene = ShaderUtils.mult3dMats(this.mats.projection, viewMat);
+        
         const light = (this.#light = new SphericLight(this.gl, {
             color: [1, 1, 1],
-            lightPosition: [0.5, 0, 0.5],
+            lightPosition: [0.25, 0, 0.25],
             lightColor: [1, 1, 1],
+            cameraPosition,
+            shininess: 5,
         }));
 
         await light.init();
@@ -44,24 +47,25 @@ class Playground extends Shader {
             },
         ]);
 
-        const viewMat = ShaderUtils.init3dInvertedMat(ShaderUtils.lookAtMat([0, 0, 2]));
+        this.animate = false;
 
-        this.mats.scene = ShaderUtils.mult3dMats(this.mats.projectionMat, viewMat);
-
-        this.requestAnimationFrame()
+        this.requestAnimationFrame();
     }
 
     computeScene = () => {
-        const planeMat = this.#storage.plane.mat
-        
-        ShaderUtils.rotate3d(planeMat, "y" -Math.PI / 4) // this.animData.frameDeltaTime / 2
-        
+        const planeMat = ShaderUtils.mult3dMats(this.#plane.mat, [
+            ShaderUtils.init3dRotationMat("y", this.animData.deltaTime / 10),
+            ShaderUtils.init3dRotationMat("x", -Math.PI / 2)
+        ]);
+
+        console.log("planeMat", planeMat);
+
         this.#light.uniformsSources.finalMat = ShaderUtils.mult3dMats(this.mats.scene, planeMat);
         this.#light.uniformsSources.objectToLightMat = planeMat;
 
         this.#light.setLight();
 
-         // render logic
+        this.gl.drawElements(this.gl.TRIANGLES, this.#plane.indices.length, this.gl.UNSIGNED_SHORT, 0);
     };
 }
 

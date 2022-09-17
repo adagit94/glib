@@ -7,6 +7,8 @@ class Light {
             objectToLightMat: conf.objectToLightMat,
             lightPosition: conf.lightPosition,
             lightColor: conf.lightColor,
+            cameraPosition: conf.cameraPosition,
+            shininess: conf.shininess,
         };
     }
 
@@ -15,7 +17,7 @@ class Light {
     locations;
     uniformsSources;
 
-    init = async (paths) => {
+    async init(paths) {
         const fetchConf = {
             mode: "same-origin",
             method: "GET",
@@ -32,6 +34,8 @@ class Light {
 
         const vShaderStr = shadersSources[0];
         const fShaderStr = shadersSources[1];
+
+        // console.log("fShaderStr", fShaderStr)
 
         const vShader = this.gl.createShader(this.gl.VERTEX_SHADER);
         const fShader = this.gl.createShader(this.gl.FRAGMENT_SHADER);
@@ -58,15 +62,19 @@ class Light {
             objectToLightMat: this.gl.getUniformLocation(program, "u_objectToLightMat"),
             lightPosition: this.gl.getUniformLocation(program, "u_lightPosition"),
             lightColor: this.gl.getUniformLocation(program, "u_lightColor"),
+            cameraPosition: this.gl.getUniformLocation(program, "u_cameraPosition"),
+            shininess: this.gl.getUniformLocation(program, "u_shininess")
         };
     };
 
     setUniforms() {
-        this.gl.uniformMatrix4fv(this.locations.finalMat, false, this.uniformsSources.finalMat);
         this.gl.uniform3f(this.locations.color, ...this.uniformsSources.color);
+        this.gl.uniformMatrix4fv(this.locations.finalMat, false, this.uniformsSources.finalMat);
+        this.gl.uniformMatrix4fv(this.locations.objectToLightMat, false, this.uniformsSources.objectToLightMat);
         this.gl.uniform3f(this.locations.lightPosition, ...this.uniformsSources.lightPosition);
         this.gl.uniform3f(this.locations.lightColor, ...this.uniformsSources.lightColor);
-        this.gl.uniformMatrix4fv(this.locations.objectToLightMat, false, this.uniformsSources.objectToLightMat);
+        this.gl.uniform3f(this.locations.cameraPosition, ...this.uniformsSources.cameraPosition);
+        this.gl.uniform1f(this.locations.shininess, this.uniformsSources.shininess);
     }
 
     getPositionLocation() {

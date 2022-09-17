@@ -9,8 +9,6 @@ export default class Shader {
     constructor(canvasSelector, mode = "2d", conf) {
         const gl = (this.gl = document.querySelector(canvasSelector).getContext("webgl2"));
 
-        super(gl);
-
         gl.canvas.width = gl.canvas.clientWidth;
         gl.canvas.height = gl.canvas.clientHeight;
 
@@ -47,7 +45,7 @@ export default class Shader {
         prevAnimTime: 0,
     };
 
-    init = async (programsConfs) => {
+    async init(programsConfs) {
         const shadersFetches = programsConfs.flatMap((programConf) => [
             fetch(programConf.paths.vShader, Shader.#shaderFetchConf),
             fetch(programConf.paths.fShader, Shader.#shaderFetchConf),
