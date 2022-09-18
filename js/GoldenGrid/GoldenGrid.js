@@ -1,4 +1,4 @@
-import SpecularLight from "../Lights/SpecularLight/SpecularLight.js";
+import SpecularLight from "../Lights/Phong/SpecularLight.js.js";
 import Shader from "../Shader/Shader.js";
 import ShaderUtils from "../Shader/ShaderUtils.js";
 import Cube from "../Shapes/3d/Cube.js";

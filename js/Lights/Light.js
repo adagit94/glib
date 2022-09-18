@@ -1,22 +1,12 @@
 class Light {
-    constructor(gl, conf) {
+    constructor(gl) {
         this.gl = gl;
-        this.uniformsSources = {
-            color: conf.color,
-            finalMat: conf.finalMat,
-            modelMat: conf.modelMat,
-            normalMat: conf.normalMat,
-            lightPosition: conf.lightPosition,
-            lightColor: conf.lightColor,
-            cameraPosition: conf.cameraPosition,
-            shininess: conf.shininess,
-        };
     }
 
     gl;
     program;
     locations;
-    uniformsSources;
+    uniforms;
 
     async init(paths) {
         const fetchConf = {
@@ -36,8 +26,6 @@ class Light {
         const vShaderStr = shadersSources[0];
         const fShaderStr = shadersSources[1];
 
-        // console.log("fShaderStr", fShaderStr)
-
         const vShader = this.gl.createShader(this.gl.VERTEX_SHADER);
         const fShader = this.gl.createShader(this.gl.FRAGMENT_SHADER);
 
@@ -55,29 +43,6 @@ class Light {
         this.gl.linkProgram(program);
 
         this.program = program;
-        this.locations = {
-            position: this.gl.getAttribLocation(program, "a_position"),
-            normal: this.gl.getAttribLocation(program, "a_normal"),
-            color: this.gl.getUniformLocation(program, "u_color"),
-            finalMat: this.gl.getUniformLocation(program, "u_finalMat"),
-            modelMat: this.gl.getUniformLocation(program, "u_modelMat"),
-            normalMat: this.gl.getUniformLocation(program, "u_normalMat"),
-            lightPosition: this.gl.getUniformLocation(program, "u_lightPosition"),
-            lightColor: this.gl.getUniformLocation(program, "u_lightColor"),
-            cameraPosition: this.gl.getUniformLocation(program, "u_cameraPosition"),
-            shininess: this.gl.getUniformLocation(program, "u_shininess"),
-        };
-    }
-
-    setUniforms() {
-        this.gl.uniform3f(this.locations.color, ...this.uniformsSources.color);
-        this.gl.uniformMatrix4fv(this.locations.finalMat, false, this.uniformsSources.finalMat);
-        this.gl.uniformMatrix4fv(this.locations.modelMat, false, this.uniformsSources.modelMat);
-        this.gl.uniformMatrix4fv(this.locations.normalMat, false, this.uniformsSources.normalMat);
-        this.gl.uniform3f(this.locations.lightPosition, ...this.uniformsSources.lightPosition);
-        this.gl.uniform3f(this.locations.lightColor, ...this.uniformsSources.lightColor);
-        this.gl.uniform3f(this.locations.cameraPosition, ...this.uniformsSources.cameraPosition);
-        this.gl.uniform1f(this.locations.shininess, this.uniformsSources.shininess);
     }
 
     getPositionLocation() {
