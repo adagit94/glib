@@ -1,5 +1,4 @@
-import DiffuseLight from "../Lights/DiffuseLight/DiffuseLight.js";
-import SpecularLight from "../Lights/Phong/SpecularLight.js.js";
+import PhongLight from "../Lights/PhongLight/PhongLight.js";
 import Shader from "../Shader/Shader.js";
 import ShaderUtils from "../Shader/ShaderUtils.js";
 import Plane from "../Shapes/3d/Plane.js";
@@ -25,10 +24,11 @@ class Playground extends Shader {
 
         this.mats.scene = ShaderUtils.mult3dMats(this.mats.projection, viewMat);
 
-        const light = (this.#light = new SpecularLight(this.gl, {
-            color: [0, 0, 1],
-            lightPosition: [0, 0, -0.1],
-            lightColor: [1, 1, 1],
+        const light = (this.#light = new PhongLight(this.gl, {
+            ambientColor: [1, 1, 1],
+            color: [1, 1, 1],
+            lightPosition: [0, 0, 0.5],
+            lightColor: [0, 0, 1],
             cameraPosition,
             shininess: 200,
         }));

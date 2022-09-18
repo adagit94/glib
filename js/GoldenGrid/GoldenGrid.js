@@ -1,4 +1,4 @@
-import SpecularLight from "../Lights/Phong/SpecularLight.js.js";
+import PhongLight from "../Lights/PhongLight/PhongLight.js";
 import Shader from "../Shader/Shader.js";
 import ShaderUtils from "../Shader/ShaderUtils.js";
 import Cube from "../Shapes/3d/Cube.js";
@@ -19,7 +19,7 @@ class GoldenGrid extends Shader {
         const cubeData = (this.#cube = new Cube(sideLength, true));
         const layers = 4;
 
-        const light = (this.#light = new SpecularLight(this.gl, {
+        const light = (this.#light = new PhongLight(this.gl, {
             color: [1, 1, 0],
             lightPosition: [0, 0, 0.25],
             lightColor: [1, 1, 1],
