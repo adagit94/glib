@@ -185,6 +185,8 @@ export default class ShaderUtils {
     return new Float32Array(invertedMat)
   }
 
+  static init3dNormalMat = (modelMat) => ShaderUtils.init3dTransposedMat(ShaderUtils.init3dInvertedMat(modelMat))
+
   static mult2dMats = (baseMat, multMats) => {
     if (!Array.isArray(multMats)) multMats = [multMats];
 

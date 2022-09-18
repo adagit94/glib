@@ -7,8 +7,8 @@ class SpotLight {
         this.uniformsSources = {
             finalMat: conf.finalMat,
             color: conf.color,
-            objectToLightMat: conf.objectToLightMat,
-            objectToLightInversedTransposedMat: conf.objectToLightInversedTransposedMat,
+            modelMat: conf.modelMat,
+            normalMat: conf.normalMat,
             lightPosition: conf.lightPosition,
             cameraPosition: conf.cameraPosition,
             lightTarget: conf.lightTarget,
@@ -29,8 +29,8 @@ class SpotLight {
                 normal: gl.getAttribLocation(program, "a_normal"),
                 finalMat: gl.getUniformLocation(program, "u_finalMat"),
                 color: gl.getUniformLocation(program, "u_color"),
-                objectToLightMat: gl.getUniformLocation(program, "u_objectToLight"),
-                objectToLightInversedTransposedMat: gl.getUniformLocation(program, "u_objectToLightInversedTransposedMat"),
+                modelMat: gl.getUniformLocation(program, "u_objectToLight"),
+                normalMat: gl.getUniformLocation(program, "u_normalMat"),
                 cameraPosition: gl.getUniformLocation(program, "u_cameraPosition"),
                 lightPosition: gl.getUniformLocation(program, "u_lightPosition"),
                 lightDirection: gl.getUniformLocation(program, "u_lightDirection"),
@@ -59,8 +59,8 @@ class SpotLight {
         this.#gl.uniform1f(this.#locations.lightOuterBorder, Math.cos(this.uniformsSources.lightOuterBorder));
         this.#gl.uniform1f(this.#locations.lightShininess, this.uniformsSources.lightShininess);
         this.#gl.uniform3f(this.#locations.cameraPosition, ...this.uniformsSources.cameraPosition);
-        this.#gl.uniformMatrix4fv(this.#locations.objectToLightMat, false, this.uniformsSources.objectToLightMat);
-        this.#gl.uniformMatrix4fv(this.#locations.objectToLightInversedTransposedMat, false, this.uniformsSources.objectToLightInversedTransposedMat);
+        this.#gl.uniformMatrix4fv(this.#locations.modelMat, false, this.uniformsSources.modelMat);
+        this.#gl.uniformMatrix4fv(this.#locations.normalMat, false, this.uniformsSources.normalMat);
     }
 
     getPositionLocation() {

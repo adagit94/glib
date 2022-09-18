@@ -4,8 +4,8 @@ class Light {
         this.uniformsSources = {
             color: conf.color,
             finalMat: conf.finalMat,
-            objectToLightMat: conf.objectToLightMat,
-            objectToLightInversedTransposedMat: conf.objectToLightInversedTransposedMat,
+            modelMat: conf.modelMat,
+            normalMat: conf.normalMat,
             lightPosition: conf.lightPosition,
             lightColor: conf.lightColor,
             cameraPosition: conf.cameraPosition,
@@ -60,20 +60,20 @@ class Light {
             normal: this.gl.getAttribLocation(program, "a_normal"),
             color: this.gl.getUniformLocation(program, "u_color"),
             finalMat: this.gl.getUniformLocation(program, "u_finalMat"),
-            objectToLightMat: this.gl.getUniformLocation(program, "u_objectToLightMat"),
-            objectToLightInversedTransposedMat: this.gl.getUniformLocation(program, "u_objectToLightInversedTransposedMat"),
+            modelMat: this.gl.getUniformLocation(program, "u_modelMat"),
+            normalMat: this.gl.getUniformLocation(program, "u_normalMat"),
             lightPosition: this.gl.getUniformLocation(program, "u_lightPosition"),
             lightColor: this.gl.getUniformLocation(program, "u_lightColor"),
             cameraPosition: this.gl.getUniformLocation(program, "u_cameraPosition"),
-            shininess: this.gl.getUniformLocation(program, "u_shininess")
+            shininess: this.gl.getUniformLocation(program, "u_shininess"),
         };
-    };
+    }
 
     setUniforms() {
         this.gl.uniform3f(this.locations.color, ...this.uniformsSources.color);
         this.gl.uniformMatrix4fv(this.locations.finalMat, false, this.uniformsSources.finalMat);
-        this.gl.uniformMatrix4fv(this.locations.objectToLightMat, false, this.uniformsSources.objectToLightMat);
-        this.gl.uniformMatrix4fv(this.locations.objectToLightInversedTransposedMat, false, this.uniformsSources.objectToLightInversedTransposedMat);
+        this.gl.uniformMatrix4fv(this.locations.modelMat, false, this.uniformsSources.modelMat);
+        this.gl.uniformMatrix4fv(this.locations.normalMat, false, this.uniformsSources.normalMat);
         this.gl.uniform3f(this.locations.lightPosition, ...this.uniformsSources.lightPosition);
         this.gl.uniform3f(this.locations.lightColor, ...this.uniformsSources.lightColor);
         this.gl.uniform3f(this.locations.cameraPosition, ...this.uniformsSources.cameraPosition);

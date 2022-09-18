@@ -1,3 +1,4 @@
+import DiffuseLight from "../Lights/DiffuseLight/DiffuseLight.js";
 import SpecularLight from "../Lights/SpecularLight/SpecularLight.js";
 import Shader from "../Shader/Shader.js";
 import ShaderUtils from "../Shader/ShaderUtils.js";
@@ -24,9 +25,9 @@ class Playground extends Shader {
 
         this.mats.scene = ShaderUtils.mult3dMats(this.mats.projection, viewMat);
 
-        const light = (this.#light = new SpecularLight(this.gl, {
+        const light = (this.#light = new DiffuseLight(this.gl, {
             color: [0, 0, 1],
-            lightPosition: [0.1, 0.1, 0.5],
+            lightPosition: [0, 0, 0.25],
             lightColor: [1, 1, 1],
             cameraPosition,
             shininess: 75,
@@ -61,8 +62,8 @@ class Playground extends Shader {
         console.log("planeMat", planeMat);
 
         this.#light.uniformsSources.finalMat = ShaderUtils.mult3dMats(this.mats.scene, planeMat);
-        this.#light.uniformsSources.objectToLightMat = planeMat;
-        this.#light.uniformsSources.objectToLightInversedTransposedMat = ShaderUtils.init3dTransposedMat(ShaderUtils.init3dInvertedMat(planeMat));
+        this.#light.uniformsSources.modelMat = planeMat;
+        this.#light.uniformsSources.normalMat = ShaderUtils.init3dNormalMat(planeMat);
 
         this.#light.setLight();
 
