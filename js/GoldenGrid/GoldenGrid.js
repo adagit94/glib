@@ -1,4 +1,4 @@
-import SphericLight from "../Lights/SphericLight/SphericLight.js";
+import SpecularLight from "../Lights/SpecularLight/SpecularLight.js";
 import Shader from "../Shader/Shader.js";
 import ShaderUtils from "../Shader/ShaderUtils.js";
 import Cube from "../Shapes/3d/Cube.js";
@@ -19,7 +19,7 @@ class GoldenGrid extends Shader {
         const cubeData = (this.#cube = new Cube(sideLength, true));
         const layers = 4;
 
-        const light = (this.#light = new SphericLight(this.gl, {
+        const light = (this.#light = new SpecularLight(this.gl, {
             color: [1, 1, 0],
             lightPosition: [0, 0, 0.25],
             lightColor: [1, 1, 1],
@@ -51,7 +51,7 @@ class GoldenGrid extends Shader {
         this.mats.scene = sceneMat;
 
         let mats = [];
-        
+
         for (let z = cubeOffset, zLayer = 0; zLayer < layers; z -= sideLength, zLayer++) {
             for (let y = cubeOffset, yLayer = 0; yLayer < layers; y -= sideLength, yLayer++) {
                 for (let x = cubeOffset, xLayer = 0; xLayer < layers; x -= sideLength, xLayer++) {
@@ -79,7 +79,7 @@ class GoldenGrid extends Shader {
         this.gl.bindVertexArray(cubesVao);
         this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, cubesIndices);
 
-        const rotationMat = ShaderUtils.init3dRotationMat("y", this.animData.deltaTime / 2)
+        const rotationMat = ShaderUtils.init3dRotationMat("y", this.animData.deltaTime / 2);
 
         for (let cube = 0; cube < cubesMats.length; cube++) {
             const cubeMat = ShaderUtils.mult3dMats(cubesMats[cube], rotationMat);

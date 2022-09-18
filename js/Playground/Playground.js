@@ -1,4 +1,4 @@
-import SphericLight from "../Lights/SphericLight/SphericLight.js";
+import SpecularLight from "../Lights/SpecularLight/SpecularLight.js";
 import Shader from "../Shader/Shader.js";
 import ShaderUtils from "../Shader/ShaderUtils.js";
 import Plane from "../Shapes/3d/Plane.js";
@@ -19,17 +19,17 @@ class Playground extends Shader {
 
         this.#plane = plane;
 
-        const cameraPosition = [0, 0, 1]
+        const cameraPosition = [0, 0, 1];
         const viewMat = ShaderUtils.init3dInvertedMat(ShaderUtils.lookAtMat(cameraPosition));
 
         this.mats.scene = ShaderUtils.mult3dMats(this.mats.projection, viewMat);
-        
-        const light = (this.#light = new SphericLight(this.gl, {
-            color: [1, 1, 1],
-            lightPosition: [0.25, 0, 0.25],
+
+        const light = (this.#light = new SpecularLight(this.gl, {
+            color: [0, 0, 1],
+            lightPosition: [0.1, 0.1, 0.5],
             lightColor: [1, 1, 1],
             cameraPosition,
-            shininess: 5,
+            shininess: 75,
         }));
 
         await light.init();
@@ -54,14 +54,15 @@ class Playground extends Shader {
 
     computeScene = () => {
         const planeMat = ShaderUtils.mult3dMats(this.#plane.mat, [
-            ShaderUtils.init3dRotationMat("y", this.animData.deltaTime / 10),
-            ShaderUtils.init3dRotationMat("x", -Math.PI / 2)
+            // ShaderUtils.init3dRotationMat("y", this.animData.deltaTime / 10),
+            ShaderUtils.init3dRotationMat("x", -Math.PI / 2),
         ]);
 
         console.log("planeMat", planeMat);
 
         this.#light.uniformsSources.finalMat = ShaderUtils.mult3dMats(this.mats.scene, planeMat);
         this.#light.uniformsSources.objectToLightMat = planeMat;
+        this.#light.uniformsSources.objectToLightInversedTransposedMat = ShaderUtils.init3dTransposedMat(ShaderUtils.init3dInvertedMat(planeMat));
 
         this.#light.setLight();
 

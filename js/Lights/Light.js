@@ -5,6 +5,7 @@ class Light {
             color: conf.color,
             finalMat: conf.finalMat,
             objectToLightMat: conf.objectToLightMat,
+            objectToLightInversedTransposedMat: conf.objectToLightInversedTransposedMat,
             lightPosition: conf.lightPosition,
             lightColor: conf.lightColor,
             cameraPosition: conf.cameraPosition,
@@ -60,6 +61,7 @@ class Light {
             color: this.gl.getUniformLocation(program, "u_color"),
             finalMat: this.gl.getUniformLocation(program, "u_finalMat"),
             objectToLightMat: this.gl.getUniformLocation(program, "u_objectToLightMat"),
+            objectToLightInversedTransposedMat: this.gl.getUniformLocation(program, "u_objectToLightInversedTransposedMat"),
             lightPosition: this.gl.getUniformLocation(program, "u_lightPosition"),
             lightColor: this.gl.getUniformLocation(program, "u_lightColor"),
             cameraPosition: this.gl.getUniformLocation(program, "u_cameraPosition"),
@@ -71,6 +73,7 @@ class Light {
         this.gl.uniform3f(this.locations.color, ...this.uniformsSources.color);
         this.gl.uniformMatrix4fv(this.locations.finalMat, false, this.uniformsSources.finalMat);
         this.gl.uniformMatrix4fv(this.locations.objectToLightMat, false, this.uniformsSources.objectToLightMat);
+        this.gl.uniformMatrix4fv(this.locations.objectToLightInversedTransposedMat, false, this.uniformsSources.objectToLightInversedTransposedMat);
         this.gl.uniform3f(this.locations.lightPosition, ...this.uniformsSources.lightPosition);
         this.gl.uniform3f(this.locations.lightColor, ...this.uniformsSources.lightColor);
         this.gl.uniform3f(this.locations.cameraPosition, ...this.uniformsSources.cameraPosition);
