@@ -3,199 +3,78 @@ class Cube {
         const sideHalfLength = sideLength / 2
         
         this.vertices = new Float32Array([
+            // FRONT
             sideHalfLength, sideHalfLength, sideHalfLength, // 0
             sideHalfLength, -sideHalfLength, sideHalfLength, // 1
             -sideHalfLength, -sideHalfLength, sideHalfLength, // 2
             -sideHalfLength, sideHalfLength, sideHalfLength, // 3
 
+            // BACK
             sideHalfLength, sideHalfLength, -sideHalfLength, // 4
             sideHalfLength, -sideHalfLength, -sideHalfLength, // 5
+            -sideHalfLength, -sideHalfLength, -sideHalfLength, // 6
+            -sideHalfLength, sideHalfLength, -sideHalfLength, // 7           
 
-            -sideHalfLength, sideHalfLength, -sideHalfLength, // 6
-            -sideHalfLength, -sideHalfLength, -sideHalfLength, // 7
+            // TOP
+            sideHalfLength, sideHalfLength, sideHalfLength, // 8
+            sideHalfLength, sideHalfLength, -sideHalfLength, // 9
+            -sideHalfLength, sideHalfLength, -sideHalfLength, // 10
+            -sideHalfLength, sideHalfLength, sideHalfLength, // 11
+
+            // BOTTOM
+            sideHalfLength, -sideHalfLength, sideHalfLength, // 12
+            sideHalfLength, -sideHalfLength, -sideHalfLength, // 13
+            -sideHalfLength, -sideHalfLength, -sideHalfLength, // 14
+            -sideHalfLength, -sideHalfLength, sideHalfLength, // 15
+
+            // RIGHT
+            sideHalfLength, sideHalfLength, sideHalfLength, // 16
+            sideHalfLength, sideHalfLength, -sideHalfLength, // 17
+            sideHalfLength, -sideHalfLength, -sideHalfLength, // 18
+            sideHalfLength, -sideHalfLength, sideHalfLength, // 19
+
+            // LEFT
+            -sideHalfLength, sideHalfLength, sideHalfLength, // 20
+            -sideHalfLength, sideHalfLength, -sideHalfLength, // 21
+            -sideHalfLength, -sideHalfLength, -sideHalfLength, // 22
+            -sideHalfLength, -sideHalfLength, sideHalfLength, // 23
         ])
 
         this.indices = new Uint16Array(wireframe ? [
-            0, 1,
-            1, 2,
-            2, 3,
-            3, 0,
 
-            0, 4,
-            4, 5,
-            5, 1,
-            1, 0,
-
-            3, 6,
-            6, 7,
-            7, 2,
-            2, 3,
-
-            4, 6,
-            6, 7,
-            7, 5, 
-            5, 4,
-
-            0, 4,
-            4, 6,
-            6, 3,
-            3, 0,
-
-            1, 5,
-            5, 7,
-            7, 2,
-            2, 1
-
-            // 0, 1,
-            // 1, 2,
-            // 2, 3,
-            // 3, 0,
-
-            // 0, 4,
-            // 4, 5,
-            // 5, 1,
-
-            // 3, 6,
-            // 6, 7,
-            // 7, 2,
-
-            // 4, 6,
-
-            // 5, 7
         ] : [
-            0, 1, 2,
-            2, 3, 0,
+          0, 1, 2,
+          0, 3, 2,
+          
+          4, 5, 6,
+          4, 7, 6,
 
-            0, 4, 5,
-            5, 1, 0,
+          8, 9, 10,
+          10, 11, 8,
 
-            4, 6, 7,
-            7, 5, 4,
+          12, 13, 14,
+          14, 15, 12,
 
-            3, 2, 6,
-            2, 7, 6,
+          16, 17, 18,
+          16, 19, 18,
 
-            3, 0, 4,
-            4, 6, 3,
-
-            1, 5, 7,
-            2, 7, 1
+          20, 21, 22,
+          20, 23, 22,
         ])
 
         this.normals = new Float32Array(wireframe ? [
-            0, 0, 1,
-            0, 0, 1,
-            0, 0, 1,
-            0, 0, 1,
-            0, 0, 1,
-            0, 0, 1,
-            0, 0, 1,
-            0, 0, 1,
 
-            1, 0, 0,
-            1, 0, 0,
-            1, 0, 0,
-            1, 0, 0,
-            1, 0, 0,
-            1, 0, 0,
-            1, 0, 0,
-            1, 0, 0,
-
-            -1, 0, 0,
-            -1, 0, 0,
-            -1, 0, 0,
-            -1, 0, 0,
-            -1, 0, 0,
-            -1, 0, 0,
-            -1, 0, 0,
-            -1, 0, 0,
-
-            0, 0, -1,
-            0, 0, -1,
-            0, 0, -1,
-            0, 0, -1,
-            0, 0, -1,
-            0, 0, -1,
-            0, 0, -1,
-            0, 0, -1,
-            
-            0, -1, 0,
-            0, -1, 0,
-            0, -1, 0,
-            0, -1, 0,
-            0, -1, 0,
-            0, -1, 0,
-            0, -1, 0,
-            0, -1, 0,
-
-            0, 1, 0,
-            0, 1, 0,
-            0, 1, 0,
-            0, 1, 0,
-            0, 1, 0,
-            0, 1, 0,
-            0, 1, 0,
-            0, 1, 0,
-
-            // -1, -1, -1, 
-            // -1, 1, -1, 
-            // -1, 1, -1,
-            // 1, 1, -1,
-            // 1, 1, -1, 
-            // 1, -1, -1, 
-            // 1, -1, -1, 
-            // -1, -1, -1,
-            
-            // -1, -1, -1,
-            // -1, -1, 1,
-            // -1, -1, 1,
-            // -1, 1, 1,
-            // -1, 1, 1,
-            // -1, 1, -1,
-
-            // 1, -1, -1,
-            // 1, -1, 1,
-            // 1, -1, 1,
-            // 1, 1, 1,
-            // 1, 1, 1,
-            // 1, 1, -1,
-
-            // -1, -1, 1,
-            // 1, -1, 1,
-            
-            // -1, 1, 1,
-            // 1, 1, 1,
         ] : [
             0, 0, 1,
             0, 0, 1,
             0, 0, 1,
             0, 0, 1,
-            0, 0, 1,
-            0, 0, 1,
-
-            1, 0, 0,
-            1, 0, 0,
-            1, 0, 0,
-            1, 0, 0,
-            1, 0, 0,
-            1, 0, 0,
 
             0, 0, -1,
             0, 0, -1,
             0, 0, -1,
             0, 0, -1,
-            0, 0, -1,
-            0, 0, -1,
 
-            -1, 0, 0,
-            -1, 0, 0,
-            -1, 0, 0,
-            -1, 0, 0,
-            -1, 0, 0,
-            -1, 0, 0,
-
-            0, 1, 0,
-            0, 1, 0,
             0, 1, 0,
             0, 1, 0,
             0, 1, 0,
@@ -205,8 +84,16 @@ class Cube {
             0, -1, 0,
             0, -1, 0,
             0, -1, 0,
-            0, -1, 0,
-            0, -1, 0,
+
+            1, 0, 0,
+            1, 0, 0,
+            1, 0, 0,
+            1, 0, 0,
+
+            -1, 0, 0,
+            -1, 0, 0,
+            -1, 0, 0,
+            -1, 0, 0,
         ])
     }
 

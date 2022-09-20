@@ -4,7 +4,7 @@ class SpotLight {
     constructor(canvasSelector, conf) {
         const gl = (this.#gl = document.querySelector(canvasSelector).getContext("webgl2"));
 
-        this.uniformsSources = {
+        this.uniforms = {
             finalMat: conf.finalMat,
             color: conf.color,
             modelMat: conf.modelMat,
@@ -43,24 +43,24 @@ class SpotLight {
     }
 
     program;
-    uniformsSources;
+    uniforms;
     #gl;
     #locations;
 
     #setUniforms() {
-        const lookAt = ShaderUtils.lookAtMat(this.uniformsSources.lightPosition, this.uniformsSources.lightTarget);
+        const lookAt = ShaderUtils.lookAtMat(this.uniforms.lightPosition, this.uniforms.lightTarget);
 
-        this.#gl.uniformMatrix4fv(this.#locations.finalMat, false, this.uniformsSources.finalMat);
-        this.#gl.uniform3f(this.#locations.color, ...this.uniformsSources.color);
+        this.#gl.uniformMatrix4fv(this.#locations.finalMat, false, this.uniforms.finalMat);
+        this.#gl.uniform3f(this.#locations.color, ...this.uniforms.color);
         this.#gl.uniform3f(this.#locations.lightDirection, -lookAt[8], -lookAt[9], -lookAt[10]);
-        this.#gl.uniform3f(this.#locations.lightPosition, ...this.uniformsSources.lightPosition);
-        this.#gl.uniform3f(this.#locations.lightColor, ...this.uniformsSources.lightColor);
-        this.#gl.uniform1f(this.#locations.lightInnerBorder, Math.cos(this.uniformsSources.lightInnerBorder));
-        this.#gl.uniform1f(this.#locations.lightOuterBorder, Math.cos(this.uniformsSources.lightOuterBorder));
-        this.#gl.uniform1f(this.#locations.lightShininess, this.uniformsSources.lightShininess);
-        this.#gl.uniform3f(this.#locations.cameraPosition, ...this.uniformsSources.cameraPosition);
-        this.#gl.uniformMatrix4fv(this.#locations.modelMat, false, this.uniformsSources.modelMat);
-        this.#gl.uniformMatrix4fv(this.#locations.normalMat, false, this.uniformsSources.normalMat);
+        this.#gl.uniform3f(this.#locations.lightPosition, ...this.uniforms.lightPosition);
+        this.#gl.uniform3f(this.#locations.lightColor, ...this.uniforms.lightColor);
+        this.#gl.uniform1f(this.#locations.lightInnerBorder, Math.cos(this.uniforms.lightInnerBorder));
+        this.#gl.uniform1f(this.#locations.lightOuterBorder, Math.cos(this.uniforms.lightOuterBorder));
+        this.#gl.uniform1f(this.#locations.lightShininess, this.uniforms.lightShininess);
+        this.#gl.uniform3f(this.#locations.cameraPosition, ...this.uniforms.cameraPosition);
+        this.#gl.uniformMatrix4fv(this.#locations.modelMat, false, this.uniforms.modelMat);
+        this.#gl.uniformMatrix4fv(this.#locations.normalMat, false, this.uniforms.normalMat);
     }
 
     getPositionLocation() {

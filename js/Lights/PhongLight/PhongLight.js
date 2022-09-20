@@ -14,17 +14,17 @@ class PhongLight extends Light {
         });
 
         this.locations = {
-            position: this.gl.getAttribLocation(program, "a_position"),
-            normal: this.gl.getAttribLocation(program, "a_normal"),
-            color: this.gl.getUniformLocation(program, "u_color"),
-            finalMat: this.gl.getUniformLocation(program, "u_finalMat"),
-            modelMat: this.gl.getUniformLocation(program, "u_modelMat"),
-            normalMat: this.gl.getUniformLocation(program, "u_normalMat"),
-            ambientColor: this.gl.getUniformLocation(program, "u_ambientColor"),
-            lightPosition: this.gl.getUniformLocation(program, "u_lightPosition"),
-            lightColor: this.gl.getUniformLocation(program, "u_lightColor"),
-            cameraPosition: this.gl.getUniformLocation(program, "u_cameraPosition"),
-            shininess: this.gl.getUniformLocation(program, "u_shininess"),
+            position: this.gl.getAttribLocation(this.program, "a_position"),
+            normal: this.gl.getAttribLocation(this.program, "a_normal"),
+            color: this.gl.getUniformLocation(this.program, "u_color"),
+            finalMat: this.gl.getUniformLocation(this.program, "u_finalMat"),
+            modelMat: this.gl.getUniformLocation(this.program, "u_modelMat"),
+            normalMat: this.gl.getUniformLocation(this.program, "u_normalMat"),
+            ambientColor: this.gl.getUniformLocation(this.program, "u_ambientColor"),
+            lightPosition: this.gl.getUniformLocation(this.program, "u_lightPosition"),
+            lightColor: this.gl.getUniformLocation(this.program, "u_lightColor"),
+            cameraPosition: this.gl.getUniformLocation(this.program, "u_cameraPosition"),
+            shininess: this.gl.getUniformLocation(this.program, "u_shininess"),
         };
     }
 

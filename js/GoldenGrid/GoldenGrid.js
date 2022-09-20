@@ -84,8 +84,8 @@ class GoldenGrid extends Shader {
         for (let cube = 0; cube < cubesMats.length; cube++) {
             const cubeMat = ShaderUtils.mult3dMats(cubesMats[cube], rotationMat);
 
-            this.#light.uniformsSources.finalMat = ShaderUtils.mult3dMats(sceneMat, cubeMat);
-            this.#light.uniformsSources.modelMat = cubeMat;
+            this.#light.uniforms.finalMat = ShaderUtils.mult3dMats(sceneMat, cubeMat);
+            this.#light.uniforms.modelMat = cubeMat;
 
             this.#light.setLight();
 

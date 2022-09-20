@@ -22,7 +22,6 @@ void main() {
     vec3 diffuseColor = diffuseLight * u_lightColor;
     vec3 specular = vec3(0);
     
-
     if(diffuseLight > 0.) {
         vec3 surfaceToCamera = normalize(u_cameraPosition - v_surfacePos);
         vec3 reflectedLightRay = reflect(-surfaceToLight, normal);

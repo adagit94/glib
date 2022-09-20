@@ -2,8 +2,6 @@ import ShaderUtils from "../../Shader/ShaderUtils.js"
 
 class Plane {
     constructor(squareLength, rows, columns, wireframe) {
-        console.log("plane constructor")
-        
         let vertices = [], indices = [], normals = []
 
         const lastColOffsetForRow = squareLength * columns
