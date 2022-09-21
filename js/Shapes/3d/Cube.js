@@ -1,5 +1,122 @@
 class Cube {
-    constructor(sideLength, wireframe) {
+    static #NORMALS = new Float32Array([
+        0, 0, 1,
+        0, 0, 1,
+        0, 0, 1,
+        0, 0, 1,
+    
+        0, 0, -1,
+        0, 0, -1,
+        0, 0, -1,
+        0, 0, -1,
+    
+        0, 1, 0,
+        0, 1, 0,
+        0, 1, 0,
+        0, 1, 0,
+    
+        0, -1, 0,
+        0, -1, 0,
+        0, -1, 0,
+        0, -1, 0,
+    
+        1, 0, 0,
+        1, 0, 0,
+        1, 0, 0,
+        1, 0, 0,
+    
+        -1, 0, 0,
+        -1, 0, 0,
+        -1, 0, 0,
+        -1, 0, 0,
+    ])
+
+    static #INVERTED_NORMALS = new Float32Array([
+        0, 0, -1,
+        0, 0, -1,
+        0, 0, -1,
+        0, 0, -1,
+        
+        0, 0, 1,
+        0, 0, 1,
+        0, 0, 1,
+        0, 0, 1,
+    
+        0, -1, 0,
+        0, -1, 0,
+        0, -1, 0,
+        0, -1, 0,
+
+        0, 1, 0,
+        0, 1, 0,
+        0, 1, 0,
+        0, 1, 0,
+    
+        -1, 0, 0,
+        -1, 0, 0,
+        -1, 0, 0,
+        -1, 0, 0,
+
+        1, 0, 0,
+        1, 0, 0,
+        1, 0, 0,
+        1, 0, 0,
+    ])
+
+    static #INDICES = new Uint16Array([
+        0, 1, 2,
+        0, 3, 2,
+        
+        4, 5, 6,
+        4, 7, 6,
+
+        8, 9, 10,
+        10, 11, 8,
+
+        12, 13, 14,
+        14, 15, 12,
+
+        16, 17, 18,
+        16, 19, 18,
+
+        20, 21, 22,
+        20, 23, 22,
+    ])
+
+    static #WIREFRAME_INDICES = new Uint16Array([
+        0, 1,
+        1, 2,
+        2, 3,
+        3, 0,
+
+        4, 5,
+        5, 6,
+        6, 7,
+        7, 4,
+
+        8, 9,
+        9, 10,
+        10, 11,
+        11, 8,
+        
+        12, 13,
+        13, 14,
+        14, 15,
+        15, 12,
+
+        16, 17,
+        17, 18,
+        18, 19,
+        19, 16,
+
+        20, 21,
+        21, 22,
+        22, 23,
+        23, 20,
+    ])
+    
+    constructor(sideLength, settings) {
+        const {wireframe, invertedNormals} = settings
         const sideHalfLength = sideLength / 2
         
         this.vertices = new Float32Array([
@@ -40,61 +157,8 @@ class Cube {
             -sideHalfLength, -sideHalfLength, sideHalfLength, // 23
         ])
 
-        this.indices = new Uint16Array(wireframe ? [
-
-        ] : [
-          0, 1, 2,
-          0, 3, 2,
-          
-          4, 5, 6,
-          4, 7, 6,
-
-          8, 9, 10,
-          10, 11, 8,
-
-          12, 13, 14,
-          14, 15, 12,
-
-          16, 17, 18,
-          16, 19, 18,
-
-          20, 21, 22,
-          20, 23, 22,
-        ])
-
-        this.normals = new Float32Array(wireframe ? [
-
-        ] : [
-            0, 0, 1,
-            0, 0, 1,
-            0, 0, 1,
-            0, 0, 1,
-
-            0, 0, -1,
-            0, 0, -1,
-            0, 0, -1,
-            0, 0, -1,
-
-            0, 1, 0,
-            0, 1, 0,
-            0, 1, 0,
-            0, 1, 0,
-
-            0, -1, 0,
-            0, -1, 0,
-            0, -1, 0,
-            0, -1, 0,
-
-            1, 0, 0,
-            1, 0, 0,
-            1, 0, 0,
-            1, 0, 0,
-
-            -1, 0, 0,
-            -1, 0, 0,
-            -1, 0, 0,
-            -1, 0, 0,
-        ])
+        this.indices = wireframe ? Cube.#WIREFRAME_INDICES : Cube.#INDICES
+        this.normals = invertedNormals ? Cube.#INVERTED_NORMALS : Cube.#NORMALS
     }
 
     vertices
