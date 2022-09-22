@@ -1,5 +1,5 @@
 class Cube {
-    static #NORMALS = new Float32Array([
+    static #NORMALS = [
         0, 0, 1,
         0, 0, 1,
         0, 0, 1,
@@ -29,41 +29,9 @@ class Cube {
         -1, 0, 0,
         -1, 0, 0,
         -1, 0, 0,
-    ])
+    ]
 
-    static #INVERTED_NORMALS = new Float32Array([
-        0, 0, -1,
-        0, 0, -1,
-        0, 0, -1,
-        0, 0, -1,
-        
-        0, 0, 1,
-        0, 0, 1,
-        0, 0, 1,
-        0, 0, 1,
-    
-        0, -1, 0,
-        0, -1, 0,
-        0, -1, 0,
-        0, -1, 0,
-
-        0, 1, 0,
-        0, 1, 0,
-        0, 1, 0,
-        0, 1, 0,
-    
-        -1, 0, 0,
-        -1, 0, 0,
-        -1, 0, 0,
-        -1, 0, 0,
-
-        1, 0, 0,
-        1, 0, 0,
-        1, 0, 0,
-        1, 0, 0,
-    ])
-
-    static #INDICES = new Uint16Array([
+    static #INDICES = [
         0, 1, 2,
         0, 3, 2,
         
@@ -81,9 +49,9 @@ class Cube {
 
         20, 21, 22,
         20, 23, 22,
-    ])
+    ]
 
-    static #WIREFRAME_INDICES = new Uint16Array([
+    static #WIREFRAME_INDICES = [
         0, 1,
         1, 2,
         2, 3,
@@ -113,13 +81,12 @@ class Cube {
         21, 22,
         22, 23,
         23, 20,
-    ])
+    ]
     
-    constructor(sideLength, settings) {
-        const {wireframe, invertedNormals} = settings
+    constructor(sideLength, wireframe) {
         const sideHalfLength = sideLength / 2
         
-        this.vertices = new Float32Array([
+        this.vertices = [
             // FRONT
             sideHalfLength, sideHalfLength, sideHalfLength, // 0
             sideHalfLength, -sideHalfLength, sideHalfLength, // 1
@@ -155,10 +122,10 @@ class Cube {
             -sideHalfLength, sideHalfLength, -sideHalfLength, // 21
             -sideHalfLength, -sideHalfLength, -sideHalfLength, // 22
             -sideHalfLength, -sideHalfLength, sideHalfLength, // 23
-        ])
+        ]
 
         this.indices = wireframe ? Cube.#WIREFRAME_INDICES : Cube.#INDICES
-        this.normals = invertedNormals ? Cube.#INVERTED_NORMALS : Cube.#NORMALS
+        this.normals = Cube.#NORMALS
     }
 
     vertices

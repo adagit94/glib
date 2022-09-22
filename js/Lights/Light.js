@@ -45,14 +45,6 @@ class Light {
         this.program = program;
     }
 
-    getPositionLocation() {
-        return this.locations.position;
-    }
-
-    getNormalLocation() {
-        return this.locations.normal;
-    }
-
     setLight = () => {
         this.gl.useProgram(this.program);
         this.setUniforms();
