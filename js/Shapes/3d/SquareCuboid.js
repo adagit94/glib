@@ -92,7 +92,7 @@ class SquareCuboid {
             widthHalf, heightHalf, heightHalf, // 0
             widthHalf, -heightHalf, heightHalf, // 1
             -widthHalf, -heightHalf, heightHalf, // 2
-            -widthHalf, sideHalfLength, heightHalf, // 3
+            -widthHalf, heightHalf, heightHalf, // 3
 
             // BACK
             widthHalf, heightHalf, -heightHalf, // 4
