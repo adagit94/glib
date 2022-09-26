@@ -1,3 +1,4 @@
+import Sequencer from "../Gadgets/Sequencer.js";
 import PhongLight from "../Lights/PhongLight/PhongLight.js";
 import Shader from "../Shader/Shader.js";
 import ShaderUtils from "../Shader/ShaderUtils.js";
@@ -36,10 +37,9 @@ class GoldenGrid extends Shader {
 
         this.mats.cubes = cubeMats;
 
-        const lightOriginOffset = 2 * sideLength
-        const lightOrigin = [-lightOriginOffset, lightOriginOffset]
+        const lightOriginOffset = cuboidH / 2 + sideLength + cuboidW / 2
 
-        this.#initMovementSequencer(lightOrigin)
+        this.#initMovementSequencer(lightOriginOffset, sideLength)
 
         const light = (this.#light = new PhongLight(this.gl, {
             color: [1, 1, 1],
@@ -143,18 +143,33 @@ class GoldenGrid extends Shader {
         this.#light.uniforms.lightPosition = lightPos
     }
 
-    #initMovementSequencer(origin) {
+    #initMovementSequencer(originOffset, sideLength) {
+        this.#movementSequencer = new Sequencer([
+            {
+                translation: [-originOffset, originOffset, -originOffset], // origin
+            },
+            {
+                translation: [0, 0, 3 * sideLength],
+                delay: 250,
+            }, 
+        ], (currentStep, data) => {
+            const delayStep = currentStep.delay
+        })
+
         this.#movementSequencer = {
-            origin,
             currentStep: 0,
             steps: [
                 {
-                    translation: [],
+                    translation: [-originOffset, originOffset, -originOffset], // origin
+                },
+                {
+                    translation: [0, 0, 3 * sideLength],
                     delay: 250,
                 },
             ],
             data: {
-                position: [...origin]
+                position: [...origin],
+                elapsedDelay: 0,
             },
         }
     }
