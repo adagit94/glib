@@ -349,20 +349,20 @@ export default class ShaderUtils {
   static lookAtMat = (
     eye = [0, 0, 1],
     target = [0, 0, 0],
-    upVec = [0, 1, 0]
   ) => {
+    const upVec = [0, 1, 0]
     const eyeToTargetVec = ShaderUtils.subtractVecs(eye, target);
 
-    const zVec = ShaderUtils.normalizeVec(eyeToTargetVec);
+    const camDirection = ShaderUtils.normalizeVec(eyeToTargetVec);
     const xVec = ShaderUtils.normalizeVec(
-      ShaderUtils.crossProduct(upVec, zVec)
+      ShaderUtils.crossProduct(upVec, camDirection)
     );
-    const yVec = ShaderUtils.normalizeVec(ShaderUtils.crossProduct(zVec, xVec));
+    const yVec = ShaderUtils.normalizeVec(ShaderUtils.crossProduct(camDirection, xVec));
 
     return new Float32Array([
       xVec[0], xVec[1], xVec[2], 0,
       yVec[0], yVec[1], yVec[2], 0,
-      zVec[0], zVec[1], zVec[2], 0,
+      camDirection[0], camDirection[1], camDirection[2], 0,
       eye[0], eye[1], eye[2], 1,
     ]);
   };

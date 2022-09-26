@@ -1,26 +1,28 @@
 import PhongLight from "../Lights/PhongLight/PhongLight.js";
 import Shader from "../Shader/Shader.js";
 import ShaderUtils from "../Shader/ShaderUtils.js";
-import Cube from "../Shapes/3d/Cube.js";
+import SkeletonCube from "../Shapes/3d/SkeletonCube.js";
 
 class GoldenGrid extends Shader {
     constructor() {
-        super("#glFrame", "3d", { fov: Math.PI / 2, near: 1, far: 10 });
+        super("#glFrame", "3d", { fov: Math.PI / 4, near: 0.1, far: 100 });
 
         this.#initGrid();
     }
 
-    #cubes = {};
+    #cube;
     #light;
 
     async #initGrid() {
-        const sideLength = 0.5;
-        const cubeOffset = sideLength * 2 - sideLength / 2;
-        const innerCube = (this.#cubes.inner = new Cube(sideLength, { wireframe: true, invertedNormals: true }));
-        const outerCube = (this.#cubes.outer = new Cube(sideLength + 0.001, { wireframe: true }));
+        const cuboidW = 0.5;
+        const cuboidH = cuboidW / 4;
+        const sideLength = cuboidW + cuboidH;
+        const cubeOffset = 2 * sideLength - sideLength / 2;
+        const cube = (this.#cube = new SkeletonCube(cuboidW, cuboidH, false));
         const layers = 4;
 
-        const cameraPosition = [0, 0, 3];
+        // const cameraPosition = [Math.cos(Math.PI / 2) * 6, 0, Math.sin(Math.PI / 2) * 6];
+        const cameraPosition = [0, 0, 6];
         const cameraMat = ShaderUtils.lookAtMat(cameraPosition);
         const viewMat = ShaderUtils.init3dInvertedMat(cameraMat);
         const sceneMat = ShaderUtils.mult3dMats(this.mats.projection, viewMat);
@@ -39,9 +41,12 @@ class GoldenGrid extends Shader {
             }
         }
 
+        this.mats.cubes = cubeMats;
+
         const light = (this.#light = new PhongLight(this.gl, {
-            color: [1, 1, 1],
-            lightPosition: [0, 1, 2.5],
+            color: [1, 1, 0],
+            lightPosition: cameraPosition,
+            lightPosition: [0, 0, 3],
             lightColor: [1, 1, 1],
             ambientColor: [0, 0, 0],
             cameraPosition,
@@ -54,21 +59,19 @@ class GoldenGrid extends Shader {
                 name: "goldenGrid",
                 paths: { vShader: "js/GoldenGrid/goldenGrid.vert", fShader: "js/GoldenGrid/goldenGrid.frag" },
                 buffersData: {
-                    innerCube: {
-                        vertices: [light.locations.position, innerCube.vertices],
-                        indices: innerCube.indices,
-                        normals: [light.locations.normal, innerCube.normals],
+                    cuboid: {
+                        vertices: [light.locations.position, cube.cuboid.vertices],
+                        indices: cube.cuboid.indices,
+                        normals: [light.locations.normal, cube.cuboid.normals],
                     },
-                    outerCube: {
-                        vertices: [light.locations.position, outerCube.vertices],
-                        indices: outerCube.indices,
-                        normals: [light.locations.normal, outerCube.normals],
+                    cube: {
+                        vertices: [light.locations.position, cube.cube.vertices],
+                        indices: cube.cube.indices,
+                        normals: [light.locations.normal, cube.cube.normals],
                     },
                 },
             },
         ]);
-
-        this.mats.cubes = cubeMats;
 
         this.animate = false;
 
@@ -79,36 +82,47 @@ class GoldenGrid extends Shader {
     }
 
     #renderGrid() {
-        const { scene: sceneMat, cubes: cubesMats } = this.mats;
+        const { scene, cubes } = this.mats;
         const { buffers } = this.programs.goldenGrid;
 
-        // const rotationMat = ShaderUtils.init3dRotationMat("y", this.animData.deltaTime / 2);
-        // const sceneRotationMat = ShaderUtils.init3dRotationMat("y", Math.PI / 2);
-        const sceneRotationMat = ShaderUtils.init3dRotationMat("y", 0);
+        let cube = 0
+        
+        for (const cubeMat of cubes) {
+            if (cube > 32) break
+            
+            const { cuboids, cubes } = this.#cube.mats;
 
-        for (let cube = 0; cube < cubesMats.length; cube++) {
-            const cubeMat = cubesMats[cube]
+            this.gl.bindVertexArray(buffers.cuboid.vao);
+            this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, buffers.cuboid.indices);
+            
+            for (const cuboidPartMat of cuboids) {
+                const modelMat = ShaderUtils.mult3dMats(cubeMat, cuboidPartMat);
 
-            this.#light.uniforms.finalMat = ShaderUtils.mult3dMats(sceneMat, [sceneRotationMat, cubeMat]);
-            this.#light.uniforms.modelMat = cubeMat;
-            this.#light.uniforms.normalMat = ShaderUtils.init3dNormalMat(cubeMat);
-            this.#light.uniforms.lightPosition = [Math.cos(this.animData.deltaTime / 4) * 2.5, 1, Math.sin(this.animData.deltaTime / 4) * 2.5]
-            this.#light.uniforms.color = [0, 0, 1]
+                this.#light.uniforms.finalMat = ShaderUtils.mult3dMats(scene, modelMat);
+                this.#light.uniforms.modelMat = modelMat;
+                this.#light.uniforms.normalMat = ShaderUtils.init3dNormalMat(modelMat);
 
-            this.#light.setLight();
+                this.#light.setLight();
 
-            this.gl.bindVertexArray(buffers.innerCube.vao);
-            this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, buffers.innerCube.indices);
+                this.gl.drawElements(this.gl.TRIANGLES, this.#cube.cuboid.indices.length, this.gl.UNSIGNED_SHORT, 0);
+            }
 
-            this.gl.drawElements(this.gl.LINES, this.#cubes.inner.indices.length, this.gl.UNSIGNED_SHORT, 0);
+            this.gl.bindVertexArray(buffers.cube.vao);
+            this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, buffers.cube.indices);
 
-            this.#light.uniforms.color = [0, 1, 0]
-            this.#light.setLight();
+            for (const cubePartMat of cubes) {
+                const modelMat = ShaderUtils.mult3dMats(cubeMat, cubePartMat);
 
-            this.gl.bindVertexArray(buffers.outerCube.vao);
-            this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, buffers.outerCube.indices);
+                this.#light.uniforms.finalMat = ShaderUtils.mult3dMats(scene, modelMat);
+                this.#light.uniforms.modelMat = modelMat;
+                this.#light.uniforms.normalMat = ShaderUtils.init3dNormalMat(modelMat);
 
-            this.gl.drawElements(this.gl.LINES, this.#cubes.outer.indices.length, this.gl.UNSIGNED_SHORT, 0);
+                this.#light.setLight();
+
+                this.gl.drawElements(this.gl.TRIANGLES, this.#cube.cube.indices.length, this.gl.UNSIGNED_SHORT, 0);
+            }
+
+            cube++
         }
     }
 
