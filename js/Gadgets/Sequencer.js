@@ -1,23 +1,47 @@
 class Sequencer {
     constructor(steps, stepValidator) {
-        this.#steps = steps
-        this.#stepValidator = stepValidator
+        this.#steps = steps;
+        this.#stepValidator = stepValidator;
     }
 
-    #steps
-    #currentStep = 0
-    customData = {
-        elapsedDelay: 0
-    }
+    #steps;
+    #currentStep = 0;
+    #stepValidator;
+    #elapsedDelay = 0;
+    customData = {};
 
     #advance() {
-        this.#currentStep++
+        this.#currentStep++;
     }
 
-    validateStep() {
-        const shouldAdvance = stepValidator(this.#steps[this.#currentStep], this.customData)
+    #validateDelay(step, frameT) {
+        const delay = step.delay;
 
-        if (shouldAdvance) this.#advance()
+        if (delay) {
+            this.#elapsedDelay += frameT;
+
+            if (this.#elapsedDelay >= delay) {
+                this.#elapsedDelay = 0;
+
+                return true;
+            }
+
+            return false;
+        }
+
+        return true;
+    }
+
+    validateStep(frameT) {
+        const step = this.#steps[this.#currentStep];
+
+        let shouldAdvance = this.#validateDelay(step, frameT);
+
+        if (shouldAdvance) {
+            shouldAdvance = this.#stepValidator(step, this.customData);
+
+            if (shouldAdvance) this.#advance();
+        }
     }
 }
 

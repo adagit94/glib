@@ -13,7 +13,7 @@ class GoldenGrid extends Shader {
 
     #cube;
     #light;
-    #movementSequencer
+    #movementSequencer;
 
     async #initGrid() {
         const cuboidW = 0.5;
@@ -37,12 +37,14 @@ class GoldenGrid extends Shader {
 
         this.mats.cubes = cubeMats;
 
-        const lightOriginOffset = cuboidH / 2 + sideLength + cuboidW / 2
+        this.#initMovementSequencer(sideLength);
 
-        this.#initMovementSequencer(lightOriginOffset, sideLength)
+        const lightOriginOffset = cuboidH / 2 + sideLength + cuboidW / 2;
+        const lightOrigin = [-lightOriginOffset, -lightOriginOffset, -lightOriginOffset];
 
         const light = (this.#light = new PhongLight(this.gl, {
             color: [1, 1, 1],
+            lightPosition: lightOrigin,
             lightColor: [1, 1, 0],
             ambientColor: [0.1, 0.1, 0.1],
             shininess: 256,
@@ -80,15 +82,15 @@ class GoldenGrid extends Shader {
         const { cubes } = this.mats;
         const { buffers } = this.programs.goldenGrid;
 
-        this.#moveCamera()
-        this.#moveLight()
+        this.#moveCamera();
+        this.#moveLight();
 
         for (const cubeMat of cubes) {
             const { cuboids, cubes } = this.#cube.mats;
 
             this.gl.bindVertexArray(buffers.cuboid.vao);
             this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, buffers.cuboid.indices);
-            
+
             for (const cuboidPartMat of cuboids) {
                 const modelMat = ShaderUtils.mult3dMats(cubeMat, cuboidPartMat);
 
@@ -119,59 +121,80 @@ class GoldenGrid extends Shader {
     }
 
     #moveCamera() {
-        const posAngle = Math.PI / 2 - this.animData.deltaTime / 8
-        const posR = 6
+        const posAngle = Math.PI / 2 - this.animData.deltaTime / 8;
+        const posR = 6;
         // const cameraPos = [Math.cos(posAngle) * posR, 0, Math.sin(posAngle) * posR]
-        const cameraPos = [0, 0, 6]
-        
+        const cameraPos = [0, 0, 6];
+
         const cameraMat = ShaderUtils.lookAtMat(cameraPos);
         const viewMat = ShaderUtils.init3dInvertedMat(cameraMat);
 
-        this.mats.scene = ShaderUtils.mult3dMats(this.mats.projection, viewMat)
-        this.#light.uniforms.cameraPosition = cameraPos
+        this.mats.scene = ShaderUtils.mult3dMats(this.mats.projection, viewMat);
+        this.#light.uniforms.cameraPosition = cameraPos;
     }
 
     #moveLight() {
         // const posAngle = Math.PI / 2 - this.animData.deltaTime / 4
-        const posAngle = -Math.PI / 2
-        const posR = 6
-        const lightPos = [Math.cos(posAngle) * posR, 0, Math.sin(posAngle) * posR]
+        const posAngle = -Math.PI / 2;
+        const posR = 6;
+        const lightPos = [Math.cos(posAngle) * posR, 0, Math.sin(posAngle) * posR];
 
         // LINEAR TRANSLATION
         // const lightPos = [-4 + this.animData.deltaTime / 8, 0, Math.sin(posAngle) * posR]
 
-        this.#light.uniforms.lightPosition = lightPos
+        this.#light.uniforms.lightPosition = lightPos;
     }
 
-    #initMovementSequencer(originOffset, sideLength) {
-        this.#movementSequencer = new Sequencer([
-            {
-                translation: [-originOffset, originOffset, -originOffset], // origin
-            },
-            {
-                translation: [0, 0, 3 * sideLength],
-                delay: 250,
-            }, 
-        ], (currentStep, data) => {
-            const delayStep = currentStep.delay
-        })
-
-        this.#movementSequencer = {
-            currentStep: 0,
-            steps: [
-                {
-                    translation: [-originOffset, originOffset, -originOffset], // origin
-                },
+    #initMovementSequencer(sideLength) {
+        this.#movementSequencer = new Sequencer(
+            [
                 {
                     translation: [0, 0, 3 * sideLength],
-                    delay: 250,
+                    delay: 0.25,
                 },
             ],
-            data: {
-                position: [...origin],
-                elapsedDelay: 0,
-            },
-        }
+            (currentStep, data) => {
+                const { lightPosition } = this.#light.uniforms;
+                const [lx, ly, lz] = lightPosition;
+                const [tx, ty, tz] = currentStep.translation;
+
+                const positionBorderline = [data.lastPos[0] + tx, data.lastPos[1] + ty, data.lastPos[2] + tz];
+
+                const precision = 3;
+
+                const moveX = lx.toFixed(precision) === positionBorderline[0].toFixed(precision);
+                const moveY = ly.toFixed(precision) === positionBorderline[1].toFixed(precision);
+                const moveZ = lz.toFixed(precision) === positionBorderline[2].toFixed(precision);
+
+                if (!moveX && !moveY && !moveZ) {
+                    data.lastPos = [lx, ly, lz];
+
+                    return true;
+                }
+
+                const t = this.animData.frameDeltaTime / 100;
+
+                if (moveX) {
+                    const tPolarity = tx < 0 ? -1 : 1
+                    
+                    lightPosition[0] = lx + t * tPolarity;
+                }
+
+                if (moveY) {
+                    const tPolarity = ty < 0 ? -1 : 1
+                    
+                    lightPosition[1] = ly + t * tPolarity;
+                }
+
+                if (moveZ) {
+                    const tPolarity = tz < 0 ? -1 : 1
+                    
+                    lightPosition[2] = lz + t * tPolarity;
+                }
+            }
+        );
+
+        this.#movementSequencer.customData.lastPos = [...this.#light.lightPosition];
     }
 
     computeScene = () => {
