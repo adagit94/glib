@@ -135,7 +135,7 @@ export default class CirclesChain extends Shader {
         }
     }
 
-    computeScene() {
+    renderScene() {
         this.#renderCircles();
     }
 }

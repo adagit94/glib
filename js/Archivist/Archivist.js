@@ -273,7 +273,7 @@ class Archivist extends Shader {
         this.#renderTentacles();
     }
 
-    computeScene() {
+    renderScene() {
         this.#computeTentacles();
         this.#renderHead();
     }

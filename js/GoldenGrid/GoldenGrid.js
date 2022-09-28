@@ -37,8 +37,6 @@ class GoldenGrid extends Shader {
 
         this.mats.cubes = cubeMats;
 
-        this.#initMovementSequencer(sideLength);
-
         const lightOriginOffset = cuboidH / 2 + sideLength + cuboidW / 2;
         const lightOrigin = [-lightOriginOffset, -lightOriginOffset, -lightOriginOffset];
 
@@ -46,9 +44,11 @@ class GoldenGrid extends Shader {
             color: [1, 1, 1],
             lightPosition: lightOrigin,
             lightColor: [1, 1, 0],
-            ambientColor: [0.1, 0.1, 0.1],
+            ambientColor: [0, 0, 0],
             shininess: 256,
         }));
+
+        this.#initMovementSequencer(sideLength);
 
         await light.init();
         await this.init([
@@ -78,12 +78,77 @@ class GoldenGrid extends Shader {
         this.requestAnimationFrame();
     }
 
+    #initMovementSequencer(sideLength) {
+        this.#movementSequencer = new Sequencer(
+            [
+                {
+                    translation: [0, 0, 3 * sideLength],
+                    // delay: 0.25,
+                },
+            ],
+            (currentStep, data) => {
+                const { lightPosition } = this.#light.uniforms;
+                const [lx, ly, lz] = lightPosition;
+                const [tx, ty, tz] = currentStep.translation;
+
+                const positionBorderline = [data.lastPos[0] + tx, data.lastPos[1] + ty, data.lastPos[2] + tz];
+
+                const precision = 2;
+
+                const moveX = lx.toFixed(precision) !== positionBorderline[0].toFixed(precision);
+                const moveY = ly.toFixed(precision) !== positionBorderline[1].toFixed(precision);
+                const moveZ = lz.toFixed(precision) !== positionBorderline[2].toFixed(precision);
+
+                // console.log("moveX", moveX)
+                // console.log("moveY", moveY)
+                // console.log("moveZ", moveZ)
+
+                if (!moveX && !moveY && !moveZ) {
+                    data.lastPos = [lx, ly, lz];
+
+                    console.log("step progression");
+
+                    return true;
+                }
+
+                const t = this.animData.frameDeltaTime / 10;
+
+                if (moveX) {
+                    const polarity = tx < 0 ? -1 : 1;
+
+                    lightPosition[0] = lx + t * polarity;
+                }
+
+                if (moveY) {
+                    const polarity = ty < 0 ? -1 : 1;
+
+                    lightPosition[1] = ly + t * polarity;
+                }
+
+                if (moveZ) {
+                    const polarity = tz < 0 ? -1 : 1;
+
+                    lightPosition[2] = lz + t * polarity;
+                }
+
+                return false;
+            }
+        );
+
+        this.#movementSequencer.customData.lastPos = [...this.#light.uniforms.lightPosition];
+    }
+
+    renderScene = () => {
+        this.#renderGrid();
+    };
+    
     #renderGrid() {
         const { cubes } = this.mats;
         const { buffers } = this.programs.goldenGrid;
 
         this.#moveCamera();
-        this.#moveLight();
+        this.#movementSequencer.validateStep(this.animData.frameDeltaTime);
+        // this.#moveLight();
 
         for (const cubeMat of cubes) {
             const { cuboids, cubes } = this.#cube.mats;
@@ -121,10 +186,9 @@ class GoldenGrid extends Shader {
     }
 
     #moveCamera() {
-        const posAngle = Math.PI / 2 - this.animData.deltaTime / 8;
+        const posAngle = Math.PI / 2; // - this.animData.deltaTime / 8;
         const posR = 6;
-        // const cameraPos = [Math.cos(posAngle) * posR, 0, Math.sin(posAngle) * posR]
-        const cameraPos = [0, 0, 6];
+        const cameraPos = [Math.cos(posAngle) * posR, 0, Math.sin(posAngle) * posR];
 
         const cameraMat = ShaderUtils.lookAtMat(cameraPos);
         const viewMat = ShaderUtils.init3dInvertedMat(cameraMat);
@@ -144,62 +208,6 @@ class GoldenGrid extends Shader {
 
         this.#light.uniforms.lightPosition = lightPos;
     }
-
-    #initMovementSequencer(sideLength) {
-        this.#movementSequencer = new Sequencer(
-            [
-                {
-                    translation: [0, 0, 3 * sideLength],
-                    delay: 0.25,
-                },
-            ],
-            (currentStep, data) => {
-                const { lightPosition } = this.#light.uniforms;
-                const [lx, ly, lz] = lightPosition;
-                const [tx, ty, tz] = currentStep.translation;
-
-                const positionBorderline = [data.lastPos[0] + tx, data.lastPos[1] + ty, data.lastPos[2] + tz];
-
-                const precision = 3;
-
-                const moveX = lx.toFixed(precision) === positionBorderline[0].toFixed(precision);
-                const moveY = ly.toFixed(precision) === positionBorderline[1].toFixed(precision);
-                const moveZ = lz.toFixed(precision) === positionBorderline[2].toFixed(precision);
-
-                if (!moveX && !moveY && !moveZ) {
-                    data.lastPos = [lx, ly, lz];
-
-                    return true;
-                }
-
-                const t = this.animData.frameDeltaTime / 100;
-
-                if (moveX) {
-                    const tPolarity = tx < 0 ? -1 : 1
-                    
-                    lightPosition[0] = lx + t * tPolarity;
-                }
-
-                if (moveY) {
-                    const tPolarity = ty < 0 ? -1 : 1
-                    
-                    lightPosition[1] = ly + t * tPolarity;
-                }
-
-                if (moveZ) {
-                    const tPolarity = tz < 0 ? -1 : 1
-                    
-                    lightPosition[2] = lz + t * tPolarity;
-                }
-            }
-        );
-
-        this.#movementSequencer.customData.lastPos = [...this.#light.lightPosition];
-    }
-
-    computeScene = () => {
-        this.#renderGrid();
-    };
 }
 
 export default GoldenGrid;

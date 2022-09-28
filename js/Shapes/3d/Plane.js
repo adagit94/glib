@@ -2,7 +2,7 @@ import ShaderUtils from "../../Shader/ShaderUtils.js"
 
 class Plane {
     constructor(squareLength, rows, columns, wireframe) {
-        let vertices = [], indices = [], normals = []
+        let vertices = [], indices = [], normals = [], textureCoords = []
 
         const lastColOffsetForRow = squareLength * columns
         const lastRowOffsetForCol = squareLength * rows
@@ -39,11 +39,17 @@ class Plane {
             for (let normal = 0; normal < indices.length; normal++) {
                 normals.push(0, 1, 0)
             }
+
+            textureCoords.push(0, 1)
+            textureCoords.push(1, 1)
+            textureCoords.push(0, 0)
+            textureCoords.push(1, 0)
         }
 
         this.vertices = vertices
         this.indices = indices
         this.normals = normals
+        this.textureCoords = textureCoords
 
         this.mat = ShaderUtils.init3dTranslationMat(-lastColOffsetForRow / 2, 0, -lastRowOffsetForCol / 2)
     }

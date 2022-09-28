@@ -35,12 +35,16 @@ class Sequencer {
     validateStep(frameT) {
         const step = this.#steps[this.#currentStep];
 
-        let shouldAdvance = this.#validateDelay(step, frameT);
+        console.log("step", step);
 
-        if (shouldAdvance) {
-            shouldAdvance = this.#stepValidator(step, this.customData);
+        if (step) {
+            let shouldAdvance = this.#validateDelay(step, frameT);
 
-            if (shouldAdvance) this.#advance();
+            if (shouldAdvance) {
+                shouldAdvance = this.#stepValidator(step, this.customData);
+
+                if (shouldAdvance) this.#advance();
+            }
         }
     }
 }

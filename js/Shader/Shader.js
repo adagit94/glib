@@ -29,7 +29,7 @@ export default class Shader {
         }
 
         this.mats = {
-          projection: projectionMat,
+            projection: projectionMat,
         };
     }
 
@@ -38,12 +38,9 @@ export default class Shader {
     mode;
     programs;
     mats;
+    textures = {};
     animate = false;
-    animData = {
-        frameDeltaTime: 0,
-        deltaTime: 0,
-        prevAnimTime: 0,
-    };
+    animData;
 
     async init(programsConfs) {
         const shadersFetches = programsConfs.flatMap((programConf) => [
@@ -84,15 +81,17 @@ export default class Shader {
             programData.locations = {
                 position: this.gl.getAttribLocation(program, "a_position"),
                 normal: this.gl.getAttribLocation(program, "a_normal"),
+                textureCoords: this.gl.getAttribLocation(program, "a_textureCoords"),
                 mat: this.gl.getUniformLocation(program, "u_mat"),
                 color: this.gl.getUniformLocation(program, "u_color"),
+                texture: this.gl.getUniformLocation(program, "u_texture"),
             };
             programData.buffers = {};
 
             const commonBuffersSettings = { size: this.mode === "3d" ? 3 : 2 };
 
             Object.entries(programConf.buffersData).forEach(([setName, data]) => {
-                const { vertices, indices, normals } = data;
+                const { vertices, indices, normals, textureCoords } = data;
                 const drawMethod = data.drawMethod ?? this.gl.STATIC_DRAW;
 
                 const vao = this.gl.createVertexArray();
@@ -101,63 +100,84 @@ export default class Shader {
 
                 let buffersSet = (programData.buffers[setName] = {
                     vao,
-                    vertices: this.createAndBindVerticesBuffer(vertices[0], new Float32Array(vertices[1]), commonBuffersSettings, drawMethod),
+                    vertices: this.createVertexBuffer(vertices[0], vertices[1], commonBuffersSettings, drawMethod),
                 });
 
                 if (indices) {
-                    buffersSet.indices = this.createAndBindIndicesBuffer(new Uint16Array(indices), drawMethod);
+                    buffersSet.indices = this.createIndexBuffer(indices, drawMethod);
                 }
 
                 if (normals) {
-                    buffersSet.normals = this.createAndBindVerticesBuffer(
-                        normals[0],
-                        new Float32Array(normals[1]),
-                        commonBuffersSettings,
-                        drawMethod
-                    );
+                    buffersSet.normals = this.createVertexBuffer(normals[0], normals[1], commonBuffersSettings, drawMethod);
+                }
+
+                if (textureCoords) {
+                    buffersSet.textureCoords = this.createVertexBuffer(textureCoords[0], textureCoords[1], { size: 2, normalize: true }, drawMethod);
                 }
             });
         });
-    };
+    }
 
-    createAndBindVerticesBuffer(attrLocation, bufferData, settings, drawMethod = this.gl.STATIC_DRAW) {
+    createVertexBuffer(attrLocation, bufferData, settings, drawMethod = this.gl.STATIC_DRAW) {
         const buffer = this.gl.createBuffer();
 
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, buffer);
-        this.gl.bufferData(this.gl.ARRAY_BUFFER, bufferData, drawMethod);
+        this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(bufferData), drawMethod);
         this.gl.enableVertexAttribArray(attrLocation);
-        this.gl.vertexAttribPointer(attrLocation, settings.size, this.gl.FLOAT, false, 0, 0);
+        this.gl.vertexAttribPointer(attrLocation, settings.size, this.gl.FLOAT, settings.normalize ?? false, 0, 0);
 
         return buffer;
     }
 
-    createAndBindIndicesBuffer(bufferData, drawMethod = this.gl.STATIC_DRAW) {
+    createIndexBuffer(bufferData, drawMethod = this.gl.STATIC_DRAW) {
         const buffer = this.gl.createBuffer();
 
         this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, buffer);
-        this.gl.bufferData(this.gl.ELEMENT_ARRAY_BUFFER, bufferData, drawMethod);
+        this.gl.bufferData(this.gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(bufferData), drawMethod);
 
         return buffer;
     }
 
-    #triggerFrame = (t) => this.renderScene(t);
+    async createTexture(name, path) {
+        const textureImage = await fetch(path, Shader.#shaderFetchConf);
+        const textureSlot = Object.keys(this.textures).length
+        const texture = this.gl.createTexture()
 
-    requestAnimationFrame = () => window.requestAnimationFrame(this.#triggerFrame);
+        this.gl.activeTexture(this.gl[`TEXTURE${textureSlot}`])
+        this.gl.bindTexture(this.gl.TEXTURE_2D, texture)
+        this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, 1, 1, 0, this.gl.RGBA, this.gl.UNSIGNED_BYTE, textureImage)
+        this.gl.generateMipmap(this.gl.TEXTURE_2D)
+        
+        this.textures[name] = textureSlot
+        console.log("image", textureImage);
+        
+        return texture
+    }
 
-    renderScene(timeNow) {
-        const timeInSecs = timeNow / 1000;
-        const deltaTime = timeInSecs - this.animData.prevAnimTime;
+    requestAnimationFrame = () => {
+        this.animData = {
+            frameDeltaTime: 0,
+            deltaTime: 0,
+            lastFrameTime: Date.now() / 1000,
+        };
 
-        this.animData.prevAnimTime = timeInSecs;
-        this.animData.frameDeltaTime = deltaTime;
-        this.animData.deltaTime += deltaTime;
+        window.requestAnimationFrame(this.#render);
+    };
+
+    #render = () => {
+        const now = Date.now() / 1000;
+        const elapsedTime = now - this.animData.lastFrameTime;
+
+        this.animData.lastFrameTime = now;
+        this.animData.frameDeltaTime = elapsedTime;
+        this.animData.deltaTime += elapsedTime;
 
         this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
         this.gl.clearColor(0, 0, 0, 1);
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 
-        this.computeScene?.();
+        this.renderScene();
 
-        if (this.animate) this.requestAnimationFrame();
-    }
+        if (this.animate) window.requestAnimationFrame(this.#render);
+    };
 }

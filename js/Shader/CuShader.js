@@ -212,7 +212,7 @@ export default class CuShader extends Shader {
         }
     };
 
-    computeScene = () => {
+    renderScene = () => {
         this.#computeView();
         // this.#renderCube();
         this.#renderCrossChannel();

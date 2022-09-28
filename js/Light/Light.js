@@ -204,7 +204,7 @@ export default class Light extends Shader {
             shape,
             count: circles,
             mat: ShaderUtils.mult2dMats(this.projectionMat, shape.mat),
-            buffer: this.createAndBindVerticesBuffer(this.#locations.position, shape.coordinates, { size: 2 }),
+            buffer: this.createVertexBuffer(this.#locations.position, shape.coordinates, { size: 2 }),
             inversedMode: { active: false },
             striped: {
                 active: true,
@@ -342,7 +342,7 @@ export default class Light extends Shader {
                     y: 0,
                 },
             ],
-            buffer: this.createAndBindVerticesBuffer(this.#locations.position, circle.coordinates, { size: 2 }),
+            buffer: this.createVertexBuffer(this.#locations.position, circle.coordinates, { size: 2 }),
             inversedMode: { active: false },
             lStepMult: 1,
             anim: {
@@ -500,8 +500,8 @@ export default class Light extends Shader {
             },
             trianglesCount: 10,
             buffers: {
-                vertex: this.createAndBindVerticesBuffer(this.#locations.position, coords, { size: 2 }),
-                index: this.createAndBindIndicesBuffer(indices, this.gl.STATIC_READ),
+                vertex: this.createVertexBuffer(this.#locations.position, coords, { size: 2 }),
+                index: this.createIndexBuffer(indices, this.gl.STATIC_READ),
             },
             inversedMode: { active: true },
             lStepMult: 1,
@@ -649,7 +649,7 @@ export default class Light extends Shader {
                 ShaderUtils.mult2dMats(ellipseMat, [ShaderUtils.init2dTranslationMat(this.gl.canvas.width / 2, -this.gl.canvas.height / 2)]),
                 ShaderUtils.mult2dMats(ellipseMat, [ShaderUtils.init2dTranslationMat(this.gl.canvas.width / 2, this.gl.canvas.height / 2)]),
             ],
-            buffer: this.createAndBindVerticesBuffer(this.#locations.position, ellipse.coordinates, { size: 2 }),
+            buffer: this.createVertexBuffer(this.#locations.position, ellipse.coordinates, { size: 2 }),
             inversedMode: { active: false },
             lStepMult: 1,
             anim: {
@@ -815,9 +815,9 @@ export default class Light extends Shader {
 
             vaos.left = leftSideVao;
 
-            buffers.vertices.left = this.createAndBindVerticesBuffer(this.#locations.position, leftSideCoordinates, { size: 2 }, this.gl.STATIC_READ);
+            buffers.vertices.left = this.createVertexBuffer(this.#locations.position, leftSideCoordinates, { size: 2 }, this.gl.STATIC_READ);
 
-            buffers.indices.left = this.createAndBindIndicesBuffer(leftIndices, this.gl.STATIC_READ);
+            buffers.indices.left = this.createIndexBuffer(leftIndices, this.gl.STATIC_READ);
         }
 
         if (renderRightSide) {
@@ -852,14 +852,9 @@ export default class Light extends Shader {
 
             vaos.right = rightSideVao;
 
-            buffers.vertices.right = this.createAndBindVerticesBuffer(
-                this.#locations.position,
-                rightSideCoordinates,
-                { size: 2 },
-                this.gl.STATIC_READ
-            );
+            buffers.vertices.right = this.createVertexBuffer(this.#locations.position, rightSideCoordinates, { size: 2 }, this.gl.STATIC_READ);
 
-            buffers.indices.right = this.createAndBindIndicesBuffer(rightIndices, this.gl.STATIC_READ);
+            buffers.indices.right = this.createIndexBuffer(rightIndices, this.gl.STATIC_READ);
         }
 
         const tPercMult = 40;
