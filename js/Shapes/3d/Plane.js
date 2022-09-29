@@ -36,9 +36,10 @@ class Plane {
             indices.push(0, 1, 3)
             indices.push(0, 2, 3)
 
-            for (let normal = 0; normal < indices.length; normal++) {
-                normals.push(0, 1, 0)
-            }
+            normals.push(0, 1, 0)
+            normals.push(0, 1, 0)
+            normals.push(0, 1, 0)
+            normals.push(0, 1, 0)
 
             textureCoords.push(0, 1)
             textureCoords.push(1, 1)

@@ -1,3 +1,4 @@
+import ShaderUtils from "../../Shader/ShaderUtils.js";
 import Light from "../Light.js";
 
 class PhongLight extends Light {
@@ -14,9 +15,7 @@ class PhongLight extends Light {
         });
 
         this.locations = {
-            position: this.gl.getAttribLocation(this.program, "a_position"),
-            normal: this.gl.getAttribLocation(this.program, "a_normal"),
-            color: this.gl.getUniformLocation(this.program, "u_color"),
+            ...ShaderUtils.initCommonLocations(this.gl, this.program),
             finalMat: this.gl.getUniformLocation(this.program, "u_finalMat"),
             modelMat: this.gl.getUniformLocation(this.program, "u_modelMat"),
             normalMat: this.gl.getUniformLocation(this.program, "u_normalMat"),

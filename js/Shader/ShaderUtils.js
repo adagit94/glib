@@ -391,4 +391,12 @@ export default class ShaderUtils {
       vec[2] / length,
     ]);
   };
+
+  static initCommonLocations = (gl, program) => ({
+    position: gl.getAttribLocation(program, "a_position"),
+    normal: gl.getAttribLocation(program, "a_normal"),
+    textureCoords: gl.getAttribLocation(program, "a_textureCoords"),
+    color: gl.getUniformLocation(program, "u_color"),
+    texture: gl.getUniformLocation(program, "u_texture"),
+  })
 }

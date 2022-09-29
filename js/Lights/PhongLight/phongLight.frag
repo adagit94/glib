@@ -8,9 +8,11 @@ uniform vec3 u_lightPosition;
 uniform vec3 u_lightColor;
 uniform vec3 u_cameraPosition;
 uniform float u_shininess;
+uniform sampler2D u_texture;
 
 in vec3 v_normal;
 in vec3 v_surfacePos;
+in vec2 v_textureCoords;
 
 out vec4 color;
 
@@ -29,7 +31,8 @@ void main() {
         specular = pow(max(dot(surfaceToCamera, reflectedLightRay), 0.), u_shininess) * u_lightColor;
     }
 
-    color = vec4(u_color, 1);
+    // color = vec4(u_color, 1);;
+    color = texture(u_texture, v_textureCoords);
     color.rgb *= u_ambientColor + diffuseColor;
     color.rgb += specular;
 }

@@ -79,12 +79,8 @@ export default class Shader {
 
             programData.program = program;
             programData.locations = {
-                position: this.gl.getAttribLocation(program, "a_position"),
-                normal: this.gl.getAttribLocation(program, "a_normal"),
-                textureCoords: this.gl.getAttribLocation(program, "a_textureCoords"),
+                ...ShaderUtils.initCommonLocations(this.gl, program),
                 mat: this.gl.getUniformLocation(program, "u_mat"),
-                color: this.gl.getUniformLocation(program, "u_color"),
-                texture: this.gl.getUniformLocation(program, "u_texture"),
             };
             programData.buffers = {};
 
@@ -100,7 +96,7 @@ export default class Shader {
 
                 let buffersSet = (programData.buffers[setName] = {
                     vao,
-                    vertices: this.createVertexBuffer(vertices[0], vertices[1], commonBuffersSettings, drawMethod),
+                    vertices: this.createVertexBuffer(programData.locations.position, vertices, commonBuffersSettings, drawMethod),
                 });
 
                 if (indices) {
@@ -108,11 +104,16 @@ export default class Shader {
                 }
 
                 if (normals) {
-                    buffersSet.normals = this.createVertexBuffer(normals[0], normals[1], commonBuffersSettings, drawMethod);
+                    buffersSet.normals = this.createVertexBuffer(programData.locations.normal, normals, commonBuffersSettings, drawMethod);
                 }
 
                 if (textureCoords) {
-                    buffersSet.textureCoords = this.createVertexBuffer(textureCoords[0], textureCoords[1], { size: 2, normalize: true }, drawMethod);
+                    buffersSet.textureCoords = this.createVertexBuffer(
+                        programData.locations.textureCoords,
+                        textureCoords,
+                        { size: 2, normalize: true },
+                        drawMethod
+                    );
                 }
             });
         });
@@ -138,20 +139,25 @@ export default class Shader {
         return buffer;
     }
 
-    async createTexture(name, path) {
-        const textureImage = await fetch(path, Shader.#shaderFetchConf);
-        const textureSlot = Object.keys(this.textures).length
-        const texture = this.gl.createTexture()
+    createTexture(name, path) {
+        return new Promise((resolve) => {
+            let textureImage = new Image();
 
-        this.gl.activeTexture(this.gl[`TEXTURE${textureSlot}`])
-        this.gl.bindTexture(this.gl.TEXTURE_2D, texture)
-        this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, 1, 1, 0, this.gl.RGBA, this.gl.UNSIGNED_BYTE, textureImage)
-        this.gl.generateMipmap(this.gl.TEXTURE_2D)
-        
-        this.textures[name] = textureSlot
-        console.log("image", textureImage);
-        
-        return texture
+            textureImage.src = path;
+            textureImage.onload = () => {
+                const textureSlot = Object.keys(this.textures).length;
+                const texture = this.gl.createTexture();
+
+                this.gl.activeTexture(this.gl[`TEXTURE${textureSlot}`]);
+                this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
+                this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, textureImage);
+                this.gl.generateMipmap(this.gl.TEXTURE_2D);
+
+                this.textures[name] = textureSlot;
+
+                resolve();
+            };
+        });
     }
 
     requestAnimationFrame = () => {
