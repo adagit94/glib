@@ -1,4 +1,4 @@
-import ShaderUtils from "../../Shader/ShaderUtils.js"
+import ShaderUtils from "../../utils/MatUtils.js"
 
 class Plane {
     constructor(squareLength, rows, columns, wireframe) {

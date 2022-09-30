@@ -1,5 +1,5 @@
-import Shader from "../Shader/Shader.js";
-import ShaderUtils from "../Shader/ShaderUtils.js";
+import Shader from "../../Shader/Shader.js";
+import ShaderUtils from "../../Shader/ShaderUtils.js";
 import ArchivistUtils from "./ArchivistUtils.js";
 
 class Archivist extends Shader {

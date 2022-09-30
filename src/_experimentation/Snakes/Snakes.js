@@ -1,5 +1,5 @@
-import Shader from "../Shader/Shader.js";
-import ShaderUtils from "../Shader/ShaderUtils.js";
+import Shader from "../Shader/Shader.js.js.js";
+import ShaderUtils from "../Shader/ShaderUtils.js.js.js";
 
 export default class Snakes extends Shader {
   constructor(shaders) {

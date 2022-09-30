@@ -1,4 +1,4 @@
-import ShaderUtils from "../../Shader/ShaderUtils.js"
+import ShaderUtils from "../../utils/MatUtils.js"
 import Cube from "./Cube.js"
 import SquareCuboid from "./SquareCuboid.js"
 

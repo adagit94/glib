@@ -1,5 +1,5 @@
-import ShaderUtils from "../Shader/ShaderUtils.js";
-import { Ellipse3d } from "../Shapes/2d/Ellipse.js";
+import ShaderUtils from "../../Shader/ShaderUtils.js";
+import { Ellipse3d } from "../../Shapes/2d/Ellipse.js";
 
 class ArchivistUtils {
   static #pressureCirclesCommonData

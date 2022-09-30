@@ -1,7 +1,7 @@
-import Shader from "./Shader.js";
-import ShaderUtils from "./ShaderUtils.js";
+import Generator from "../Generator/Generator.js";
+import ShaderUtils from "../utils/MatUtils.js";
 
-export default class CuShader extends Shader {
+export default class CuShader extends Generator {
     static #cubeCorners = ["bottomLeft"]; // "topRight" , "bottomRight", "topLeft"
     static #curvesPerCorner = 5; // , "topRight", "bottomRight", "topLeft"
 

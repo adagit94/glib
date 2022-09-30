@@ -1,4 +1,6 @@
-export default class ShaderUtils {
+import VecUtils from "./VecUtils.js";
+
+class MatUtils {
   static init2dIdentityMat = () => new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]);
 
   static init3dIdentityMat = () =>
@@ -185,7 +187,7 @@ export default class ShaderUtils {
     return new Float32Array(invertedMat)
   }
 
-  static init3dNormalMat = (modelMat) => ShaderUtils.init3dTransposedMat(ShaderUtils.init3dInvertedMat(modelMat))
+  static init3dNormalMat = (modelMat) => MatUtils.init3dTransposedMat(MatUtils.init3dInvertedMat(modelMat))
 
   static mult2dMats = (baseMat, multMats) => {
     if (!Array.isArray(multMats)) multMats = [multMats];
@@ -351,13 +353,13 @@ export default class ShaderUtils {
     target = [0, 0, 0],
   ) => {
     const upVec = [0, 1, 0]
-    const eyeToTargetVec = ShaderUtils.subtractVecs(eye, target);
+    const eyeToTargetVec = VecUtils.subtractVecs(eye, target);
 
-    const camDirection = ShaderUtils.normalizeVec(eyeToTargetVec);
-    const xVec = ShaderUtils.normalizeVec(
-      ShaderUtils.crossProduct(upVec, camDirection)
+    const camDirection = VecUtils.normalizeVec(eyeToTargetVec);
+    const xVec = VecUtils.normalizeVec(
+      VecUtils.crossProduct(upVec, camDirection)
     );
-    const yVec = ShaderUtils.normalizeVec(ShaderUtils.crossProduct(camDirection, xVec));
+    const yVec = VecUtils.normalizeVec(VecUtils.crossProduct(camDirection, xVec));
 
     return new Float32Array([
       xVec[0], xVec[1], xVec[2], 0,
@@ -366,37 +368,6 @@ export default class ShaderUtils {
       eye[0], eye[1], eye[2], 1,
     ]);
   };
-
-  static dotProduct = (vecA, vecB) =>
-    vecA[0] * vecB[0] + vecA[1] * vecB[1] + vecA[2] * vecB[2];
-
-  static crossProduct = (vecA, vecB) =>
-    new Float32Array([
-      vecA[1] * vecB[2] - vecB[1] * vecA[2],
-      vecA[2] * vecB[0] - vecB[2] * vecA[0],
-      vecA[0] * vecB[1] - vecB[0] * vecA[1],
-    ]);
-
-  static subtractVecs = (vecA, vecB) =>
-    new Float32Array([vecA[0] - vecB[0], vecA[1] - vecB[1], vecA[2] - vecB[2]]);
-
-  static normalizeVec = (vec) => {
-    const length = Math.sqrt(
-      Math.pow(vec[0], 2) + Math.pow(vec[1], 2) + Math.pow(vec[2], 2)
-    );
-
-    return new Float32Array([
-      vec[0] / length,
-      vec[1] / length,
-      vec[2] / length,
-    ]);
-  };
-
-  static initCommonLocations = (gl, program) => ({
-    position: gl.getAttribLocation(program, "a_position"),
-    normal: gl.getAttribLocation(program, "a_normal"),
-    textureCoords: gl.getAttribLocation(program, "a_textureCoords"),
-    color: gl.getUniformLocation(program, "u_color"),
-    texture: gl.getUniformLocation(program, "u_texture"),
-  })
 }
+
+export default MatUtils

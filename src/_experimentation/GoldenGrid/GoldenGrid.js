@@ -1,8 +1,8 @@
-import Sequencer from "../Gadgets/Sequencer.js";
-import PhongLight from "../Lights/PhongLight/PhongLight.js";
-import Shader from "../Shader/Shader.js";
-import ShaderUtils from "../Shader/ShaderUtils.js";
-import SkeletonCube from "../Shapes/3d/SkeletonCube.js";
+import Sequencer from "../Gadgets/Sequencer.js.js.js";
+import PhongLight from "../Lights/PhongLight/PhongLight.js.js.js";
+import Shader from "../Shader/Shader.js.js.js";
+import ShaderUtils from "../Shader/ShaderUtils.js.js.js";
+import SkeletonCube from "../Shapes/3d/SkeletonCube.js.js.js";
 
 class GoldenGrid extends Shader {
     constructor() {

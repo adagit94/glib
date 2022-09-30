@@ -31,8 +31,8 @@ void main() {
         specular = pow(max(dot(surfaceToCamera, reflectedLightRay), 0.), u_shininess) * u_lightColor;
     }
 
-    // color = vec4(u_color, 1);;
-    color = texture(u_texture, v_textureCoords);
+    // color = texture(u_texture, v_textureCoords);
+    color = vec4(u_color, 1);;
     color.rgb *= u_ambientColor + diffuseColor;
     color.rgb += specular;
 }
