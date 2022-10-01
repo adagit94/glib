@@ -1,22 +1,14 @@
 import Generator from "../Generator/Generator.js";
-import ShaderUtils from "../utils/MatUtils.js";
 
-class Framer {
-    constructor(canvasSelector) {
-        const gl = (this.gl = document.querySelector(canvasSelector).getContext("webgl2"));
-
-        gl.canvas.width = gl.canvas.clientWidth;
-        gl.canvas.height = gl.canvas.clientHeight;
-
-        this.aspectRatio = gl.canvas.width / gl.canvas.height;
+class Framer extends Generator {
+    constructor(canvasSelector, mode, perspectiveConf) {
+        super(canvasSelector, mode, perspectiveConf)
     }
 
-    gl;
-    aspectRatio;
     animate = false;
     animData;
 
-    requestAnimationFrame = () => {
+    requestAnimationFrame () {
         this.animData = {
             frameDeltaTime: 0,
             deltaTime: 0,

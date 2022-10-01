@@ -15,12 +15,10 @@ class Playground extends Framer {
         this.#initData();
     }
 
-    #generator;
     #geometry;
 
     async #initData() {
-        // const generator = (this.#generator = new PhongLight(this.gl, this.aspectRatio, { fov: Math.PI / 4, near: 0.1, far: 100 }));
-        const generator = (this.#generator = new Generator(this.gl, this.aspectRatio, { fov: Math.PI / 4, near: 0.1, far: 100 }));
+        // const generator = (this = new PhongLight(this.gl, this.aspectRatio, { fov: Math.PI / 4, near: 0.1, far: 100 }));
 
         const wireframe = false;
         const plane = new Plane(0.8, 1, 1, wireframe);
@@ -30,7 +28,7 @@ class Playground extends Framer {
         // const cameraPosition = [Math.cos(Math.PI / 2 + Math.PI / 4) * 3, 0, Math.sin(Math.PI / 2 + Math.PI / 8) * 4];
         const viewMat = MatUtils.init3dInvertedMat(MatUtils.lookAtMat(cameraPosition));
 
-        generator.mats.scene = MatUtils.mult3dMats(generator.mats.projection, viewMat);
+        this.mats.scene = MatUtils.mult3dMats(this.mats.projection, viewMat);
 
         // Promise.all([
         //     generator.init(
@@ -55,7 +53,7 @@ class Playground extends Framer {
         // ]);
 
         await Promise.all([
-            generator.init([
+            this.init([
                 {
                     name: "playground",
                     paths: {
@@ -72,7 +70,7 @@ class Playground extends Framer {
                     },
                 },
             ]),
-            generator.createTexture("lightImg", "/print-screens/angle/rotation-y-gradient.png"),
+            this.createTexture("lightImg", "/print-screens/angle/rotation-y-gradient.png"),
         ]);
 
         this.animate = false;
@@ -93,30 +91,32 @@ class Playground extends Framer {
         //     MatUtils.init3dRotationMat("x", -Math.PI / 2),
         // ]);
 
-        this.gl.useProgram(this.#generator.programs.playground.program);
-        this.gl.bindVertexArray(this.#generator.programs.playground.buffers.geometry.vao);
-        this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.#generator.programs.playground.buffers.geometry.indices);
+        console.log(this)
+        
+        this.gl.useProgram(this.programs.playground.program);
+        this.gl.bindVertexArray(this.programs.playground.buffers.geometry.vao);
+        this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.programs.playground.buffers.geometry.indices);
 
-        this.gl.uniform3f(this.#generator.programs.playground.locations.color, 1, 0, 0);
-        this.gl.uniformMatrix4fv(this.#generator.programs.playground.locations.finalMat, false, MatUtils.mult3dMats(this.#generator.mats.scene, backPlaneMat));
+        this.gl.uniform3f(this.programs.playground.locations.color, 1, 0, 0);
+        this.gl.uniformMatrix4fv(this.programs.playground.locations.finalMat, false, MatUtils.mult3dMats(this.mats.scene, backPlaneMat));
 
         this.gl.drawElements(this.gl.TRIANGLES, this.#geometry.indices.length, this.gl.UNSIGNED_SHORT, 0);
 
-        // this.#generator.uniforms.color = [1, 0, 0]
-        // this.#generator.uniforms.finalMat = MatUtils.mult3dMats(this.mats.scene, backPlaneMat);
-        // this.#generator.uniforms.modelMat = backPlaneMat;
-        // this.#generator.uniforms.normalMat = MatUtils.init3dNormalMat(backPlaneMat);
+        // this.uniforms.color = [1, 0, 0]
+        // this.uniforms.finalMat = MatUtils.mult3dMats(this.mats.scene, backPlaneMat);
+        // this.uniforms.modelMat = backPlaneMat;
+        // this.uniforms.normalMat = MatUtils.init3dNormalMat(backPlaneMat);
 
-        // this.#generator.setLight();
+        // this.setLight();
 
         // this.gl.drawElements(this.gl.TRIANGLES, this.#geometry.indices.length, this.gl.UNSIGNED_SHORT, 0);
 
-        // this.#generator.uniforms.color = [0, 1, 0]
-        // this.#generator.uniforms.finalMat = MatUtils.mult3dMats(this.mats.scene, frontPlaneMat);
-        // this.#generator.uniforms.modelMat = frontPlaneMat;
-        // this.#generator.uniforms.normalMat = MatUtils.init3dNormalMat(frontPlaneMat);
+        // this.uniforms.color = [0, 1, 0]
+        // this.uniforms.finalMat = MatUtils.mult3dMats(this.mats.scene, frontPlaneMat);
+        // this.uniforms.modelMat = frontPlaneMat;
+        // this.uniforms.normalMat = MatUtils.init3dNormalMat(frontPlaneMat);
 
-        // this.#generator.setLight();
+        // this.setLight();
 
         // this.gl.drawElements(this.gl.TRIANGLES, this.#geometry.indices.length, this.gl.UNSIGNED_SHORT, 0);
     };

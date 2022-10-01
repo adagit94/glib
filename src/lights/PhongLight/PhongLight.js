@@ -1,8 +1,8 @@
 import Light from "../Light.js";
 
 class PhongLight extends Light {
-    constructor(gl, aspectRatio, generatorConf) {
-        super(gl, aspectRatio, generatorConf);
+    constructor(canvasSelector, mode, perspectiveConf) {
+        super(canvasSelector, mode, perspectiveConf);
     }
 
     async init(buffersData, initialUniforms) {

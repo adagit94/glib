@@ -1,8 +1,8 @@
-import Generator from "../Generator/Generator.js";
+import Framer from "../Framer/Framer.js";
 
-class Light extends Generator {
-    constructor(gl, aspectRatio, generatorConf) {
-        super(gl, aspectRatio, generatorConf);
+class Light extends Framer {
+    constructor(canvasSelector, mode, perspectiveConf) {
+        super(canvasSelector, mode, perspectiveConf);
     }
 
     program;

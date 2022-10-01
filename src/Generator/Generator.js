@@ -1,15 +1,20 @@
 import MatUtils from "../utils/MatUtils.js";
 
 class Generator {
-    static #localFetchConf = {
-        "mode": "same-origin",
-        "method": "GET"
-    }
+    static #LOCAL_FETCH_CONF = {
+        mode: "same-origin",
+        method: "GET",
+    };
+
+    static #PERSPECTIVE_CONF = { fov: Math.PI / 4, near: 0.1, far: 100 }
     
-    constructor(gl, aspectRatio, conf, mode = "3d") {
-        this.gl = gl;
-        this.aspectRatio = aspectRatio;
-        this.mode = mode;
+    constructor(canvasSelector, mode = "3d", perspectiveConf = Generator.#PERSPECTIVE_CONF) {
+        const gl = (this.gl = document.querySelector(canvasSelector).getContext("webgl2"));
+
+        gl.canvas.width = gl.canvas.clientWidth;
+        gl.canvas.height = gl.canvas.clientHeight;
+
+        this.mode = mode
 
         switch (mode) {
             case "2d":
@@ -17,13 +22,17 @@ class Generator {
                 break;
 
             case "3d":
-                this.mats.projection = MatUtils.initPerspectiveMat(conf.fov, this.aspectRatio, conf.near, conf.far);
+                this.mats.projection = MatUtils.initPerspectiveMat(
+                    perspectiveConf.fov,
+                    gl.canvas.width / gl.canvas.height,
+                    perspectiveConf.near,
+                    perspectiveConf.far
+                );
                 break;
         }
     }
 
     gl;
-    aspectRatio;
     mode;
     programs = {};
     mats = {};
@@ -31,8 +40,8 @@ class Generator {
 
     async init(programsConfs) {
         const shadersFetches = programsConfs.flatMap((programConf) => [
-            fetch(programConf.paths.vShader, Generator.#localFetchConf),
-            fetch(programConf.paths.fShader, Generator.#localFetchConf),
+            fetch(programConf.paths.vShader, Generator.#LOCAL_FETCH_CONF),
+            fetch(programConf.paths.fShader, Generator.#LOCAL_FETCH_CONF),
         ]);
 
         let shadersSources = await Promise.all(shadersFetches);
@@ -100,7 +109,7 @@ class Generator {
             });
         });
 
-        return this.programs
+        return this.programs;
     }
 
     #createVertexBuffer(attrLocation, bufferData, settings, drawMethod = this.gl.STATIC_DRAW) {
