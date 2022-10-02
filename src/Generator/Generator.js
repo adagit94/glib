@@ -6,15 +6,15 @@ class Generator {
         method: "GET",
     };
 
-    static #PERSPECTIVE_CONF = { fov: Math.PI / 4, near: 0.1, far: 100 }
-    
+    static #PERSPECTIVE_CONF = { fov: Math.PI / 4, near: 0.1, far: 100 };
+
     constructor(canvasSelector, mode = "3d", perspectiveConf = Generator.#PERSPECTIVE_CONF) {
         const gl = (this.gl = document.querySelector(canvasSelector).getContext("webgl2"));
 
         gl.canvas.width = gl.canvas.clientWidth;
         gl.canvas.height = gl.canvas.clientHeight;
 
-        this.mode = mode
+        this.mode = mode;
 
         switch (mode) {
             case "2d":
@@ -132,35 +132,84 @@ class Generator {
         return buffer;
     }
 
-    createTexture(name, path) {
-        return new Promise((resolve) => {
-            let textureImage = new Image();
+    async createTextures(texturesConf) {
+        const imageLoads = Promise.all(
+            texturesConf
+                .filter((textureConf) => textureConf.path)
+                .map(
+                    (textureConf) =>
+                        new Promise((resolve) => {
+                            let textureImage = new Image();
 
-            textureImage.src = path;
-            textureImage.onload = () => {
-                const textureSlot = Object.keys(this.textures).length;
-                const texture = this.gl.createTexture();
+                            textureImage.src = textureConf.path;
+                            textureImage.onload = () => {
+                                this.#setTexture(textureConf, textureImage);
 
-                this.gl.activeTexture(this.gl[`TEXTURE${textureSlot}`]);
-                this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
-                this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, textureImage);
-                this.gl.generateMipmap(this.gl.TEXTURE_2D);
+                                resolve();
+                            };
+                        })
+                )
+        );
 
-                this.textures[name] = textureSlot;
+        texturesConf.filter((textureConf) => !textureConf.path).forEach((textureConf) => this.#setTexture(textureConf));
 
-                resolve();
-            };
-        });
+        await imageLoads;
     }
 
-    #initCommonLocations = (program) => ({
-        position: this.gl.getAttribLocation(program, "a_position"),
-        normal: this.gl.getAttribLocation(program, "a_normal"),
-        textureCoords: this.gl.getAttribLocation(program, "a_textureCoords"),
-        color: this.gl.getUniformLocation(program, "u_color"),
-        texture: this.gl.getUniformLocation(program, "u_texture"),
-        finalMat: this.gl.getUniformLocation(program, "u_finalMat"),
-    });
+    #setTexture = (textureConf, textureImage) => {
+        const { name, setParams, path, settings } = textureConf;
+
+        const textureUnit = Object.keys(this.textures).length;
+        const texture = this.gl.createTexture();
+        const textureData = { texture, unit: textureUnit };
+
+        this.gl.activeTexture(this.gl[`TEXTURE${textureUnit}`]);
+        this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
+
+        if (path) {
+            this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, textureImage);
+
+            this.gl.generateMipmap(this.gl.TEXTURE_2D);
+        } else {
+            this.gl.texImage2D(
+                this.gl.TEXTURE_2D,
+                0,
+                settings.internalFormat ?? this.gl.RGBA,
+                settings.width,
+                settings.height,
+                0,
+                settings.format ?? this.gl.RGBA,
+                settings.type ?? this.gl.UNSIGNED_BYTE,
+                null
+            );
+        }
+
+        setParams();
+
+        this.textures[name] = textureData;
+    };
+
+    createFramebufferTexture(texture, settings) {
+        const framebuffer = this.gl.createFramebuffer();
+
+        this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, framebuffer);
+        this.gl.framebufferTexture2D(this.gl.FRAMEBUFFER, settings.attachment, this.gl.TEXTURE_2D, texture, 0);
+    }
+
+    #initCommonLocations = (program) => {
+        this.gl.bindAttribLocation(program, 0, "a_position")
+        this.gl.bindAttribLocation(program, 1, "a_normal")
+        this.gl.bindAttribLocation(program, 2, "a_textureCoords")
+        
+        return {
+            position: this.gl.getAttribLocation(program, "a_position"),
+            normal: this.gl.getAttribLocation(program, "a_normal"),
+            textureCoords: this.gl.getAttribLocation(program, "a_textureCoords"),
+            color: this.gl.getUniformLocation(program, "u_color"),
+            texture: this.gl.getUniformLocation(program, "u_texture"),
+            finalMat: this.gl.getUniformLocation(program, "u_finalMat"),
+        };
+    };
 }
 
 export default Generator;
