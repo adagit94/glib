@@ -82,6 +82,38 @@ class Cube {
         22, 23,
         23, 20,
     ]
+
+    static #TEXTURE_COORDS = [
+        1, 1,
+        1, 0,
+        0, 0,
+        0, 1,
+
+        0, 1,
+        0, 0,
+        1, 0,
+        1, 1,
+
+        1, 0,
+        1, 1,
+        0, 1,
+        0, 0,
+        
+        1, 0,
+        1, 1,
+        0, 1,
+        0, 0,
+
+        0, 1,
+        1, 1,
+        1, 0,
+        0, 0,
+
+        1, 1,
+        0, 1,
+        0, 0,
+        1, 0,
+    ]
     
     constructor(sideLength, wireframe) {
         const sideHalfLength = sideLength / 2
@@ -126,6 +158,7 @@ class Cube {
 
         this.indices = wireframe ? Cube.#WIREFRAME_INDICES : Cube.#INDICES
         this.normals = Cube.#NORMALS
+        this.textureCoords = Cube.#TEXTURE_COORDS
     }
 
     vertices

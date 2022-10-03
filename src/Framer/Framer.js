@@ -8,7 +8,7 @@ class Framer extends Generator {
     animate = false;
     animData;
 
-    requestAnimationFrame () {
+    requestAnimationFrame() {
         this.animData = {
             frameDeltaTime: 0,
             deltaTime: 0,

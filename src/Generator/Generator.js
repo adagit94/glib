@@ -37,6 +37,7 @@ class Generator {
     programs = {};
     mats = {};
     textures = {};
+    framebuffers = {};
 
     async init(programsConfs) {
         const shadersFetches = programsConfs.flatMap((programConf) => [
@@ -73,40 +74,43 @@ class Generator {
 
             programData.program = program;
             programData.locations = this.#initCommonLocations(program);
-            programData.buffers = {};
 
-            const commonBuffersSettings = { size: this.mode === "3d" ? 3 : 2 };
+            if (programConf.buffersData) {
+                const commonBuffersSettings = { size: this.mode === "3d" ? 3 : 2 };
 
-            Object.entries(programConf.buffersData).forEach(([setName, data]) => {
-                const { vertices, indices, normals, textureCoords } = data;
-                const drawMethod = data.drawMethod ?? this.gl.STATIC_DRAW;
+                programData.buffers = {};
 
-                const vao = this.gl.createVertexArray();
+                Object.entries(programConf.buffersData).forEach(([setName, data]) => {
+                    const { vertices, indices, normals, textureCoords } = data;
+                    const drawMethod = data.drawMethod ?? this.gl.STATIC_DRAW;
 
-                this.gl.bindVertexArray(vao);
+                    const vao = this.gl.createVertexArray();
 
-                let buffersSet = (programData.buffers[setName] = {
-                    vao,
-                    vertices: this.#createVertexBuffer(programData.locations.position, vertices, commonBuffersSettings, drawMethod),
+                    this.gl.bindVertexArray(vao);
+
+                    let buffersSet = (programData.buffers[setName] = {
+                        vao,
+                        vertices: this.#createVertexBuffer(programData.locations.position, vertices, commonBuffersSettings, drawMethod),
+                    });
+
+                    if (indices) {
+                        buffersSet.indices = this.#createIndexBuffer(indices, drawMethod);
+                    }
+
+                    if (normals) {
+                        buffersSet.normals = this.#createVertexBuffer(programData.locations.normal, normals, commonBuffersSettings, drawMethod);
+                    }
+
+                    if (textureCoords) {
+                        buffersSet.textureCoords = this.#createVertexBuffer(
+                            programData.locations.textureCoords,
+                            textureCoords,
+                            { size: 2, normalize: true },
+                            drawMethod
+                        );
+                    }
                 });
-
-                if (indices) {
-                    buffersSet.indices = this.#createIndexBuffer(indices, drawMethod);
-                }
-
-                if (normals) {
-                    buffersSet.normals = this.#createVertexBuffer(programData.locations.normal, normals, commonBuffersSettings, drawMethod);
-                }
-
-                if (textureCoords) {
-                    buffersSet.textureCoords = this.#createVertexBuffer(
-                        programData.locations.textureCoords,
-                        textureCoords,
-                        { size: 2, normalize: true },
-                        drawMethod
-                    );
-                }
-            });
+            }
         });
 
         return this.programs;
@@ -161,9 +165,9 @@ class Generator {
 
         const textureUnit = Object.keys(this.textures).length;
         const texture = this.gl.createTexture();
-        const textureData = { texture, unit: textureUnit };
+        const textureData = { texture, unit: textureUnit, settings };
 
-        this.gl.activeTexture(this.gl[`TEXTURE${textureUnit}`]);
+        // this.gl.activeTexture(this.gl[`TEXTURE${textureUnit}`]);
         this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
 
         if (path) {
@@ -189,18 +193,23 @@ class Generator {
         this.textures[name] = textureData;
     };
 
-    createFramebufferTexture(texture, settings) {
+    createFramebufferTexture(name, texture, settings) {
         const framebuffer = this.gl.createFramebuffer();
 
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, framebuffer);
         this.gl.framebufferTexture2D(this.gl.FRAMEBUFFER, settings.attachment, this.gl.TEXTURE_2D, texture, 0);
+
+        // this.gl.readBuffer(this.gl.NONE)
+        // this.gl.drawBuffers(this.gl.NONE)
+
+        this.framebuffers[name] = framebuffer;
     }
 
     #initCommonLocations = (program) => {
-        this.gl.bindAttribLocation(program, 0, "a_position")
-        this.gl.bindAttribLocation(program, 1, "a_normal")
-        this.gl.bindAttribLocation(program, 2, "a_textureCoords")
-        
+        this.gl.bindAttribLocation(program, 0, "a_position");
+        this.gl.bindAttribLocation(program, 1, "a_normal");
+        this.gl.bindAttribLocation(program, 2, "a_textureCoords");
+
         return {
             position: this.gl.getAttribLocation(program, "a_position"),
             normal: this.gl.getAttribLocation(program, "a_normal"),
