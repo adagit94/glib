@@ -30,6 +30,7 @@ class Light extends Framer {
             normalMat: this.gl.getUniformLocation(this.program.program, "u_normalMat"),
             lightMat: this.gl.getUniformLocation(this.program.program, "u_lightMat"),
             lightColor: this.gl.getUniformLocation(this.program.program, "u_lightColor"),
+            depthMap: this.gl.getUniformLocation(this.program.program, "u_depthMap"),
         };
 
         program.depthMap.locations = {
@@ -45,7 +46,9 @@ class Light extends Framer {
         this.gl.uniformMatrix4fv(this.program.locations.finalMat, false, this.uniforms.finalMat);
         this.gl.uniformMatrix4fv(this.program.locations.modelMat, false, this.uniforms.modelMat);
         this.gl.uniformMatrix4fv(this.program.locations.normalMat, false, this.uniforms.normalMat);
+        this.gl.uniformMatrix4fv(this.program.locations.lightMat, false, this.uniforms.lightMat);
         this.gl.uniform3f(this.program.locations.lightColor, ...this.uniforms.lightColor);
+        this.gl.uniform1i(this.program.locations.depthMap, this.uniforms.depthMap);
     }
 
     setLight() {

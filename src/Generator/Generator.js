@@ -167,7 +167,7 @@ class Generator {
         const texture = this.gl.createTexture();
         const textureData = { texture, unit: textureUnit, settings };
 
-        // this.gl.activeTexture(this.gl[`TEXTURE${textureUnit}`]);
+        this.gl.activeTexture(this.gl[`TEXTURE${textureUnit}`]);
         this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
 
         if (path) {

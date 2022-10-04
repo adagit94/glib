@@ -19,10 +19,10 @@ class PhongLight extends Light {
         );
 
         Object.assign(this.program.locations, {
-            ambientColor: this.gl.getUniformLocation(this.program, "u_ambientColor"),
-            lightPosition: this.gl.getUniformLocation(this.program, "u_lightPosition"),
-            cameraPosition: this.gl.getUniformLocation(this.program, "u_cameraPosition"),
-            shininess: this.gl.getUniformLocation(this.program, "u_shininess"),
+            ambientColor: this.gl.getUniformLocation(this.program.program, "u_ambientColor"),
+            lightPosition: this.gl.getUniformLocation(this.program.program, "u_lightPosition"),
+            cameraPosition: this.gl.getUniformLocation(this.program.program, "u_cameraPosition"),
+            shininess: this.gl.getUniformLocation(this.program.program, "u_shininess"),
         });
     }
 

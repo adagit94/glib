@@ -33,6 +33,7 @@ class Plane {
             vertices.push(0, 0, lastRowOffsetForCol)   
             vertices.push(lastColOffsetForRow, 0, lastRowOffsetForCol)   
 
+            // COULD BE MADE STATIC 
             indices.push(0, 1, 3)
             indices.push(0, 2, 3)
 
