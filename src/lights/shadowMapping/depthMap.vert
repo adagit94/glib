@@ -1,10 +1,9 @@
 #version 300 es
 
-uniform mat4 u_lightMat;
-uniform mat4 u_modelMat;
+uniform mat4 u_finalLightMat;
 
 in vec3 a_position;
 
 void main() {
-    gl_Position = u_lightMat * u_modelMat * vec4(a_position, 1);
+    gl_Position = u_finalLightMat * vec4(a_position, 1);
 }

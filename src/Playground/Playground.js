@@ -30,7 +30,7 @@ class Playground extends PhongLight {
         const viewMat = MatUtils.init3dInvertedMat(MatUtils.lookAtMat(cameraPosition));
 
         this.mats.scene = MatUtils.mult3dMats(this.mats.projection, [viewMat, MatUtils.init3dRotationMat("y", -Math.PI / 4)]); // MatUtils.init3dRotationMat("y", Math.PI / 6)
-        this.mats.light = MatUtils.mult3dMats(MatUtils.initPerspectiveMat(Math.PI / 4, 1, 1, 100), MatUtils.lookAtMat([-2.5, 2, 4], [0, 0, 0]))
+        this.mats.light = MatUtils.mult3dMats(MatUtils.initPerspectiveMat(Math.PI / 4, 1, 1, 100), MatUtils.lookAtMat([-2.5, 2, 4], [0, 0, 0]));
 
         await Promise.all([
             this.init([
@@ -95,7 +95,7 @@ class Playground extends PhongLight {
 
         this.createFramebufferTexture("depth", this.textures.depth.texture, { attachment: this.gl.DEPTH_ATTACHMENT });
 
-        console.log(this)
+        console.log(this);
 
         this.animate = false;
 
@@ -109,8 +109,6 @@ class Playground extends PhongLight {
         this.gl.uniform1i(this.programs.playground.locations.texture, this.textures.light.texture);
         this.gl.uniform1i(this.programs.playground.locations.projectedTexture, this.textures.depth.texture);
 
-        this.mats.light.view = MatUtils.lookAtMat([2 - this.animData.deltaTime / 2, 0, 4], [0, 0, 0]);
-
         const planeMat = MatUtils.mult3dMats(MatUtils.init3dTranslationMat(-0.4, 0.4, -0.4), [
             MatUtils.init3dRotationMat("y", 0),
             MatUtils.init3dRotationMat("x", -Math.PI / 2),
@@ -118,40 +116,43 @@ class Playground extends PhongLight {
 
         const cubeMat = MatUtils.init3dTranslationMat(0, 0, 0.75);
 
-        let finalPlaneMat = MatUtils.mult3dMats(this.mats.light.projection, [this.mats.light.view, planeMat]);
-        let finalCubeMat = MatUtils.mult3dMats(this.mats.light.projection, [this.mats.light.view, cubeMat]);
         let textureMat = MatUtils.init3dIdentityMat();
 
         this.gl.useProgram(this.program.depthMap.program);
-        this.gl.uniformMatrix4fv(this.program.depthMap.locations.lighMat, false, this.mats.light);
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.framebuffers.depth);
         this.gl.viewport(0, 0, this.textures.depth.settings.width, this.textures.depth.settings.height);
 
-        this.gl.uniformMatrix4fv(this.program.depthMap.locations.modelMat, false, planeMat);
+        this.gl.uniformMatrix4fv(this.program.depthMap.locations.finalLightMat, false, MatUtils.mult3dMats(this.mats.light, planeMat));
         this.#renderPlane();
 
-        this.gl.uniformMatrix4fv(this.program.depthMap.locations.modelMat, false, cubeMat);
+        this.gl.uniformMatrix4fv(this.program.depthMap.locations.finalLightMat, false, MatUtils.mult3dMats(this.mats.light, cubeMat));
         this.#renderCube();
 
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
-        
+
         this.gl.useProgram(this.program.program);
         this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
         this.gl.bindTexture(this.gl.TEXTURE_2D, this.textures.depth.texture);
 
-        finalPlaneMat = MatUtils.mult3dMats(this.mats.scene, planeMat);
-        finalCubeMat = MatUtils.mult3dMats(this.mats.scene, cubeMat);
         textureMat = MatUtils.mult3dMats(this.mats.light.projection, [
             MatUtils.init3dInvertedMat(this.mats.light.view),
             // MatUtils.init3dTranslationMat(0, 0, 0),
         ]);
 
-        this.gl.uniform3f(this.program.locations.color, 1, 1, 1);
-        this.#renderPlane(finalPlaneMat, planeMat, textureMat);
+        this.gl.uniformMatrix4fv(this.program.locations.lightMat, false, this.mats.light);
 
-        this.gl.uniform3f(this.programs.playground.locations.color, 0, 0, 1);
-        this.#renderCube(finalCubeMat, cubeMat, textureMat);
+        this.gl.uniformMatrix4fv(this.program.locations.modelMat, false, planeMat);
+        this.gl.uniformMatrix4fv(this.program.locations.normalMat, false, MatUtils.init3dTransposedMat(MatUtils.init3dInvertedMat(planeMat)));
+        this.gl.uniformMatrix4fv(this.program.locations.finalMat, false, MatUtils.mult3dMats(this.mats.scene, planeMat));
+        this.gl.uniform3f(this.program.locations.color, 1, 1, 1);
+        this.#renderPlane();
+
+        this.gl.uniformMatrix4fv(this.program.locations.modelMat, false, cubeMat);
+        this.gl.uniformMatrix4fv(this.program.locations.normalMat, false, MatUtils.init3dTransposedMat(MatUtils.init3dInvertedMat(cubeMat)));
+        this.gl.uniformMatrix4fv(this.program.locations.finalMat, false, MatUtils.mult3dMats(this.mats.scene, cubeMat));
+        this.gl.uniform3f(this.programs.locations.color, 0, 0, 1);
+        this.#renderCube();
     };
 
     #renderPlane() {

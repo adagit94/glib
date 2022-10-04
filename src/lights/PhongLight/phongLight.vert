@@ -12,12 +12,14 @@ in vec2 a_textureCoords;
 out vec3 v_surfacePos;
 out vec3 v_normal;
 out vec2 v_textureCoords;
+out vec4 v_surfacePosInLightSpace;
 
 void main() {
     vec4 position = vec4(a_position, 1.);
 
     v_surfacePos = vec3(u_modelMat * position);
     v_normal = mat3(u_normalMat) * a_normal;
+    v_surfacePosInLightSpace = u_lightMat * vec4(v_surfacePos, 1);
     v_textureCoords = a_textureCoords;
 
     gl_Position = u_finalMat * position;

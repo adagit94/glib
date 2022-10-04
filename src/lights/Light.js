@@ -34,8 +34,7 @@ class Light extends Framer {
 
         program.depthMap.locations = {
             position: program.depthMap.locations.position,
-            modelMat: this.gl.getUniformLocation(this.program.depthMap.program, "u_modelMat"),
-            lightMat: this.gl.getUniformLocation(this.program.depthMap.program, "u_lightMat"),
+            finalLightMat: this.gl.getUniformLocation(this.program.depthMap.program, "u_finalLightMat"),
         };
 
         this.uniforms = initialUniforms;
