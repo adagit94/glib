@@ -14,7 +14,7 @@ uniform sampler2D u_depthMap;
 in vec3 v_normal;
 in vec3 v_surfacePos;
 in vec4 v_surfacePosInLightSpace;
-// in vec2 v_textureCoords;
+in vec2 v_textureCoords;
 
 out vec4 color;
 

@@ -25,13 +25,15 @@ class Playground extends PhongLight {
         const cube = new Cube(0.2, wireframe);
         const geometry = (this.#geometry = { plane, cube });
 
-        const lightPosition = [0, 0, 2];
-        const cameraPosition = [Math.cos(Math.PI / 2.5) * 2, 0, Math.sin(Math.PI / 2.5) * 2];
-        // const cameraPosition = [Math.cos(Math.PI / 2 + Math.PI / 4) * 3, 0, Math.sin(Math.PI / 2 + Math.PI / 8) * 4];
+        // const cameraPosition = [Math.cos(Math.PI / 2.25) * 20, 0, Math.sin(Math.PI / 2.25) * 20];
+        // const lightPosition = [Math.cos(Math.PI / 2 + Math.PI / 8) * 5, 0, Math.sin(Math.PI / 2 + Math.PI / 8) * 5];
+        const lightPosition = [0, 0, 5];
+        const cameraPosition = lightPosition;
+        // const cameraPosition = [Math.cos(Math.PI / 2.25) * 20, 0, Math.sin(Math.PI / 2.25) * 20];
         const viewMat = MatUtils.init3dInvertedMat(MatUtils.lookAtMat(cameraPosition));
 
-        this.mats.scene = MatUtils.mult3dMats(this.mats.projection, [viewMat])
-        this.mats.light = MatUtils.mult3dMats(MatUtils.initPerspectiveMat(Math.PI / 4, 1, 1, 100), MatUtils.lookAtMat(lightPosition, [0, 0, 0]));
+        this.mats.scene = MatUtils.mult3dMats(this.mats.projection, [viewMat]);
+        this.mats.light = MatUtils.mult3dMats(MatUtils.initPerspectiveMat(Math.PI / 4, 1, 0.1, 100), MatUtils.lookAtMat(lightPosition, [0, 0, 0]));
 
         await Promise.all([
             this.init(
@@ -46,7 +48,7 @@ class Playground extends PhongLight {
                         vertices: geometry.cube.vertices,
                         indices: geometry.cube.indices,
                         normals: geometry.cube.normals,
-                        textureCoords: geometry.textureCoords,
+                        textureCoords: geometry.cube.textureCoords,
                     },
                 },
                 {
@@ -77,8 +79,8 @@ class Playground extends PhongLight {
                 {
                     name: "depth",
                     settings: {
-                        width: 1920,
-                        height: 1080,
+                        width: 100,
+                        height: 100,
                         internalFormat: this.gl.DEPTH_COMPONENT32F,
                         format: this.gl.DEPTH_COMPONENT,
                         type: this.gl.FLOAT,
@@ -106,30 +108,33 @@ class Playground extends PhongLight {
     }
 
     renderScene = () => {
-        const planeMat = MatUtils.mult3dMats(MatUtils.init3dTranslationMat(-0.4, 0.4, -0.4), [
-            MatUtils.init3dRotationMat("y", 0),
+        const planeMat = MatUtils.mult3dMats(this.#geometry.plane.mat, [
+            MatUtils.init3dScaleMat(4, 4, 4),
             MatUtils.init3dRotationMat("x", -Math.PI / 2),
         ]);
 
-        const cubeMat = MatUtils.init3dTranslationMat(0, 0, 0.75);
+        const cubeMat = MatUtils.mult3dMats(MatUtils.init3dTranslationMat(1.5, -1.5, 2), [
+            MatUtils.init3dScaleMat(4, 4, 4),
+        ]);
 
         // let textureMat = MatUtils.init3dIdentityMat();
 
         this.gl.useProgram(this.program.depthMap.program);
+        // this.gl.bindTexture(this.gl.TEXTURE_2D, this.textures.depth.texture);
+
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.framebuffers.depth);
         this.gl.viewport(0, 0, this.textures.depth.settings.width, this.textures.depth.settings.height);
 
         this.gl.uniformMatrix4fv(this.program.depthMap.locations.finalLightMat, false, MatUtils.mult3dMats(this.mats.light, planeMat));
         this.#renderPlane();
 
-        this.gl.uniformMatrix4fv(this.program.depthMap.locations.finalLightMat, false, MatUtils.mult3dMats(this.mats.light, cubeMat));
-        this.#renderCube();
+        // this.gl.uniformMatrix4fv(this.program.depthMap.locations.finalLightMat, false, MatUtils.mult3dMats(this.mats.light, cubeMat));
+        // this.#renderCube();
 
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
 
         this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
-        this.gl.bindTexture(this.gl.TEXTURE_2D, this.textures.depth.texture);
 
         // textureMat = MatUtils.mult3dMats(this.mats.light.projection, [
         //     MatUtils.init3dInvertedMat(this.mats.light.view),
@@ -137,21 +142,22 @@ class Playground extends PhongLight {
         // ]);
 
         this.uniforms.lightMat = this.mats.light;
-        this.uniforms.depthMap = this.textures.depth.texture
+        this.uniforms.depthMap = this.textures.depth.texture;
 
+        this.gl.bindTexture(this.gl.TEXTURE_2D, this.textures.depth.texture);
         this.uniforms.modelMat = planeMat;
-        this.uniforms.normalMat = MatUtils.init3dTransposedMat(MatUtils.init3dInvertedMat(planeMat))
-        this.uniforms.finalMat = MatUtils.mult3dMats(this.mats.scene, planeMat)
+        this.uniforms.normalMat = MatUtils.init3dTransposedMat(MatUtils.init3dInvertedMat(planeMat));
+        this.uniforms.finalMat = MatUtils.mult3dMats(this.mats.scene, planeMat);
         this.uniforms.color = [1, 1, 1];
-        this.setLight()
+        this.setLight();
         this.#renderPlane();
 
-        this.uniforms.modelMat = cubeMat;
-        this.uniforms.normalMat = MatUtils.init3dTransposedMat(MatUtils.init3dInvertedMat(cubeMat))
-        this.uniforms.finalMat = MatUtils.mult3dMats(this.mats.scene, cubeMat)
-        this.uniforms.color = [0, 0, 1];
-        this.setLight()
-        this.#renderCube();
+        // this.uniforms.modelMat = cubeMat;
+        // this.uniforms.normalMat = MatUtils.init3dTransposedMat(MatUtils.init3dInvertedMat(cubeMat));
+        // this.uniforms.finalMat = MatUtils.mult3dMats(this.mats.scene, cubeMat);
+        // this.uniforms.color = [0, 0, 1];
+        // this.setLight();
+        // this.#renderCube();
     };
 
     #renderPlane() {
