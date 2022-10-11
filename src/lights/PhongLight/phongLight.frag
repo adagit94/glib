@@ -3,35 +3,41 @@
 precision highp float;
 
 uniform vec3 u_color;
+uniform float u_far;
 uniform vec3 u_ambientColor;
 uniform vec3 u_lightPosition;
 uniform vec3 u_lightColor;
 uniform vec3 u_cameraPosition;
 uniform float u_shininess;
-// uniform sampler2D u_texture;
-uniform sampler2D u_depthMap;
+uniform samplerCube u_depthMap;
 
 in vec3 v_normal;
 in vec3 v_surfacePos;
-in vec4 v_surfacePosInLightSpace;
-in vec2 v_textureCoords;
+// in vec2 v_textureCoords;
 
 out vec4 color;
 
-float computeShadow() {
-    vec3 projectedSurfacePosInLightSpace = v_surfacePosInLightSpace.xyz / v_surfacePosInLightSpace.w;
-    projectedSurfacePosInLightSpace = (projectedSurfacePosInLightSpace + 1.) / 2.;
+const float bias = 0.02;
 
-    float closestDepth = texture(u_depthMap, projectedSurfacePosInLightSpace.xy).r;
-    float currentDepth = projectedSurfacePosInLightSpace.z;
-    float shadow = currentDepth > closestDepth ? 1.0 : 0.0;
+float getAvgVisibility(vec3 lightToSurface) {
+    float currentDepth = length(lightToSurface) / u_far;
+    lightToSurface = normalize(lightToSurface);
+    float visibility = 0.0;
 
-    return shadow;
+    for(int x = -2; x <= 2; x++) {
+        for(int y = -2; y <= 2; y++) {
+            for(int z = -2; z <= 2; z++) {
+                float closestDepth = texture(u_depthMap, lightToSurface + vec3(x, y, z) * 0.02).z;
+
+                visibility += currentDepth - bias > closestDepth ? 0.0 : 1.0;
+            }
+        }
+    }
+
+    return visibility / 125.;
 }
 
 void main() {
-    // vec3 texColor = texture(u_texture, v_textureCoords).rgb;
-
     vec3 normal = normalize(v_normal);
     vec3 surfaceToLight = normalize(u_lightPosition - v_surfacePos);
 
@@ -46,9 +52,10 @@ void main() {
         specular = pow(max(dot(surfaceToCamera, reflectedLightRay), 0.), u_shininess) * u_lightColor;
     }
 
-    float shadow = 1. - computeShadow();
+    // vec3 lightToSurface = v_surfacePos - u_lightPosition;  // surfaceToLight * -1.
+    float visibility = getAvgVisibility(v_surfacePos - u_lightPosition);
 
     color = vec4(u_color, 1);
-    color.rgb *= u_ambientColor + diffuseColor * shadow;
-    color.rgb += specular * shadow;
+    color.rgb *= u_ambientColor + diffuseColor * visibility;
+    color.rgb += specular * visibility;
 }

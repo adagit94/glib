@@ -40,37 +40,54 @@ class Generator {
     framebuffers = {};
 
     async init(programsConfs) {
-        const shadersFetches = programsConfs.flatMap((programConf) => [
-            fetch(programConf.paths.vShader, Generator.#LOCAL_FETCH_CONF),
-            fetch(programConf.paths.fShader, Generator.#LOCAL_FETCH_CONF),
-        ]);
+        let shaderTypes = [];
+        let fetches = [];
 
-        let shadersSources = await Promise.all(shadersFetches);
+        programsConfs.forEach((programConf) => {
+            const paths = Object.entries(programConf.paths);
+            let programShaderTypes = [];
+
+            paths.forEach(([shader, filePath]) => {
+                let shaderType;
+
+                switch (shader) {
+                    case "vShader":
+                        shaderType = this.gl.VERTEX_SHADER;
+                        break;
+
+                    case "fShader":
+                        shaderType = this.gl.FRAGMENT_SHADER;
+                        break;
+                }
+
+                programShaderTypes.push(shaderType);
+                fetches.push(fetch(filePath, Generator.#LOCAL_FETCH_CONF));
+            });
+
+            shaderTypes.push(programShaderTypes);
+        });
+
+        let shadersSources = await Promise.all(fetches);
         shadersSources = await Promise.all(shadersSources.map((res) => res.text()));
 
-        programsConfs.forEach((programConf, programI) => {
+        for (let prog = 0, shaderOffset = 0; prog < programsConfs.length; prog++) {
+            const programConf = programsConfs[prog];
             let programData = (this.programs[programConf.name] = {});
-
-            const shadersOffset = programI * 2;
-
-            const vShaderStr = shadersSources[shadersOffset];
-            const fShaderStr = shadersSources[shadersOffset + 1];
-
-            const vShader = this.gl.createShader(this.gl.VERTEX_SHADER);
-            const fShader = this.gl.createShader(this.gl.FRAGMENT_SHADER);
-
-            this.gl.shaderSource(vShader, vShaderStr);
-            this.gl.shaderSource(fShader, fShaderStr);
-
-            this.gl.compileShader(vShader);
-            this.gl.compileShader(fShader);
-
             const program = this.gl.createProgram();
 
-            this.gl.attachShader(program, vShader);
-            this.gl.attachShader(program, fShader);
+            for (const shaderType of shaderTypes[prog]) {
+                const shader = this.gl.createShader(shaderType);
+                const shaderCode = shadersSources[shaderOffset];
+
+                this.gl.shaderSource(shader, shaderCode);
+                this.gl.compileShader(shader);
+                this.gl.attachShader(program, shader);
+
+                shaderOffset++;
+            }
 
             this.gl.linkProgram(program);
+
 
             programData.program = program;
             programData.locations = this.#initCommonLocations(program);
@@ -111,7 +128,7 @@ class Generator {
                     }
                 });
             }
-        });
+        }
 
         return this.programs;
     }
@@ -147,7 +164,7 @@ class Generator {
 
                             textureImage.src = textureConf.path;
                             textureImage.onload = () => {
-                                this.#setTexture(textureConf, textureImage);
+                                this.#createTexture(textureConf, textureImage);
 
                                 resolve();
                             };
@@ -155,52 +172,55 @@ class Generator {
                 )
         );
 
-        texturesConf.filter((textureConf) => !textureConf.path).forEach((textureConf) => this.#setTexture(textureConf));
+        texturesConf.filter((textureConf) => !textureConf.path).forEach((textureConf) => this.#createTexture(textureConf));
 
         await imageLoads;
     }
 
-    #setTexture = (textureConf, textureImage) => {
-        const { name, setParams, path, settings } = textureConf;
-
-        const textureUnit = Object.keys(this.textures).length;
+    #createTexture(texConf, texImage) {
+        const { path, settings } = texConf;
+        const unit = Object.keys(this.textures).length;
         const texture = this.gl.createTexture();
-        const textureData = { texture, unit: textureUnit, settings };
 
-        this.gl.activeTexture(this.gl[`TEXTURE${textureUnit}`]);
-        this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
+        this.gl.activeTexture(this.gl[`TEXTURE${unit}`]);
 
         if (path) {
-            this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, textureImage);
-
+            this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
+            this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, texImage);
             this.gl.generateMipmap(this.gl.TEXTURE_2D);
         } else {
-            this.gl.texImage2D(
-                this.gl.TEXTURE_2D,
-                0,
-                settings.internalFormat ?? this.gl.RGBA,
-                settings.width,
-                settings.height,
-                0,
-                settings.format ?? this.gl.RGBA,
-                settings.type ?? this.gl.UNSIGNED_BYTE,
-                null
-            );
+            const iterations = settings.cubeMap ? 6 : 1;
+
+            this.gl.bindTexture(settings.bindTarget, texture);
+
+            for (let i = 0; i < iterations; i++) {
+                this.gl.texImage2D(
+                    settings.texTarget + i,
+                    0,
+                    settings.internalFormat,
+                    settings.width,
+                    settings.height,
+                    0,
+                    settings.format,
+                    settings.type,
+                    null
+                );
+            }
         }
 
-        setParams();
+        this.textures[texConf.name] = { texture, unit, settings };
 
-        this.textures[name] = textureData;
-    };
+        settings.setParams?.();
+    }
 
     createFramebufferTexture(name, texture, settings) {
         const framebuffer = this.gl.createFramebuffer();
 
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, framebuffer);
-        this.gl.framebufferTexture2D(this.gl.FRAMEBUFFER, settings.attachment, this.gl.TEXTURE_2D, texture, 0);
+        this.gl.framebufferTexture2D(this.gl.FRAMEBUFFER, settings.attachment, settings.texTarget, texture, 0);
 
-        // this.gl.readBuffer(this.gl.NONE)
-        // this.gl.drawBuffers(this.gl.NONE)
+        // this.gl.readBuffer(this.gl.NONE);
+        // this.gl.drawBuffers([this.gl.NONE]);
 
         this.framebuffers[name] = framebuffer;
     }

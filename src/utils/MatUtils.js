@@ -351,8 +351,8 @@ class MatUtils {
   static lookAtMat = (
     eye = [0, 0, 1],
     target = [0, 0, 0],
+    upVec = [0, 1, 0]
   ) => {
-    const upVec = [0, 1, 0]
     const eyeToTargetVec = VecUtils.subtractVecs(eye, target);
 
     const camDirection = VecUtils.normalizeVec(eyeToTargetVec);

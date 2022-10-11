@@ -6,6 +6,8 @@ class VecUtils {
 
     static subtractVecs = (vecA, vecB) => new Float32Array([vecA[0] - vecB[0], vecA[1] - vecB[1], vecA[2] - vecB[2]]);
 
+    static addVecs = (vecA, vecB) => new Float32Array([vecA[0] + vecB[0], vecA[1] + vecB[1], vecA[2] + vecB[2]]);
+
     static normalizeVec = (vec) => {
         const length = Math.sqrt(Math.pow(vec[0], 2) + Math.pow(vec[1], 2) + Math.pow(vec[2], 2));
 
