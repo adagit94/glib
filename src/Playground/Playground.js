@@ -10,7 +10,7 @@ import Framer from "../Framer/Framer.js";
 
 class Playground extends PhongLight {
     constructor() {
-        super("#glFrame");
+        super("#glFrame", "3d", { fov: Math.PI / 4, near: 1, far: 200 });
 
         this.#initData();
     }
@@ -25,9 +25,8 @@ class Playground extends PhongLight {
         const cube = new Cube(0.2, wireframe);
         const geometry = (this.#geometry = { plane, cube });
 
-        // const lightPosition = [Math.cos(Math.PI / 2 + Math.PI / 8) * 5, 0, Math.sin(Math.PI / 2 + Math.PI / 8) * 5];
-        // const cameraPosition = lightPosition;
-        const cameraPosition = [Math.cos(Math.PI / 2) * 10, 0, Math.sin(Math.PI / 2) * 10];
+        // const cameraPosition = [Math.cos(-Math.PI / 6) * 4, 0, Math.sin(-Math.PI / 6) * 4];
+        const cameraPosition = [Math.cos(-Math.PI / 6) * 4, 0, Math.sin(-Math.PI / 6) * 4];
         const viewMat = MatUtils.init3dInvertedMat(MatUtils.lookAtMat(cameraPosition));
         const lFar = 100;
 
@@ -81,266 +80,208 @@ class Playground extends PhongLight {
                 //         // gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR); // surface area > texture
                 //     },
                 // },
-                {
-                    name: "depthMap",
-                    settings: {
-                        width: 25,
-                        height: 25,
-                        internalFormat: this.gl.DEPTH_COMPONENT32F,
-                        format: this.gl.DEPTH_COMPONENT,
-                        type: this.gl.FLOAT,
-                        bindTarget: this.gl.TEXTURE_2D,
-                        texTarget: this.gl.TEXTURE_2D,
-                    },
-                    setParams: () => {
-                        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.NEAREST);
-                        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.NEAREST);
-                        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
-                        this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
-                    },
-                },
                 // {
-                //     name: "depthCubeMap",
+                //     name: "depthMap",
                 //     settings: {
-                //         cubeMap: true,
-                //         width: 100,
-                //         height: 100,
+                //         width: 25,
+                //         height: 25,
                 //         internalFormat: this.gl.DEPTH_COMPONENT32F,
                 //         format: this.gl.DEPTH_COMPONENT,
                 //         type: this.gl.FLOAT,
-                //         bindTarget: this.gl.TEXTURE_CUBE_MAP,
-                //         texTarget: this.gl.TEXTURE_CUBE_MAP_POSITIVE_X,
+                //         bindTarget: this.gl.TEXTURE_2D,
+                //         texTarget: this.gl.TEXTURE_2D,
                 //     },
                 //     setParams: () => {
-                //         this.gl.texParameteri(this.gl.TEXTURE_CUBE_MAP, this.gl.TEXTURE_MAG_FILTER, this.gl.NEAREST);
-                //         this.gl.texParameteri(this.gl.TEXTURE_CUBE_MAP, this.gl.TEXTURE_MIN_FILTER, this.gl.NEAREST);
-                //         this.gl.texParameteri(this.gl.TEXTURE_CUBE_MAP, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
-                //         this.gl.texParameteri(this.gl.TEXTURE_CUBE_MAP, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
+                //         this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, this.gl.NEAREST);
+                //         this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, this.gl.NEAREST);
+                //         this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
+                //         this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
                 //     },
                 // },
+                {
+                    name: "depthMap",
+                    settings: {
+                        cubeMap: true,
+                        width: 200,
+                        height: 200,
+                        internalFormat: this.gl.DEPTH_ATTACHMENT32F,
+                        format: this.gl.DEPTH_ATTACHMENT,
+                        type: this.gl.FLOAT,
+                        bindTarget: this.gl.TEXTURE_CUBE_MAP,
+                        texTarget: this.gl.TEXTURE_CUBE_MAP_POSITIVE_X,
+                    },
+                    setParams: () => {
+                        this.gl.texParameteri(this.gl.TEXTURE_CUBE_MAP, this.gl.TEXTURE_MAG_FILTER, this.gl.NEAREST);
+                        this.gl.texParameteri(this.gl.TEXTURE_CUBE_MAP, this.gl.TEXTURE_MIN_FILTER, this.gl.NEAREST);
+                        this.gl.texParameteri(this.gl.TEXTURE_CUBE_MAP, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
+                        this.gl.texParameteri(this.gl.TEXTURE_CUBE_MAP, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
+                    },
+                },
             ]),
         ]);
 
-        this.createFramebufferTexture("depthMap", this.textures.depthMap.texture, {
-            texTarget: this.gl.TEXTURE_2D,
-            attachment: this.gl.DEPTH_ATTACHMENT,
-        });
-
-        console.log(this);
+        // this.createFramebufferTexture("depthMaps", this.textures.depthMap.texture, {
+        //     cubeMap: true,
+        //     texTarget: this.gl.TEXTURE_CUBE_MAP_POSITIVE_X,
+        //     attachment: this.gl.DEPTH_ATTACHMENT,
+        // });
 
         this.animate = false;
 
         this.gl.enable(this.gl.DEPTH_TEST);
         this.gl.clearDepth(1);
 
+        console.log(this);
         this.requestAnimationFrame();
     }
-
-    // renderScene = () => {
-    //     const tDivider = 6;
-
-    //     this.mats.light.cubeSides = {};
-
-    //     const lPos = (this.uniforms.lightPosition = [
-    //         Math.cos(this.animData.deltaTime / tDivider) * 10,
-    //         0,
-    //         Math.sin(this.animData.deltaTime / tDivider) * 10,
-    //     ]);
-
-    //     this.mats.light.cubeSides.right = MatUtils.mult3dMats(
-    //         this.mats.light.perspective,
-    //         MatUtils.lookAtMat(lPos, [lPos[0] + 1, lPos[1], lPos[2]], [0, -1, 0])
-    //     );
-
-    //     this.mats.light.cubeSides.left = MatUtils.mult3dMats(
-    //         this.mats.light.perspective,
-    //         MatUtils.lookAtMat(lPos, [lPos[0] - 1, lPos[1], lPos[2]], [0, -1, 0])
-    //     );
-
-    //     this.mats.light.cubeSides.top = MatUtils.mult3dMats(
-    //         this.mats.light.perspective,
-    //         MatUtils.lookAtMat(lPos, [lPos[0], lPos[1] + 1, lPos[2]], [0, 0, 1])
-    //     );
-
-    //     this.mats.light.cubeSides.bottom = MatUtils.mult3dMats(
-    //         this.mats.light.perspective,
-    //         MatUtils.lookAtMat(lPos, [lPos[0], lPos[1] - 1, lPos[2]], [0, 0, -1])
-    //     );
-
-    //     this.mats.light.cubeSides.front = MatUtils.mult3dMats(
-    //         this.mats.light.perspective,
-    //         MatUtils.lookAtMat(lPos, [lPos[0], lPos[1], lPos[2] + 1], [0, -1, 0])
-    //     );
-
-    //     this.mats.light.cubeSides.back = MatUtils.mult3dMats(
-    //         this.mats.light.perspective,
-    //         MatUtils.lookAtMat(lPos, [lPos[0], lPos[1], lPos[2] - 1], [0, -1, 0])
-    //     );
-
-    //     const planeMat = MatUtils.mult3dMats(this.#geometry.plane.mat, [
-    //         MatUtils.init3dTranslationMat(-0.75, 1.25, 0),
-    //         MatUtils.init3dRotationMat("x", -Math.PI / 2),
-    //         MatUtils.init3dScaleMat(4, 4, 4),
-    //     ]);
-
-    //     const cubeMat = MatUtils.mult3dMats(this.#geometry.plane.mat, [
-    //         MatUtils.init3dTranslationMat(-0.75, 1.25, 1),
-    //         MatUtils.init3dRotationMat("x", -Math.PI / 2),
-    //         MatUtils.init3dScaleMat(2, 2, 2),
-    //     ]);
-
-    //     this.gl.useProgram(this.program.depthMap.program);
-    //     this.gl.viewport(0, 0, this.textures.top.settings.width, this.textures.top.settings.height);
-
-    //     const cubeSides = Object.keys(this.textures);
-
-    //     for (const side of cubeSides) {
-    //         const fb = this.framebuffers[side];
-    //         const lightMat = this.mats.light.cubeSides[side];
-
-    //         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, fb);
-
-    //         this.gl.uniformMatrix4fv(this.program.depthMap.locations.finalLightMat, false, MatUtils.mult3dMats(lightMat, planeMat));
-    //         this.#renderPlane();
-
-    //         this.gl.uniformMatrix4fv(this.program.depthMap.locations.finalLightMat, false, MatUtils.mult3dMats(lightMat, cubeMat));
-    //         this.#renderPlane();
-    //     }
-
-    //     this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
-    //     this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
-    //     this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
-
-    //     for (const side of cubeSides) {
-    //         const tex = this.textures[side];
-
-    //         this.gl.activeTexture(this.gl[`TEXTURE${tex.unit}`]);
-    //         // this.gl.bindTexture(this.gl.TEXTURE_CUBE_MAP, tex);
-
-    //         this.uniforms.depthMap = tex.texture;
-
-    //         this.uniforms.modelMat = planeMat;
-    //         this.uniforms.normalMat = MatUtils.init3dTransposedMat(MatUtils.init3dInvertedMat(planeMat));
-    //         this.uniforms.finalMat = MatUtils.mult3dMats(this.mats.scene, planeMat);
-    //         this.uniforms.color = [1, 1, 1];
-
-    //         this.setLight();
-    //         this.#renderPlane();
-
-    //         this.uniforms.modelMat = cubeMat;
-    //         this.uniforms.normalMat = MatUtils.init3dTransposedMat(MatUtils.init3dInvertedMat(cubeMat));
-    //         this.uniforms.finalMat = MatUtils.mult3dMats(this.mats.scene, cubeMat);
-    //         this.uniforms.color = [0, 0, 1];
-
-    //         this.setLight();
-    //         this.#renderPlane();
-    //     }
-
-    //     // this.uniforms.modelMat = planeMat;
-    //     // this.uniforms.normalMat = MatUtils.init3dTransposedMat(MatUtils.init3dInvertedMat(planeMat));
-    //     // this.uniforms.finalMat = MatUtils.mult3dMats(this.mats.scene, planeMat);
-    //     // this.uniforms.color = [1, 1, 1];
-    //     // this.setLight();
-    //     // this.#renderPlane();
-
-    //     // this.uniforms.modelMat = cubeMat;
-    //     // this.uniforms.normalMat = MatUtils.init3dTransposedMat(MatUtils.init3dInvertedMat(cubeMat));
-    //     // this.uniforms.finalMat = MatUtils.mult3dMats(this.mats.scene, cubeMat);
-    //     // this.uniforms.color = [0, 0, 1];
-    //     // this.setLight();
-    //     // this.#renderCube();
-    // };
 
     renderScene = () => {
         const tDivider = 10;
 
-        this.mats.light.cubeSides = {};
+        this.mats.light.cubeSides = [];
 
-        console.log("render");
+        // const lPos = (this.program.depthMap.uniforms.lightPosition = this.program.uniforms.lightPosition = [0, 0, 0]);
+        const lPos = (this.program.depthMap.uniforms.lightPosition = this.program.uniforms.lightPosition = [Math.cos(0) * 4, 0, Math.sin(0) * 4]);
+        // const lPos =
+        //     (this.program.depthMap.uniforms.lightPosition =
+        //     this.program.uniforms.lightPosition =
+        //         [
+        //             Math.cos(Math.PI / 2 - this.animData.deltaTime / tDivider) * 5,
+        //             0,
+        //             Math.sin(Math.PI / 2 - this.animData.deltaTime / tDivider) * 5,
+        //         ]);
 
-        // const lPos = (this.uniforms.lightPosition = [
-        //     Math.cos(this.animData.deltaTime / tDivider) * 10,
-        //     0,
-        //     Math.sin(this.animData.deltaTime / tDivider) * 10,
-        // ]);
+        // right
+        this.mats.light.cubeSides.push(
+            MatUtils.mult3dMats(
+                this.mats.light.projection,
+                MatUtils.init3dInvertedMat(MatUtils.lookAtMat(lPos, [lPos[0] + 1, lPos[1], lPos[2]], [0, -1, 0]))
+            )
+        );
 
-        const lPos = (this.uniforms.lightPosition = [Math.cos(Math.PI / 2) * 10, 0, Math.sin(Math.PI / 2) * 10]);
-        const lDir = [0, 0, 0];
+        // left
+        this.mats.light.cubeSides.push(
+            MatUtils.mult3dMats(
+                this.mats.light.projection,
+                MatUtils.init3dInvertedMat(MatUtils.lookAtMat(lPos, [lPos[0] - 1, lPos[1], lPos[2]], [0, -1, 0]))
+            )
+        );
 
-        const lightMat = (this.mats.light.view = MatUtils.mult3dMats(
-            this.mats.light.projection,
-            MatUtils.init3dInvertedMat(MatUtils.lookAtMat(lPos, lDir))
-            // MatUtils.init3dInvertedMat(MatUtils.lookAtMat(lPos, [0, 0, 0]))
-        ));
+        // top
+        this.mats.light.cubeSides.push(
+            MatUtils.mult3dMats(
+                this.mats.light.projection,
+                MatUtils.init3dInvertedMat(MatUtils.lookAtMat(lPos, [lPos[0], lPos[1] + 1, lPos[2]], [0, 0, 1]))
+            )
+        );
+
+        // bottom
+        this.mats.light.cubeSides.push(
+            MatUtils.mult3dMats(
+                this.mats.light.projection,
+                MatUtils.init3dInvertedMat(MatUtils.lookAtMat(lPos, [lPos[0], lPos[1] - 1, lPos[2]], [0, 0, -1]))
+            )
+        );
+
+        // front
+        this.mats.light.cubeSides.push(
+            MatUtils.mult3dMats(
+                this.mats.light.projection,
+                MatUtils.init3dInvertedMat(MatUtils.lookAtMat(lPos, [lPos[0], lPos[1], lPos[2] + 1], [0, -1, 0]))
+            )
+        );
+
+        // back
+        this.mats.light.cubeSides.push(
+            MatUtils.mult3dMats(
+                this.mats.light.projection,
+                MatUtils.init3dInvertedMat(MatUtils.lookAtMat(lPos, [lPos[0], lPos[1], lPos[2] - 1], [0, -1, 0]))
+            )
+        );
 
         const planeMat = MatUtils.mult3dMats(this.#geometry.plane.mat, [
-            MatUtils.init3dTranslationMat(-0.75, 1.25, 0),
+            MatUtils.init3dTranslationMat(-8, 1.25, 1),
+            MatUtils.init3dRotationMat("y", -Math.PI / 2),
             MatUtils.init3dRotationMat("x", -Math.PI / 2),
             MatUtils.init3dScaleMat(4, 4, 4),
         ]);
 
-        const cubeMat = MatUtils.mult3dMats(this.#geometry.plane.mat, [
-            MatUtils.init3dTranslationMat(-0.75, 1.25, 1),
-            MatUtils.init3dRotationMat("x", -Math.PI / 2),
-            MatUtils.init3dScaleMat(2, 2, 2),
+        const cubeMat = MatUtils.mult3dMats(MatUtils.init3dTranslationMat(-3, -0.5, 0), [
+            // MatUtils.init3dRotationMat("x", -Math.PI / 2),
+            MatUtils.init3dScaleMat(6, 6, 6),
         ]);
 
+        // const planeMat = MatUtils.mult3dMats(this.#geometry.plane.mat, [
+        //     MatUtils.init3dTranslationMat(-0.75, 1.25, 0),
+        //     MatUtils.init3dRotationMat("x", -Math.PI / 2),
+        //     MatUtils.init3dScaleMat(4, 4, 4),
+        // ]);
+
+        // const cubeMat = MatUtils.mult3dMats(MatUtils.init3dTranslationMat(0.5, -0.5, 1), [
+        //     // MatUtils.init3dRotationMat("x", -Math.PI / 2),
+        //     MatUtils.init3dScaleMat(6, 6, 6),
+        // ]);
+
         this.gl.viewport(0, 0, this.textures.depthMap.settings.width, this.textures.depthMap.settings.height);
-        this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.framebuffers.depthMap);
 
-        this.program.depthMap.uniforms.lightPosition = lPos;
+        const framebuffer = this.gl.createFramebuffer();
 
-        this.program.depthMap.uniforms.finalMat = MatUtils.mult3dMats(this.mats.scene, planeMat);
-        this.program.depthMap.uniforms.modelMat = planeMat;
-        this.setDepthMap()
-        this.#renderPlane();
+        this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, framebuffer);
 
-        this.program.depthMap.uniforms.finalMat = MatUtils.mult3dMats(this.mats.scene, cubeMat)
-        this.program.depthMap.uniforms.modelMat = cubeMat
-        this.setDepthMap()
-        this.#renderPlane();
+        for (let side = 0; side < 6; side++) {
+            const lightMat = this.mats.light.cubeSides[side];
+
+            this.gl.framebufferTexture2D(
+                this.gl.FRAMEBUFFER,
+                this.gl.DEPTH_ATTACHMENT,
+                this.gl.TEXTURE_CUBE_MAP_POSITIVE_X + side,
+                this.textures.depthMap.texture,
+                0
+            );
+            this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+
+            console.log("lightMat", lightMat);
+            console.log("framebuffer", framebuffer, this.gl.checkFramebufferStatus(this.gl.FRAMEBUFFER) === this.gl.FRAMEBUFFER_COMPLETE);
+
+            this.program.depthMap.uniforms.finalMat = MatUtils.mult3dMats(lightMat, planeMat);
+            this.program.depthMap.uniforms.modelMat = planeMat;
+            this.setDepthMap();
+            this.#renderPlane();
+
+            this.program.depthMap.uniforms.finalMat = MatUtils.mult3dMats(lightMat, cubeMat);
+            this.program.depthMap.uniforms.modelMat = cubeMat;
+            this.setDepthMap();
+            // this.#renderPlane();
+            this.#renderCube();
+        }
 
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
         this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
-        // this.gl.clearColor(0, 0, 0, 1);
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 
-        // this.gl.activeTexture(this.gl[`TEXTURE${this.textures.depthMap.unit}`]);
-        // this.gl.bindTexture(this.gl.TEXTURE_2D, this.textures.depthMap.texture);
+        // this.gl.activeTexture(this.gl[`TEXTURE0`]);
+        // this.gl.bindTexture(this.gl.TEXTURE_CUBE_MAP, this.textures.depthMap.texture);
+        this.program.uniforms.depthMap = this.textures.depthMap.unit;
 
-        // this.uniforms.lightMat = MatUtils.mult3dMats(lightMat, planeMat);
-        this.uniforms.depthMap = this.textures.depthMap.texture;
 
-        this.uniforms.modelMat = planeMat;
-        this.uniforms.normalMat = MatUtils.init3dTransposedMat(MatUtils.init3dInvertedMat(planeMat));
-        this.uniforms.finalMat = MatUtils.mult3dMats(this.mats.scene, planeMat);
-        this.uniforms.color = [1, 1, 1];
-
-        this.setLight();
-        this.#renderPlane();
-
-        this.uniforms.lightMat = MatUtils.mult3dMats(lightMat, cubeMat);
-        this.uniforms.modelMat = cubeMat;
-        this.uniforms.normalMat = MatUtils.init3dTransposedMat(MatUtils.init3dInvertedMat(cubeMat));
-        this.uniforms.finalMat = MatUtils.mult3dMats(this.mats.scene, cubeMat);
-        this.uniforms.color = [0, 0, 1];
+        this.program.uniforms.modelMat = planeMat;
+        this.program.uniforms.normalMat = MatUtils.init3dTransposedMat(MatUtils.init3dInvertedMat(planeMat));
+        this.program.uniforms.finalMat = MatUtils.mult3dMats(this.mats.scene, planeMat);
+        this.program.uniforms.color = [1, 1, 1];
 
         this.setLight();
         this.#renderPlane();
 
-        // this.uniforms.modelMat = planeMat;
-        // this.uniforms.normalMat = MatUtils.init3dTransposedMat(MatUtils.init3dInvertedMat(planeMat));
-        // this.uniforms.finalMat = MatUtils.mult3dMats(this.mats.scene, planeMat);
-        // this.uniforms.color = [1, 1, 1];
-        // this.setLight();
+        this.program.uniforms.modelMat = cubeMat;
+        this.program.uniforms.normalMat = MatUtils.init3dTransposedMat(MatUtils.init3dInvertedMat(cubeMat));
+        this.program.uniforms.finalMat = MatUtils.mult3dMats(this.mats.scene, cubeMat);
+        this.program.uniforms.color = [0, 0, 1];
+
+        this.setLight();
         // this.#renderPlane();
+        this.#renderCube();
 
-        // this.uniforms.modelMat = cubeMat;
-        // this.uniforms.normalMat = MatUtils.init3dTransposedMat(MatUtils.init3dInvertedMat(cubeMat));
-        // this.uniforms.finalMat = MatUtils.mult3dMats(this.mats.scene, cubeMat);
-        // this.uniforms.color = [0, 0, 1];
-        // this.setLight();
-        // this.#renderCube();
+        
     };
 
     #renderPlane() {

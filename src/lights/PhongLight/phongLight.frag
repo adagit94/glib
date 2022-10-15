@@ -13,7 +13,7 @@ uniform samplerCube u_depthMap;
 
 in vec3 v_normal;
 in vec3 v_surfacePos;
-// in vec2 v_textureCoords;
+in vec2 v_textureCoords;
 
 out vec4 color;
 
@@ -27,7 +27,7 @@ float getAvgVisibility(vec3 lightToSurface) {
     for(int x = -2; x <= 2; x++) {
         for(int y = -2; y <= 2; y++) {
             for(int z = -2; z <= 2; z++) {
-                float closestDepth = texture(u_depthMap, lightToSurface + vec3(x, y, z) * 0.02).z;
+                float closestDepth = texture(u_depthMap, lightToSurface + vec3(x, y, z) * 0.02).r;
 
                 visibility += currentDepth - bias > closestDepth ? 0.0 : 1.0;
             }
@@ -36,6 +36,22 @@ float getAvgVisibility(vec3 lightToSurface) {
 
     return visibility / 125.;
 }
+
+// float getAvgVisibility(vec3 lightToSurface) {
+//     // float closestDepth = texture(u_depthMap, lightToSurface / u_far).z;
+//     vec4 closestDepth = texture(u_depthMap, lightToSurface);
+
+//     color = closestDepth;
+//     // color = vec4(vec3(texture(u_depthMap, length(lightToSurface) / u_far)), 1.);
+//     // closestDepth *= u_far;
+
+//     // float currentDepth = length(lightToSurface);
+//     // float visibility = currentDepth > closestDepth ? 0.0 : 1.0;
+
+//     // return visibility;
+
+//     return 0.0;
+// }
 
 void main() {
     vec3 normal = normalize(v_normal);
@@ -53,7 +69,10 @@ void main() {
     }
 
     // vec3 lightToSurface = v_surfacePos - u_lightPosition;  // surfaceToLight * -1.
+    // float visibility = 1.;
     float visibility = getAvgVisibility(v_surfacePos - u_lightPosition);
+
+    // color = vec4(u_color, 1);
 
     color = vec4(u_color, 1);
     color.rgb *= u_ambientColor + diffuseColor * visibility;

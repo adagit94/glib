@@ -29,10 +29,10 @@ class PhongLight extends Light {
     setUniforms() {
         super.setUniforms()
 
-        this.gl.uniform3f(this.program.locations.ambientColor, ...this.uniforms.ambientColor);
-        this.gl.uniform3f(this.program.locations.lightPosition, ...this.uniforms.lightPosition);
-        this.gl.uniform3f(this.program.locations.cameraPosition, ...this.uniforms.cameraPosition);
-        this.gl.uniform1f(this.program.locations.shininess, this.uniforms.shininess); 
+        this.gl.uniform3f(this.program.locations.ambientColor, ...this.program.uniforms.ambientColor);
+        this.gl.uniform3f(this.program.locations.lightPosition, ...this.program.uniforms.lightPosition);
+        this.gl.uniform3f(this.program.locations.cameraPosition, ...this.program.uniforms.cameraPosition);
+        this.gl.uniform1f(this.program.locations.shininess, this.program.uniforms.shininess); 
     }
 }
 

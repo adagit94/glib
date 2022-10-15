@@ -12,5 +12,6 @@ out vec4 color;
 void main() {
     float lightToSurfaceDistance = distance(v_surfacePosition, u_lightPosition);
 
-    color = vec4(vec3(lightToSurfaceDistance / u_far), 1);
+    gl_FragDepth = lightToSurfaceDistance / u_far;
+    // color = vec4(vec3(lightToSurfaceDistance / u_far), 1);
 }

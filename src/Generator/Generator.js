@@ -88,7 +88,6 @@ class Generator {
 
             this.gl.linkProgram(program);
 
-
             programData.program = program;
             programData.locations = this.#initCommonLocations(program);
 
@@ -210,20 +209,25 @@ class Generator {
 
         this.textures[texConf.name] = { texture, unit, settings };
 
-        settings.setParams?.();
+        texConf.setParams?.();
     }
 
-    createFramebufferTexture(name, texture, settings) {
-        const framebuffer = this.gl.createFramebuffer();
+    // createFramebufferTexture(name, texture, settings) {
+    //     let its = settings.cubeMap ? 6 : 1;
+    //     let fbs = [];
 
-        this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, framebuffer);
-        this.gl.framebufferTexture2D(this.gl.FRAMEBUFFER, settings.attachment, settings.texTarget, texture, 0);
+    //     const framebuffer = this.gl.createFramebuffer();
 
-        // this.gl.readBuffer(this.gl.NONE);
-        // this.gl.drawBuffers([this.gl.NONE]);
+    //     this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, framebuffer);
+        
 
-        this.framebuffers[name] = framebuffer;
-    }
+    //     // this.gl.readBuffer(this.gl.NONE);
+    //     // this.gl.drawBuffers([this.gl.NONE]);
+
+    //     fbs.push(framebuffer);
+
+    //     this.framebuffers[name] = settings.cubeMap ? fbs : fbs[0];
+    // }
 
     #initCommonLocations = (program) => {
         this.gl.bindAttribLocation(program, 0, "a_position");
