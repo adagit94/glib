@@ -102,10 +102,10 @@ class Playground extends PhongLight {
                     name: "depthMap",
                     settings: {
                         cubeMap: true,
-                        width: 200,
-                        height: 200,
-                        internalFormat: this.gl.DEPTH_ATTACHMENT32F,
-                        format: this.gl.DEPTH_ATTACHMENT,
+                        width: 800,
+                        height: 800,
+                        internalFormat: this.gl.DEPTH_COMPONENT32F,
+                        format: this.gl.DEPTH_COMPONENT,
                         type: this.gl.FLOAT,
                         bindTarget: this.gl.TEXTURE_CUBE_MAP,
                         texTarget: this.gl.TEXTURE_CUBE_MAP_POSITIVE_X,
@@ -120,11 +120,15 @@ class Playground extends PhongLight {
             ]),
         ]);
 
-        // this.createFramebufferTexture("depthMaps", this.textures.depthMap.texture, {
-        //     cubeMap: true,
-        //     texTarget: this.gl.TEXTURE_CUBE_MAP_POSITIVE_X,
-        //     attachment: this.gl.DEPTH_ATTACHMENT,
-        // });
+        this.createFramebuffer("depthMap", () => {
+            this.gl.framebufferTexture2D(
+                this.gl.FRAMEBUFFER,
+                this.gl.DEPTH_ATTACHMENT,
+                this.gl.TEXTURE_CUBE_MAP_POSITIVE_X,
+                this.textures.depthMap.texture,
+                0
+            );
+        });
 
         this.animate = false;
 
@@ -211,22 +215,9 @@ class Playground extends PhongLight {
             MatUtils.init3dScaleMat(6, 6, 6),
         ]);
 
-        // const planeMat = MatUtils.mult3dMats(this.#geometry.plane.mat, [
-        //     MatUtils.init3dTranslationMat(-0.75, 1.25, 0),
-        //     MatUtils.init3dRotationMat("x", -Math.PI / 2),
-        //     MatUtils.init3dScaleMat(4, 4, 4),
-        // ]);
-
-        // const cubeMat = MatUtils.mult3dMats(MatUtils.init3dTranslationMat(0.5, -0.5, 1), [
-        //     // MatUtils.init3dRotationMat("x", -Math.PI / 2),
-        //     MatUtils.init3dScaleMat(6, 6, 6),
-        // ]);
-
         this.gl.viewport(0, 0, this.textures.depthMap.settings.width, this.textures.depthMap.settings.height);
 
-        const framebuffer = this.gl.createFramebuffer();
-
-        this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, framebuffer);
+        this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.framebuffers.depthMap);
 
         for (let side = 0; side < 6; side++) {
             const lightMat = this.mats.light.cubeSides[side];
@@ -238,10 +229,9 @@ class Playground extends PhongLight {
                 this.textures.depthMap.texture,
                 0
             );
-            this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
 
-            console.log("lightMat", lightMat);
-            console.log("framebuffer", framebuffer, this.gl.checkFramebufferStatus(this.gl.FRAMEBUFFER) === this.gl.FRAMEBUFFER_COMPLETE);
+            this.gl.clear(this.gl.DEPTH_BUFFER_BIT);
+
 
             this.program.depthMap.uniforms.finalMat = MatUtils.mult3dMats(lightMat, planeMat);
             this.program.depthMap.uniforms.modelMat = planeMat;
@@ -251,7 +241,6 @@ class Playground extends PhongLight {
             this.program.depthMap.uniforms.finalMat = MatUtils.mult3dMats(lightMat, cubeMat);
             this.program.depthMap.uniforms.modelMat = cubeMat;
             this.setDepthMap();
-            // this.#renderPlane();
             this.#renderCube();
         }
 
@@ -262,7 +251,6 @@ class Playground extends PhongLight {
         // this.gl.activeTexture(this.gl[`TEXTURE0`]);
         // this.gl.bindTexture(this.gl.TEXTURE_CUBE_MAP, this.textures.depthMap.texture);
         this.program.uniforms.depthMap = this.textures.depthMap.unit;
-
 
         this.program.uniforms.modelMat = planeMat;
         this.program.uniforms.normalMat = MatUtils.init3dTransposedMat(MatUtils.init3dInvertedMat(planeMat));
@@ -280,8 +268,6 @@ class Playground extends PhongLight {
         this.setLight();
         // this.#renderPlane();
         this.#renderCube();
-
-        
     };
 
     #renderPlane() {

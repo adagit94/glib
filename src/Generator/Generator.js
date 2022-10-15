@@ -212,22 +212,13 @@ class Generator {
         texConf.setParams?.();
     }
 
-    // createFramebufferTexture(name, texture, settings) {
-    //     let its = settings.cubeMap ? 6 : 1;
-    //     let fbs = [];
+    createFramebuffer(name, setBuffer) {
+        const framebuffer = this.framebuffers[name] = this.gl.createFramebuffer();
 
-    //     const framebuffer = this.gl.createFramebuffer();
+        this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, framebuffer);
 
-    //     this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, framebuffer);
-        
-
-    //     // this.gl.readBuffer(this.gl.NONE);
-    //     // this.gl.drawBuffers([this.gl.NONE]);
-
-    //     fbs.push(framebuffer);
-
-    //     this.framebuffers[name] = settings.cubeMap ? fbs : fbs[0];
-    // }
+        setBuffer?.()
+    }
 
     #initCommonLocations = (program) => {
         this.gl.bindAttribLocation(program, 0, "a_position");
