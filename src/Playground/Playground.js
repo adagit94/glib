@@ -25,9 +25,9 @@ class Playground extends PhongLight {
         const cube = new Cube(0.2, wireframe);
         const geometry = (this.#geometry = { plane, cube });
 
-        // const cameraPosition = [Math.cos(-Math.PI / 6) * 4, 0, Math.sin(-Math.PI / 6) * 4];
-        const cameraPosition = [Math.cos(-Math.PI / 6) * 4, 0, Math.sin(-Math.PI / 6) * 4];
-        const viewMat = MatUtils.init3dInvertedMat(MatUtils.lookAtMat(cameraPosition));
+        const cameraPosition = [Math.cos(-Math.PI / 4) * 6, 0, Math.sin(-Math.PI / 4) * 6];
+        // const cameraPosition = [Math.cos(0) * 8, 0.5, Math.sin(0) * 8];
+        const viewMat = MatUtils.init3dInvertedMat(MatUtils.lookAtMat(cameraPosition, [0, 0, 0])); // [-7, 1.25, 2]
         const lFar = 100;
 
         this.mats.scene = MatUtils.mult3dMats(this.mats.projection, [viewMat]);
@@ -140,12 +140,12 @@ class Playground extends PhongLight {
     }
 
     renderScene = () => {
-        const tDivider = 10;
+        const tDivider = 8;
 
         this.mats.light.cubeSides = [];
 
         // const lPos = (this.program.depthMap.uniforms.lightPosition = this.program.uniforms.lightPosition = [0, 0, 0]);
-        const lPos = (this.program.depthMap.uniforms.lightPosition = this.program.uniforms.lightPosition = [Math.cos(0) * 4, 0, Math.sin(0) * 4]);
+        const lPos = (this.program.depthMap.uniforms.lightPosition = this.program.uniforms.lightPosition = [Math.sin(Math.PI / 2 - this.animData.deltaTime / tDivider) * 5, 0, Math.cos(Math.PI / 2 - this.animData.deltaTime / tDivider) * 5]);
         // const lPos =
         //     (this.program.depthMap.uniforms.lightPosition =
         //     this.program.uniforms.lightPosition =
@@ -204,13 +204,13 @@ class Playground extends PhongLight {
         );
 
         const planeMat = MatUtils.mult3dMats(this.#geometry.plane.mat, [
-            MatUtils.init3dTranslationMat(-8, 1.25, 1),
+            MatUtils.init3dTranslationMat(-10, 1.25, 2),
             MatUtils.init3dRotationMat("y", -Math.PI / 2),
             MatUtils.init3dRotationMat("x", -Math.PI / 2),
-            MatUtils.init3dScaleMat(4, 4, 4),
+            MatUtils.init3dScaleMat(6, 6, 6),
         ]);
 
-        const cubeMat = MatUtils.mult3dMats(MatUtils.init3dTranslationMat(-3, -0.5, 0), [
+        const cubeMat = MatUtils.mult3dMats(MatUtils.init3dTranslationMat(-3, -0.5, -0.5), [
             // MatUtils.init3dRotationMat("x", -Math.PI / 2),
             MatUtils.init3dScaleMat(6, 6, 6),
         ]);

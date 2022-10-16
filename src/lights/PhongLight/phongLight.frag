@@ -17,24 +17,27 @@ in vec2 v_textureCoords;
 
 out vec4 color;
 
-const float bias = 0.02;
+const float visibilityBias = 0.02;
+const float avgBorder = 2.;
+const float avgIterations = pow(avgBorder * 2. + 1., 3.);
+const float avgOffset = 0.001;
 
 float getAvgVisibility(vec3 lightToSurface) {
     float currentDepth = length(lightToSurface) / u_far;
     lightToSurface = normalize(lightToSurface);
     float visibility = 0.0;
 
-    for(int x = -2; x <= 2; x++) {
-        for(int y = -2; y <= 2; y++) {
-            for(int z = -2; z <= 2; z++) {
-                float closestDepth = texture(u_depthMap, lightToSurface + vec3(x, y, z) * 0.02).r;
+    for(float x = -avgBorder; x <= avgBorder; x++) {
+        for(float y = -avgBorder; y <= avgBorder; y++) {
+            for(float z = -avgBorder; z <= avgBorder; z++) {
+                float closestDepth = texture(u_depthMap, lightToSurface + vec3(x, y, z) * avgOffset).r;
 
-                visibility += currentDepth - bias > closestDepth ? 0.0 : 1.0;
+                visibility += currentDepth - visibilityBias > closestDepth ? 0.0 : 1.0;
             }
         }
     }
 
-    return visibility / 125.;
+    return visibility / avgIterations;
 }
 
 void main() {
