@@ -1,6 +1,7 @@
 #version 300 es
 
 precision highp float;
+precision highp samplerCubeShadow;
 
 uniform vec3 u_color;
 uniform float u_far;
@@ -9,7 +10,7 @@ uniform vec3 u_lightPosition;
 uniform vec3 u_lightColor;
 uniform vec3 u_cameraPosition;
 uniform float u_shininess;
-uniform samplerCube u_depthMap;
+uniform samplerCubeShadow u_depthMap;
 
 in vec3 v_normal;
 in vec3 v_surfacePos;
@@ -17,27 +18,13 @@ in vec2 v_textureCoords;
 
 out vec4 color;
 
-const float visibilityBias = 0.02;
-const float avgBorder = 2.;
-const float avgIterations = pow(avgBorder * 2. + 1., 3.);
-const float avgOffset = 0.001;
+const float visibilityBias = 0.002;
 
-float getAvgVisibility(vec3 lightToSurface) {
+float getVisibility(vec3 lightToSurface) {
     float currentDepth = length(lightToSurface) / u_far;
-    lightToSurface = normalize(lightToSurface);
-    float visibility = 0.0;
+    float visibility = texture(u_depthMap, vec4(lightToSurface, currentDepth - visibilityBias));
 
-    for(float x = -avgBorder; x <= avgBorder; x++) {
-        for(float y = -avgBorder; y <= avgBorder; y++) {
-            for(float z = -avgBorder; z <= avgBorder; z++) {
-                float closestDepth = texture(u_depthMap, lightToSurface + vec3(x, y, z) * avgOffset).r;
-
-                visibility += currentDepth - visibilityBias > closestDepth ? 0.0 : 1.0;
-            }
-        }
-    }
-
-    return visibility / avgIterations;
+    return visibility;
 }
 
 void main() {
@@ -55,7 +42,7 @@ void main() {
         specular = pow(max(dot(surfaceToCamera, reflectedLightRay), 0.), u_shininess) * u_lightColor;
     }
 
-    float visibility = getAvgVisibility(v_surfacePos - u_lightPosition);
+    float visibility = getVisibility(v_surfacePos - u_lightPosition);
 
     color = vec4(u_color, 1);
     color.rgb *= u_ambientColor + diffuseColor * visibility;
