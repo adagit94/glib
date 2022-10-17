@@ -1,4 +1,4 @@
-import PhongLight from "../lights/PhongLight/PhongLight.js";
+import PointLight from "../lights/PointLight/PointLight.js";
 import Generator from "../Generator/Generator.js";
 import MatUtils from "../utils/MatUtils.js";
 import Cube from "../shapes/3d/Cube.js";
@@ -8,7 +8,7 @@ import SkeletonCube from "../shapes/3d/SkeletonCube.js";
 import SquareCuboid from "../shapes/3d/SquareCuboid.js";
 import Framer from "../Framer/Framer.js";
 
-class Playground extends PhongLight {
+class Playground extends PointLight {
     constructor() {
         super("#glFrame", "3d", { fov: Math.PI / 4, near: 1, far: 200 });
 
@@ -25,8 +25,8 @@ class Playground extends PhongLight {
         const cube = new Cube(0.2, wireframe);
         const geometry = (this.#geometry = { plane, cube });
 
-        const cameraPosition = [Math.cos(-Math.PI / 4) * 6, 0, Math.sin(-Math.PI / 4) * 6];
-        // const cameraPosition = [Math.cos(0) * 8, 0.5, Math.sin(0) * 8];
+        // const cameraPosition = [Math.cos(-Math.PI / 3.5) * 6, 0, Math.sin(-Math.PI / 3.5) * 6];
+        const cameraPosition = [Math.cos(0) * 8, 0.5, Math.sin(0) * 8];
         const viewMat = MatUtils.init3dInvertedMat(MatUtils.lookAtMat(cameraPosition, [0, 0, 0])); // [-7, 1.25, 2]
         const lFar = 100;
 
@@ -54,7 +54,7 @@ class Playground extends PhongLight {
                     light: {
                         ambientColor: [0, 0, 0],
                         lightColor: [1, 1, 1],
-                        shininess: 256,
+                        shininess: 1024,
                         far: lFar,
                         cameraPosition,
                     },
@@ -146,7 +146,8 @@ class Playground extends PhongLight {
         this.mats.light.cubeSides = [];
 
         // const lPos = (this.program.depthMap.uniforms.lightPosition = this.program.uniforms.lightPosition = [0, 0, 0]);
-        const lPos = (this.program.depthMap.uniforms.lightPosition = this.program.uniforms.lightPosition = [Math.sin(Math.PI / 2 - this.animData.deltaTime / tDivider) * 5, 0, Math.cos(Math.PI / 2 - this.animData.deltaTime / tDivider) * 5]);
+        // const lPos = (this.program.depthMap.uniforms.lightPosition = this.program.uniforms.lightPosition = [Math.sin(Math.PI / 2 - this.animData.deltaTime / tDivider) * 5, 0, Math.cos(Math.PI / 2 - this.animData.deltaTime / tDivider) * 5]);
+        const lPos = (this.program.depthMap.uniforms.lightPosition = this.program.uniforms.lightPosition = [Math.cos(0) * 6, 0, Math.sin(0) * 6]);
         // const lPos =
         //     (this.program.depthMap.uniforms.lightPosition =
         //     this.program.uniforms.lightPosition =
@@ -213,7 +214,7 @@ class Playground extends PhongLight {
 
         const cubeMat = MatUtils.mult3dMats(MatUtils.init3dTranslationMat(-3, -0.5, -0.5), [
             // MatUtils.init3dRotationMat("x", -Math.PI / 2),
-            MatUtils.init3dScaleMat(6, 6, 6),
+            MatUtils.init3dScaleMat(10, 10, 10),
         ]);
 
         this.gl.viewport(0, 0, this.textures.depthMap.settings.width, this.textures.depthMap.settings.height);

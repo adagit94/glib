@@ -37,9 +37,9 @@ void main() {
 
     if(diffuseLight > 0. && !isnan(u_shininess)) {
         vec3 surfaceToCamera = normalize(u_cameraPosition - v_surfacePos);
-        vec3 reflectedLightRay = reflect(-surfaceToLight, normal);
+        vec3 halfVec = normalize(surfaceToLight + surfaceToCamera);
 
-        specular = pow(max(dot(surfaceToCamera, reflectedLightRay), 0.), u_shininess) * u_lightColor;
+        specular = pow(max(dot(normal, halfVec), 0.), u_shininess) * u_lightColor;
     }
 
     float visibility = getVisibility(v_surfacePos - u_lightPosition);
