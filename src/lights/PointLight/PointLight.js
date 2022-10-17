@@ -2,8 +2,8 @@ import MatUtils from "../../utils/MatUtils.js";
 import Light from "../Light.js";
 
 class PointLight extends Light {
-    constructor(canvasSelector, mode, perspectiveConf) {
-        super(canvasSelector, mode, perspectiveConf);
+    constructor(conf) {
+        super(conf);
     }
 
     async init(conf, depthMapConf, initialUniforms) {
@@ -92,49 +92,49 @@ class PointLight extends Light {
 
         // x+
         depthMap.light.mats.push(
-            MatUtils.mult3dMats(
+            MatUtils.multMats3d(
                 depthMap.light.perspectiveMat,
-                MatUtils.init3dInvertedMat(MatUtils.lookAtMat(lightPosition, [lightPosition[0] + 1, lightPosition[1], lightPosition[2]], [0, -1, 0]))
+                MatUtils.view3d(lightPosition, [lightPosition[0] + 1, lightPosition[1], lightPosition[2]], [0, -1, 0])
             )
         );
 
         // x-
         depthMap.light.mats.push(
-            MatUtils.mult3dMats(
+            MatUtils.multMats3d(
                 depthMap.light.perspectiveMat,
-                MatUtils.init3dInvertedMat(MatUtils.lookAtMat(lightPosition, [lightPosition[0] - 1, lightPosition[1], lightPosition[2]], [0, -1, 0]))
+                MatUtils.view3d(lightPosition, [lightPosition[0] - 1, lightPosition[1], lightPosition[2]], [0, -1, 0])
             )
         );
 
         // y+
         depthMap.light.mats.push(
-            MatUtils.mult3dMats(
+            MatUtils.multMats3d(
                 depthMap.light.perspectiveMat,
-                MatUtils.init3dInvertedMat(MatUtils.lookAtMat(lightPosition, [lightPosition[0], lightPosition[1] + 1, lightPosition[2]], [0, 0, 1]))
+                MatUtils.view3d(lightPosition, [lightPosition[0], lightPosition[1] + 1, lightPosition[2]], [0, 0, 1])
             )
         );
 
         // y-
         depthMap.light.mats.push(
-            MatUtils.mult3dMats(
+            MatUtils.multMats3d(
                 depthMap.light.perspectiveMat,
-                MatUtils.init3dInvertedMat(MatUtils.lookAtMat(lightPosition, [lightPosition[0], lightPosition[1] - 1, lightPosition[2]], [0, 0, -1]))
+                MatUtils.view3d(lightPosition, [lightPosition[0], lightPosition[1] - 1, lightPosition[2]], [0, 0, -1])
             )
         );
 
         // z+
         depthMap.light.mats.push(
-            MatUtils.mult3dMats(
+            MatUtils.multMats3d(
                 depthMap.light.perspectiveMat,
-                MatUtils.init3dInvertedMat(MatUtils.lookAtMat(lightPosition, [lightPosition[0], lightPosition[1], lightPosition[2] + 1], [0, -1, 0]))
+                MatUtils.view3d(lightPosition, [lightPosition[0], lightPosition[1], lightPosition[2] + 1], [0, -1, 0])
             )
         );
 
         // z-
         depthMap.light.mats.push(
-            MatUtils.mult3dMats(
+            MatUtils.multMats3d(
                 depthMap.light.perspectiveMat,
-                MatUtils.init3dInvertedMat(MatUtils.lookAtMat(lightPosition, [lightPosition[0], lightPosition[1], lightPosition[2] - 1], [0, -1, 0]))
+                MatUtils.view3d(lightPosition, [lightPosition[0], lightPosition[1], lightPosition[2] - 1], [0, -1, 0])
             )
         );
     };
@@ -159,7 +159,7 @@ class PointLight extends Light {
             const lightMat = depthMap.light.mats[side];
 
             for (const model of models) {
-                depthMap.uniforms.finalMat = MatUtils.mult3dMats(lightMat, model.mat);
+                depthMap.uniforms.finalMat = MatUtils.multMats3d(lightMat, model.mat);
                 depthMap.uniforms.modelMat = model.mat;
 
                 this.setDepthMap();

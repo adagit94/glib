@@ -1,8 +1,8 @@
 import Framer from "../Framer/Framer.js";
 
 class Light extends Framer {
-    constructor(canvasSelector, mode, perspectiveConf) {
-        super(canvasSelector, mode, perspectiveConf);
+    constructor(conf) {
+        super(conf);
     }
 
     program;

@@ -1,18 +1,18 @@
 import VecUtils from "./VecUtils.js";
 
 class MatUtils {
-  static init2dIdentityMat = () => new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]);
+  static identity2d = () => new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]);
 
-  static init3dIdentityMat = () =>
+  static identity3d = () =>
     new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
 
-  static init2dTranslationMat = (x, y) =>
+  static translated2d = (x, y) =>
     new Float32Array([1, 0, 0, 0, 1, 0, x, y, 1]);
 
-  static init3dTranslationMat = (x, y, z) => 
+  static translated3d = (x, y, z) => 
   new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, x, y, z, 1]);
 
-  static init2dScaleMat = (w, h) =>
+  static scaled2d = (w, h) =>
     new Float32Array(
       [
         w, 0, 0,
@@ -20,7 +20,7 @@ class MatUtils {
         0, 0, 1
       ]);
 
-  static init3dScaleMat = (wS, hS, dS) =>
+  static scaled3d = (wS, hS, dS) =>
     new Float32Array(
       [
         wS, 0, 0, 0,
@@ -30,14 +30,14 @@ class MatUtils {
       ]
     );
 
-  static init2dRotationMat = (rad) => {
+  static rotated2d = (rad) => {
     const cos = Math.cos(rad);
     const sin = Math.sin(rad);
 
     return new Float32Array([cos, -sin, 0, sin, cos, 0, 0, 0, 1]);
   };
 
-  static init3dRotationMat = (axis, rad) => {
+  static rotated3d = (axis, rad) => {
     const sin = Math.sin(rad);
     const cos = Math.cos(rad);
 
@@ -104,9 +104,9 @@ class MatUtils {
     }
   };
 
-  static init2dProjectionMat = (w, h) => new Float32Array([2 / w, 0, 0, 0, -2 / h, 0, -1, 1, 1]);
+  static projection2d = (w, h) => new Float32Array([2 / w, 0, 0, 0, -2 / h, 0, -1, 1, 1]);
 
-  static initPerspectiveMat = (fov, aspectRatio, near, far) => {
+  static perspective = (fov, aspectRatio, near, far) => {
     const f = 1 / Math.tan(fov / 2);
     const rangeInv = 1 / (near - far);
 
@@ -118,7 +118,7 @@ class MatUtils {
     ]);
   };
 
-  static init3dTransposedMat = (matToTranspose) => {
+  static transposed3d = (matToTranspose) => {
     let transposedMat = []
 
     for (let rowStartI = 0, colStartI = 0; rowStartI < matToTranspose.length; rowStartI += 4, colStartI++) {
@@ -132,7 +132,7 @@ class MatUtils {
     return new Float32Array(transposedMat)
   }
 
-  static init3dInvertedMat = (matToInvert) => {
+  static inverted3d = (matToInvert) => {
     let invertedMat = []
 
     const a00 = matToInvert[0];
@@ -187,9 +187,9 @@ class MatUtils {
     return new Float32Array(invertedMat)
   }
 
-  static init3dNormalMat = (modelMat) => MatUtils.init3dTransposedMat(MatUtils.init3dInvertedMat(modelMat))
+  static normal3d = (modelMat) => MatUtils.transposed3d(MatUtils.inverted3d(modelMat))
 
-  static mult2dMats = (baseMat, multMats) => {
+  static multMats2d = (baseMat, multMats) => {
     if (!Array.isArray(multMats)) multMats = [multMats];
 
     let matToMult = baseMat;
@@ -221,7 +221,7 @@ class MatUtils {
     return new Float32Array(matToMult);
   };
 
-  static mult3dMats = (baseMat, multMats) => {
+  static multMats3d = (baseMat, multMats) => {
     if (!Array.isArray(multMats)) multMats = [multMats];
 
     let matToMult = baseMat;
@@ -348,18 +348,16 @@ class MatUtils {
     }
   };
 
-  static lookAtMat = (
-    eye = [0, 0, 1],
-    target = [0, 0, 0],
-    upVec = [0, 1, 0]
-  ) => {
-    const eyeToTargetVec = VecUtils.subtractVecs(eye, target);
+  static view3d = (eye, target, upVec = [0, 1, 0]) => MatUtils.inverted3d(MatUtils.lookAtMat(eye, target, upVec))
+  
+  static lookAtMat = (eye, target, upVec) => {
+    const eyeToTargetVec = VecUtils.subtract(eye, target);
 
-    const camDirection = VecUtils.normalizeVec(eyeToTargetVec);
-    const xVec = VecUtils.normalizeVec(
-      VecUtils.crossProduct(upVec, camDirection)
+    const camDirection = VecUtils.normalize(eyeToTargetVec);
+    const xVec = VecUtils.normalize(
+      VecUtils.cross(upVec, camDirection)
     );
-    const yVec = VecUtils.normalizeVec(VecUtils.crossProduct(camDirection, xVec));
+    const yVec = VecUtils.normalize(VecUtils.cross(camDirection, xVec));
 
     return new Float32Array([
       xVec[0], xVec[1], xVec[2], 0,

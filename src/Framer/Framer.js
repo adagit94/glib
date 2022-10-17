@@ -1,8 +1,8 @@
 import Generator from "../Generator/Generator.js";
 
 class Framer extends Generator {
-    constructor(canvasSelector, mode, perspectiveConf) {
-        super(canvasSelector, mode, perspectiveConf)
+    constructor(conf) {
+        super(conf)
     }
 
     animate = false;

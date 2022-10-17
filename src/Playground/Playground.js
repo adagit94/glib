@@ -10,7 +10,7 @@ import Framer from "../Framer/Framer.js";
 
 class Playground extends PointLight {
     constructor() {
-        super("#glFrame", "3d", { fov: Math.PI / 4, near: 1, far: 200 });
+        super({ canvasSelector: "#glFrame", pespectiveConf: { fov: Math.PI / 4, near: 1, far: 200 } });
 
         this.#initData();
     }
@@ -27,10 +27,10 @@ class Playground extends PointLight {
 
         // const cameraPosition = [Math.cos(-Math.PI / 3.5) * 6, 0, Math.sin(-Math.PI / 3.5) * 6];
         const cameraPosition = [Math.cos(0) * 8, 0.5, Math.sin(0) * 8];
-        const viewMat = MatUtils.init3dInvertedMat(MatUtils.lookAtMat(cameraPosition, [0, 0, 0])); // [-7, 1.25, 2]
+        const viewMat = MatUtils.view3d(cameraPosition, [0, 0, 0]); // [-7, 1.25, 2]
         const lFar = 100;
 
-        this.mats.scene = MatUtils.mult3dMats(this.mats.projection, [viewMat]);
+        this.mats.scene = MatUtils.multMats3d(this.mats.projection, [viewMat]);
 
         await this.init(
             {
@@ -51,7 +51,7 @@ class Playground extends PointLight {
             },
             {
                 size: 800,
-                lightPerspectiveMat: MatUtils.initPerspectiveMat(Math.PI / 2, 1, 0.1, lFar),
+                lightPerspectiveMat: MatUtils.perspective(Math.PI / 2, 1, 0.1, lFar),
             },
             {
                 light: {
@@ -64,7 +64,7 @@ class Playground extends PointLight {
                 depthMap: {
                     far: lFar,
                 },
-            },
+            }
         );
 
         this.animate = false;
@@ -82,16 +82,16 @@ class Playground extends PointLight {
 
         this.setCubeMapLightMats(lPos);
 
-        const planeMat = MatUtils.mult3dMats(this.#geometry.plane.mat, [
-            MatUtils.init3dTranslationMat(-10, 1.25, 2),
-            MatUtils.init3dRotationMat("y", -Math.PI / 2),
-            MatUtils.init3dRotationMat("x", -Math.PI / 2),
-            MatUtils.init3dScaleMat(6, 6, 6),
+        const planeMat = MatUtils.multMats3d(this.#geometry.plane.mat, [
+            MatUtils.translated3d(-10, 1.25, 2),
+            MatUtils.rotated3d("y", -Math.PI / 2),
+            MatUtils.rotated3d("x", -Math.PI / 2),
+            MatUtils.scaled3d(6, 6, 6),
         ]);
 
-        const cubeMat = MatUtils.mult3dMats(MatUtils.init3dTranslationMat(-3, -0.5, -0.5), [
+        const cubeMat = MatUtils.multMats3d(MatUtils.translated3d(-3, -0.5, -0.5), [
             // MatUtils.init3dRotationMat("x", -Math.PI / 2),
-            MatUtils.init3dScaleMat(10, 10, 10),
+            MatUtils.scaled3d(10, 10, 10),
         ]);
 
         this.renderCubeMapTextures([
@@ -100,16 +100,16 @@ class Playground extends PointLight {
         ]);
 
         this.program.uniforms.modelMat = planeMat;
-        this.program.uniforms.normalMat = MatUtils.init3dNormalMat(planeMat);
-        this.program.uniforms.finalMat = MatUtils.mult3dMats(this.mats.scene, planeMat);
+        this.program.uniforms.normalMat = MatUtils.normal3d(planeMat);
+        this.program.uniforms.finalMat = MatUtils.multMats3d(this.mats.scene, planeMat);
         this.program.uniforms.color = [1, 1, 1];
 
         this.setLight();
         this.#renderPlane();
 
         this.program.uniforms.modelMat = cubeMat;
-        this.program.uniforms.normalMat = MatUtils.init3dNormalMat(cubeMat);
-        this.program.uniforms.finalMat = MatUtils.mult3dMats(this.mats.scene, cubeMat);
+        this.program.uniforms.normalMat = MatUtils.normal3d(cubeMat);
+        this.program.uniforms.finalMat = MatUtils.multMats3d(this.mats.scene, cubeMat);
         this.program.uniforms.color = [0, 0, 1];
         this.setLight();
         this.#renderCube();

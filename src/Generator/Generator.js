@@ -14,21 +14,24 @@ class Generator {
         textureCoords: 2,
     };
 
-    constructor(canvasSelector, mode = "3d", perspectiveConf = Generator.#PERSPECTIVE_CONF) {
-        const gl = (this.gl = document.querySelector(canvasSelector).getContext("webgl2"));
+    constructor(conf) {
+        let { canvasSelector, mode, perspectiveConf } = conf;
 
+        const gl = (this.gl = document.querySelector(canvasSelector).getContext("webgl2"));
         gl.canvas.width = gl.canvas.clientWidth;
         gl.canvas.height = gl.canvas.clientHeight;
 
+        if (!mode) mode = "3d";
         this.mode = mode;
 
         switch (mode) {
             case "2d":
-                this.mats.projection = MatUtils.init2dProjectionMat(gl.canvas.width, gl.canvas.height);
+                this.mats.projection = MatUtils.projection2d(gl.canvas.width, gl.canvas.height);
                 break;
 
             case "3d":
-                this.mats.projection = MatUtils.initPerspectiveMat(
+                if (!perspectiveConf) perspectiveConf = Generator.#PERSPECTIVE_CONF;
+                this.mats.projection = MatUtils.perspective(
                     perspectiveConf.fov,
                     gl.canvas.width / gl.canvas.height,
                     perspectiveConf.near,
@@ -48,15 +51,15 @@ class Generator {
 
     async init(conf) {
         const { programs, buffers, textures, framebuffers } = conf;
-        let toAwait = []
+        let toAwait = [];
 
-        toAwait.push(this.createPrograms(programs))
+        toAwait.push(this.createPrograms(programs));
         if (textures) toAwait.push(this.createTextures(textures));
 
         this.createBuffers(buffers);
         if (framebuffers) this.createFramebuffers(framebuffers);
 
-        await Promise.all(toAwait)
+        await Promise.all(toAwait);
     }
 
     async createPrograms(programsConfs) {

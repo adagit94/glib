@@ -53,7 +53,7 @@ class Plane {
         this.normals = normals
         this.textureCoords = textureCoords
 
-        this.mat = ShaderUtils.init3dTranslationMat(-lastColOffsetForRow / 2, 0, -lastRowOffsetForCol / 2)
+        this.mat = ShaderUtils.translated3d(-lastColOffsetForRow / 2, 0, -lastRowOffsetForCol / 2)
     }
 
     vertices
