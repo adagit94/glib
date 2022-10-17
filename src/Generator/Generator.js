@@ -8,6 +8,12 @@ class Generator {
 
     static #PERSPECTIVE_CONF = { fov: Math.PI / 4, near: 0.1, far: 100 };
 
+    static #ATTRIBUTE_INDICES = {
+        position: 0,
+        normal: 1,
+        textureCoords: 2,
+    };
+
     constructor(canvasSelector, mode = "3d", perspectiveConf = Generator.#PERSPECTIVE_CONF) {
         const gl = (this.gl = document.querySelector(canvasSelector).getContext("webgl2"));
 
@@ -35,11 +41,25 @@ class Generator {
     gl;
     mode;
     programs = {};
+    buffers = {};
     mats = {};
     textures = {};
     framebuffers = {};
 
-    async init(programsConfs) {
+    async init(conf) {
+        const { programs, buffers, textures, framebuffers } = conf;
+        let toAwait = []
+
+        toAwait.push(this.createPrograms(programs))
+        if (textures) toAwait.push(this.createTextures(textures));
+
+        this.createBuffers(buffers);
+        if (framebuffers) this.createFramebuffers(framebuffers);
+
+        await Promise.all(toAwait)
+    }
+
+    async createPrograms(programsConfs) {
         let shaderTypes = [];
         let fetches = [];
 
@@ -90,55 +110,51 @@ class Generator {
 
             programData.program = program;
             programData.locations = this.#initCommonLocations(program);
-
-            if (programConf.buffersData) {
-                const commonBuffersSettings = { size: this.mode === "3d" ? 3 : 2 };
-
-                programData.buffers = {};
-
-                Object.entries(programConf.buffersData).forEach(([setName, data]) => {
-                    const { vertices, indices, normals, textureCoords } = data;
-                    const drawMethod = data.drawMethod ?? this.gl.STATIC_DRAW;
-
-                    const vao = this.gl.createVertexArray();
-
-                    this.gl.bindVertexArray(vao);
-
-                    let buffersSet = (programData.buffers[setName] = {
-                        vao,
-                        vertices: this.#createVertexBuffer(programData.locations.position, vertices, commonBuffersSettings, drawMethod),
-                    });
-
-                    if (indices) {
-                        buffersSet.indices = this.#createIndexBuffer(indices, drawMethod);
-                    }
-
-                    if (normals) {
-                        buffersSet.normals = this.#createVertexBuffer(programData.locations.normal, normals, commonBuffersSettings, drawMethod);
-                    }
-
-                    if (textureCoords) {
-                        buffersSet.textureCoords = this.#createVertexBuffer(
-                            programData.locations.textureCoords,
-                            textureCoords,
-                            { size: 2, normalize: true },
-                            drawMethod
-                        );
-                    }
-                });
-            }
         }
-
-        return this.programs;
     }
 
-    #createVertexBuffer(attrLocation, bufferData, settings, drawMethod = this.gl.STATIC_DRAW) {
+    createBuffers(buffersData) {
+        const commonBuffersSettings = { size: this.mode === "3d" ? 3 : 2 };
+
+        Object.entries(buffersData).forEach(([setName, data]) => {
+            const { vertices, indices, normals, textureCoords } = data;
+            const drawMethod = data.drawMethod ?? this.gl.STATIC_DRAW;
+
+            const vao = this.gl.createVertexArray();
+
+            this.gl.bindVertexArray(vao);
+
+            let buffersSet = (this.buffers[setName] = {
+                vao,
+                vertices: this.#createVertexBuffer(Generator.#ATTRIBUTE_INDICES.position, vertices, commonBuffersSettings, drawMethod),
+            });
+
+            if (indices) {
+                buffersSet.indices = this.#createIndexBuffer(indices, drawMethod);
+            }
+
+            if (normals) {
+                buffersSet.normals = this.#createVertexBuffer(Generator.#ATTRIBUTE_INDICES.normal, normals, commonBuffersSettings, drawMethod);
+            }
+
+            if (textureCoords) {
+                buffersSet.textureCoords = this.#createVertexBuffer(
+                    Generator.#ATTRIBUTE_INDICES.textureCoords,
+                    textureCoords,
+                    { size: 2, normalize: true },
+                    drawMethod
+                );
+            }
+        });
+    }
+
+    #createVertexBuffer(index, bufferData, settings, drawMethod = this.gl.STATIC_DRAW) {
         const buffer = this.gl.createBuffer();
 
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, buffer);
         this.gl.bufferData(this.gl.ARRAY_BUFFER, new Float32Array(bufferData), drawMethod);
-        this.gl.enableVertexAttribArray(attrLocation);
-        this.gl.vertexAttribPointer(attrLocation, settings.size, this.gl.FLOAT, settings.normalize ?? false, 0, 0);
+        this.gl.enableVertexAttribArray(index);
+        this.gl.vertexAttribPointer(index, settings.size, this.gl.FLOAT, settings.normalize ?? false, 0, 0);
 
         return buffer;
     }
@@ -152,40 +168,26 @@ class Generator {
         return buffer;
     }
 
-    async createTextures(texturesConf) {
+    async createTextures(texturesConfs) {
         const imageLoads = Promise.all(
-            texturesConf
-                .filter((textureConf) => textureConf.path)
-                .map(
-                    (textureConf) =>
-                        new Promise((resolve) => {
-                            let textureImage = new Image();
-
-                            textureImage.src = textureConf.path;
-                            textureImage.onload = () => {
-                                this.#createTexture(textureConf, textureImage);
-
-                                resolve();
-                            };
-                        })
-                )
+            texturesConfs.filter((textureConf) => textureConf.path).map((textureConf) => this.createTextureFromImage(textureConf))
         );
-
-        texturesConf.filter((textureConf) => !textureConf.path).forEach((textureConf) => this.#createTexture(textureConf));
+        texturesConfs.filter((textureConf) => !textureConf.path).forEach((textureConf) => this.createTexture(textureConf));
 
         await imageLoads;
     }
 
-    #createTexture(texConf, texImage) {
-        const { path, settings } = texConf;
+    createTexture(textureConf, textureImage) {
+        const { path, settings } = textureConf;
         const unit = Object.keys(this.textures).length;
         const texture = this.gl.createTexture();
+        const texData = (this.textures[textureConf.name] = { texture, unit, settings });
 
         this.gl.activeTexture(this.gl[`TEXTURE${unit}`]);
 
         if (path) {
             this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
-            this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, texImage);
+            this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, textureImage);
             this.gl.generateMipmap(this.gl.TEXTURE_2D);
         } else {
             const iterations = settings.cubeMap ? 6 : 1;
@@ -207,23 +209,43 @@ class Generator {
             }
         }
 
-        this.textures[texConf.name] = { texture, unit, settings };
+        textureConf.setParams?.();
 
-        texConf.setParams?.();
+        return texData;
     }
 
-    createFramebuffer(name, setBuffer) {
-        const framebuffer = this.framebuffers[name] = this.gl.createFramebuffer();
+    createTextureFromImage(textureConf) {
+        return new Promise((resolve) => {
+            let textureImage = new Image();
+
+            textureImage.src = textureConf.path;
+            textureImage.onload = () => {
+                resolve(this.createTexture(textureConf, textureImage));
+            };
+        });
+    }
+
+    createFramebuffers(framebuffersConfs) {
+        for (const fbConf of framebuffersConfs) {
+            this.createFramebuffer(fbConf);
+        }
+    }
+
+    createFramebuffer(framebufferConf) {
+        const { name, bindTexture } = framebufferConf;
+        const framebuffer = (this.framebuffers[name] = this.gl.createFramebuffer());
 
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, framebuffer);
 
-        setBuffer?.()
+        bindTexture();
+
+        return framebuffer;
     }
 
     #initCommonLocations = (program) => {
-        this.gl.bindAttribLocation(program, 0, "a_position");
-        this.gl.bindAttribLocation(program, 1, "a_normal");
-        this.gl.bindAttribLocation(program, 2, "a_textureCoords");
+        this.gl.bindAttribLocation(program, Generator.#ATTRIBUTE_INDICES.position, "a_position");
+        this.gl.bindAttribLocation(program, Generator.#ATTRIBUTE_INDICES.normal, "a_normal");
+        this.gl.bindAttribLocation(program, Generator.#ATTRIBUTE_INDICES.textureCoords, "a_textureCoords");
 
         return {
             position: this.gl.getAttribLocation(program, "a_position"),

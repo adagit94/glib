@@ -7,10 +7,10 @@ class Light extends Framer {
 
     program;
 
-    async init(programsConfs, initialUniforms) {
-        const programs = await super.init(programsConfs);
+    async init(conf, initialUniforms) {
+        await super.init(conf);
 
-        this.program = programs.light
+        this.program = this.programs.light
         this.program.locations = {
             ...this.program.locations,
             modelMat: this.gl.getUniformLocation(this.program.program, "u_modelMat"),
@@ -21,7 +21,7 @@ class Light extends Framer {
         };
         this.program.uniforms = initialUniforms.light;
 
-        this.program.depthMap = programs.depthMap
+        this.program.depthMap = this.programs.depthMap
         this.program.depthMap.uniforms = initialUniforms.depthMap;
     }
 
