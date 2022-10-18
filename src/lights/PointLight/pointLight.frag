@@ -20,7 +20,8 @@ out vec4 color;
 
 const float visibilityBias = 0.002;
 
-float getVisibility(vec3 lightToSurface) {
+float getVisibility() {
+    vec3 lightToSurface = v_surfacePos - u_lightPosition;
     float currentDepth = length(lightToSurface) / u_far;
     float visibility = texture(u_depthMap, vec4(lightToSurface, currentDepth - visibilityBias));
 
@@ -42,7 +43,7 @@ void main() {
         specular = pow(max(dot(normal, halfVec), 0.), u_shininess) * u_lightColor;
     }
 
-    float visibility = getVisibility(v_surfacePos - u_lightPosition);
+    float visibility = getVisibility();
 
     color = vec4(u_color, 1);
     color.rgb *= u_ambientColor + diffuseColor * visibility;

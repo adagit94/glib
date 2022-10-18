@@ -80,7 +80,7 @@ class Playground extends PointLight {
         const tDivider = 8;
         const lPos = [Math.cos(0) * 6, 0, Math.sin(0) * 6];
 
-        this.setCubeMapLightMats(lPos);
+        this.lightForDepthMap(lPos);
 
         const planeMat = MatUtils.multMats3d(this.#geometry.plane.mat, [
             MatUtils.translated3d(-10, 1.25, 2),
@@ -94,7 +94,7 @@ class Playground extends PointLight {
             MatUtils.scaled3d(10, 10, 10),
         ]);
 
-        this.renderCubeMapTextures([
+        this.renderDepthMap([
             { mat: planeMat, render: this.#renderPlane },
             { mat: cubeMat, render: this.#renderCube },
         ]);

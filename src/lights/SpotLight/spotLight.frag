@@ -1,33 +1,51 @@
 #version 300 es
 
 precision highp float;
+precision highp sampler2DShadow;
 
 uniform vec3 u_color;
+uniform vec3 u_ambientColor;
+uniform vec3 u_lightPosition;
 uniform vec3 u_lightColor;
-uniform vec3 u_lightDirection;
-uniform float u_lightShininess;
-uniform float u_lightInnerBorder;
-uniform float u_lightOuterBorder;
+uniform vec3 u_cameraPosition;
+uniform float u_shininess;
+uniform sampler2DShadow u_depthMap;
 
 in vec3 v_normal;
-in vec3 v_surfaceToLight;
-in vec3 v_surfaceToCamera;
+in vec3 v_surfacePos;
+in vec2 v_textureCoords;
+in vec4 v_fragPosInLightSpace;
 
 out vec4 color;
 
+const float visibilityBias = 0.002;
+
+float getVisibility() {
+    vec3 projectedCoords = (v_fragPosInLightSpace.xyz / v_fragPosInLightSpace.w + 1.) / 2.;
+    float currentDepth = projectedCoords.z;
+    float visibility = texture(u_depthMap, vec3(projectedCoords.xy, currentDepth - visibilityBias));
+
+    return visibility;
+}
+
 void main() {
     vec3 normal = normalize(v_normal);
-    vec3 surfaceToLight = normalize(v_surfaceToLight);
-    vec3 surfaceToCamera = normalize(v_surfaceToCamera);
-    vec3 halfVector = normalize(surfaceToLight + surfaceToCamera);
+    vec3 surfaceToLight = normalize(u_lightPosition - v_surfacePos);
 
-    float dotFromDirection = dot(v_surfaceToLight, -u_lightDirection);
-    float shouldLight = smoothstep(u_lightOuterBorder, u_lightInnerBorder, dotFromDirection);
-    float light = shouldLight * dot(normal, surfaceToLight);
-    float specular = shouldLight * pow(dot(normal, halfVector), u_lightShininess);
+    float diffuseLight = max(dot(normal, surfaceToLight), 0.);
+    vec3 diffuseColor = diffuseLight * u_lightColor;
+    vec3 specular = vec3(0);
+
+    if(diffuseLight > 0. && !isnan(u_shininess)) {
+        vec3 surfaceToCamera = normalize(u_cameraPosition - v_surfacePos);
+        vec3 halfVec = normalize(surfaceToLight + surfaceToCamera);
+
+        specular = pow(max(dot(normal, halfVec), 0.), u_shininess) * u_lightColor;
+    }
+
+    float visibility = getVisibility();
 
     color = vec4(u_color, 1);
-    color.rgb *= light;
-    color.rgb *= u_lightColor;
-    // color.rgb += specular; // experiment with multiplication
+    color.rgb *= u_ambientColor + diffuseColor * visibility;
+    color.rgb += specular * visibility;
 }

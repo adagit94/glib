@@ -3,22 +3,24 @@
 uniform mat4 u_finalMat;
 uniform mat4 u_modelMat;
 uniform mat4 u_normalMat;
-uniform vec3 u_lightPosition;
-uniform vec3 u_cameraPosition;
+uniform mat4 u_finalLightMat;
 
 in vec3 a_position;
 in vec3 a_normal;
+in vec2 a_textureCoords;
 
+out vec3 v_surfacePos;
 out vec3 v_normal;
-out vec3 v_surfaceToLight;
-out vec3 v_surfaceToCamera;
+out vec2 v_textureCoords;
+out vec4 v_fragPosInLightSpace;
 
 void main() {
-    vec3 surfacePos = mat3(u_modelMat) * a_position;
+    vec4 position = vec4(a_position, 1);
 
+    v_surfacePos = vec3(u_modelMat * position);
     v_normal = mat3(u_normalMat) * a_normal;
-    v_surfaceToLight = u_lightPosition - surfacePos;
-    v_surfaceToCamera = u_cameraPosition - surfacePos;
+    v_textureCoords = a_textureCoords;
+    v_fragPosInLightSpace = u_finalLightMat * position;
 
-    gl_Position = u_finalMat * vec4(a_position, 1);
+    gl_Position = u_finalMat * position;
 }
