@@ -1,3 +1,0 @@
-Lightness
-- postupne ztmavovani kruhu v inverznim rezimu. Od nejsvetlejsiho po nejtmavsi kdy na hranici souesedniho dojde k pridani do celku atd.postupne. Bude nutne definovat hranicni pocatecni kruh
-- u obrysovych kruhu ztmavovani jen urciteho rozsahu po urcitych krocich
