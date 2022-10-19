@@ -10,6 +10,7 @@ class SpotLight extends Light {
         await super.init(
             "SpotLight",
             conf,
+            depthMapConf,
             initialUniforms,
         );
 
@@ -49,14 +50,14 @@ class SpotLight extends Light {
         const { depthMap, uniforms } = this.program;
 
         uniforms.lightPosition = position;
-        uniforms.lightFinalMat = depthMap.uniforms.lightFinalMat = MatUtils.view3d(position, target);
+        depthMap.light.viewMat = MatUtils.multMats3d(depthMap.light.projectionMat, MatUtils.view3d(position, target))
     };
-
+    
     renderModelsToDepthMap = (models) => {
         const { depthMap } = this.program;
-
+        
         for (const model of models) {
-            depthMap.uniforms.modelMat = model.mat;
+            depthMap.uniforms.lightFinalMat = MatUtils.multMats3d(depthMap.light.viewMat, model.mat);
 
             this.setDepthMap();
             model.render();

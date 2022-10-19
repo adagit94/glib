@@ -7,7 +7,7 @@ class Light extends Framer {
 
     program;
 
-    async init(lightType, conf, initialUniforms) {
+    async init(lightType, conf, depthMapConf, initialUniforms) {
         await super.init({
             ...conf,
             programs: [
@@ -50,6 +50,7 @@ class Light extends Framer {
             position: this.program.depthMap.locations.position,
             finalLightMat: this.gl.getUniformLocation(this.program.depthMap.program, "u_finalLightMat"),
         };
+        this.program.depthMap.light = { projectionMat: depthMapConf.lightProjectionMat };
     }
 
     setUniforms() {
@@ -76,7 +77,6 @@ class Light extends Framer {
 
         this.gl.viewport(0, 0, depthMap.texture.settings.width, depthMap.texture.settings.height);
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, depthMap.framebuffer);
-        this.gl.clear(this.gl.DEPTH_BUFFER_BIT);
 
         this.renderModelsToDepthMap(models)
 

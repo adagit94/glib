@@ -7,7 +7,7 @@ class PointLight extends Light {
     }
 
     async init(conf, depthMapConf, initialUniforms) {
-        await super.init("PointLight", conf, initialUniforms);
+        await super.init("PointLight", conf, depthMapConf, initialUniforms);
 
         const { depthMap } = this.program;
 
@@ -16,7 +16,6 @@ class PointLight extends Light {
             lightPosition: this.gl.getUniformLocation(depthMap.program, "u_lightPosition"),
             far: this.gl.getUniformLocation(depthMap.program, "u_far"),
         });
-        depthMap.light = { perspectiveMat: depthMapConf.lightPerspectiveMat };
         depthMap.texture = this.createTexture({
             name: "depthMap",
             settings: {
@@ -57,36 +56,36 @@ class PointLight extends Light {
         const { depthMap, uniforms } = this.program;
 
         uniforms.lightPosition = depthMap.uniforms.lightPosition = position;
-        depthMap.light.mats = [];
+        depthMap.light.viewMats = [];
 
         // x+
-        depthMap.light.mats.push(
-            MatUtils.multMats3d(depthMap.light.perspectiveMat, MatUtils.view3d(position, [position[0] + 1, position[1], position[2]], [0, -1, 0]))
+        depthMap.light.viewMats.push(
+            MatUtils.multMats3d(depthMap.light.projectionMat, MatUtils.view3d(position, [position[0] + 1, position[1], position[2]], [0, -1, 0]))
         );
 
         // x-
-        depthMap.light.mats.push(
-            MatUtils.multMats3d(depthMap.light.perspectiveMat, MatUtils.view3d(position, [position[0] - 1, position[1], position[2]], [0, -1, 0]))
+        depthMap.light.viewMats.push(
+            MatUtils.multMats3d(depthMap.light.projectionMat, MatUtils.view3d(position, [position[0] - 1, position[1], position[2]], [0, -1, 0]))
         );
 
         // y+
-        depthMap.light.mats.push(
-            MatUtils.multMats3d(depthMap.light.perspectiveMat, MatUtils.view3d(position, [position[0], position[1] + 1, position[2]], [0, 0, 1]))
+        depthMap.light.viewMats.push(
+            MatUtils.multMats3d(depthMap.light.projectionMat, MatUtils.view3d(position, [position[0], position[1] + 1, position[2]], [0, 0, 1]))
         );
 
         // y-
-        depthMap.light.mats.push(
-            MatUtils.multMats3d(depthMap.light.perspectiveMat, MatUtils.view3d(position, [position[0], position[1] - 1, position[2]], [0, 0, -1]))
+        depthMap.light.viewMats.push(
+            MatUtils.multMats3d(depthMap.light.projectionMat, MatUtils.view3d(position, [position[0], position[1] - 1, position[2]], [0, 0, -1]))
         );
 
         // z+
-        depthMap.light.mats.push(
-            MatUtils.multMats3d(depthMap.light.perspectiveMat, MatUtils.view3d(position, [position[0], position[1], position[2] + 1], [0, -1, 0]))
+        depthMap.light.viewMats.push(
+            MatUtils.multMats3d(depthMap.light.projectionMat, MatUtils.view3d(position, [position[0], position[1], position[2] + 1], [0, -1, 0]))
         );
 
         // z-
-        depthMap.light.mats.push(
-            MatUtils.multMats3d(depthMap.light.perspectiveMat, MatUtils.view3d(position, [position[0], position[1], position[2] - 1], [0, -1, 0]))
+        depthMap.light.viewMats.push(
+            MatUtils.multMats3d(depthMap.light.projectionMat, MatUtils.view3d(position, [position[0], position[1], position[2] - 1], [0, -1, 0]))
         );
     };
 
@@ -104,7 +103,7 @@ class PointLight extends Light {
 
             this.gl.clear(this.gl.DEPTH_BUFFER_BIT);
 
-            const lightMat = depthMap.light.mats[side];
+            const lightMat = depthMap.light.viewMats[side];
 
             for (const model of models) {
                 depthMap.uniforms.finalLightMat = MatUtils.multMats3d(lightMat, model.mat);
