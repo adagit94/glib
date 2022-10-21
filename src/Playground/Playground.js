@@ -7,8 +7,9 @@ import Plane from "../shapes/3d/Plane.js";
 import SkeletonCube from "../shapes/3d/SkeletonCube.js";
 import SquareCuboid from "../shapes/3d/SquareCuboid.js";
 import Framer from "../Framer/Framer.js";
+import SpotLight from "../lights/SpotLight/SpotLight.js";
 
-class Playground extends PointLight {
+class Playground extends SpotLight {
     constructor() {
         super({ canvasSelector: "#glFrame", pespectiveConf: { fov: Math.PI / 4, near: 1, far: 200 } });
 
@@ -22,11 +23,11 @@ class Playground extends PointLight {
 
         const wireframe = false;
         const plane = new Plane(0.8, 1, 1, wireframe);
-        const cube = new Cube(0.2, wireframe);
+        const cube = new Cube(0.20, wireframe);
         const geometry = (this.#geometry = { plane, cube });
 
         // const cameraPosition = [Math.cos(-Math.PI / 3.5) * 6, 0, Math.sin(-Math.PI / 3.5) * 6];
-        const cameraPosition = [Math.cos(Math.PI / 2) * 8, 0, Math.sin(Math.PI / 2) * 8];
+        const cameraPosition = [Math.cos(0) * 16, 0, Math.sin(0) * 16];
         const viewMat = MatUtils.view3d(cameraPosition, [0, 0, 0]); // [-7, 1.25, 2]
         const lFar = 100;
 
@@ -79,46 +80,73 @@ class Playground extends PointLight {
     renderScene = () => {
         const tDivider = 8;
         // const lPos = [Math.cos(0) * 6, 0, Math.sin(0) * 6];
-        const lPos = [0, 0, 0];
+        const lPos = [2, 0, -5];
 
-        this.lightForDepthMap(lPos);
+        this.lightForDepthMap(lPos, [-2.4, 0, -5]);
 
         const planeMats = [
-            MatUtils.multMats3d(this.#geometry.plane.mat, [
-                MatUtils.translated3d(-2.4, 2.4, -5),
+            MatUtils.multMats3d(this.#geometry.plane.mat, [ 
+                MatUtils.translated3d(-2.4, 2.4, -8),
                 // MatUtils.rotated3d("y", -Math.PI / 2),
                 MatUtils.rotated3d("x", -Math.PI / 2),
                 MatUtils.scaled3d(6, 6, 6),
             ]),
             MatUtils.multMats3d(this.#geometry.plane.mat, [
-                MatUtils.translated3d(-2.4, 2.4, -5),
-                // MatUtils.rotated3d("y", -Math.PI / 2),
+                MatUtils.translated3d(-11, 5, 8),
+                MatUtils.rotated3d("y", -Math.PI / 2),
                 MatUtils.rotated3d("x", -Math.PI / 2),
-                MatUtils.scaled3d(6, 6, 6),
+                MatUtils.scaled3d(16, 16, 16),
             ]),
         ];
 
-        const cubeMat = MatUtils.multMats3d(MatUtils.translated3d(0, 0, -5), [
-            // MatUtils.init3dRotationMat("x", -Math.PI / 2),
-            MatUtils.scaled3d(10, 10, 10),
-        ]);
+        const cubeMats = [
+            MatUtils.multMats3d(MatUtils.translated3d(0, 0, -5), [
+                // MatUtils.init3dRotationMat("x", -Math.PI / 2),
+                MatUtils.scaled3d(10, 10, 10),
+            ]),
+            MatUtils.multMats3d(MatUtils.translated3d(-5, 0, -0), [
+                // MatUtils.init3dRotationMat("x", -Math.PI / 2),
+                MatUtils.scaled3d(10, 10, 10),
+            ]),
+        ];
 
         this.renderDepthMap([
-            { mat: planeMats, render: this.#renderPlane },
-            { mat: cubeMat, render: this.#renderCube },
+            { mat: planeMats[0], render: this.#renderPlane },
+            { mat: planeMats[1], render: this.#renderPlane },
+            { mat: cubeMats[0], render: this.#renderCube },
+            { mat: cubeMats[1], render: this.#renderCube },
         ]);
 
-        this.program.uniforms.modelMat = planeMats;
-        this.program.uniforms.normalMat = MatUtils.normal3d(planeMats);
-        this.program.uniforms.finalMat = MatUtils.multMats3d(this.mats.scene, planeMats);
+        this.program.uniforms.modelMat = planeMats[0];
+        this.program.uniforms.normalMat = MatUtils.normal3d(planeMats[0]);
+        this.program.uniforms.finalMat = MatUtils.multMats3d(this.mats.scene, planeMats[0]);
+        this.program.uniforms.finalLightMat = MatUtils.multMats3d(this.program.depthMap.light.viewMat, planeMats[0]);
         this.program.uniforms.color = [1, 1, 1];
 
         this.setLight();
         this.#renderPlane();
 
-        this.program.uniforms.modelMat = cubeMat;
-        this.program.uniforms.normalMat = MatUtils.normal3d(cubeMat);
-        this.program.uniforms.finalMat = MatUtils.multMats3d(this.mats.scene, cubeMat);
+        this.program.uniforms.modelMat = planeMats[1];
+        this.program.uniforms.normalMat = MatUtils.normal3d(planeMats[1]);
+        this.program.uniforms.finalMat = MatUtils.multMats3d(this.mats.scene, planeMats[1]);
+        this.program.uniforms.finalLightMat = MatUtils.multMats3d(this.program.depthMap.light.viewMat, planeMats[1]);
+        this.program.uniforms.color = [1, 1, 1];
+
+        this.setLight();
+        this.#renderPlane();
+
+        this.program.uniforms.modelMat = cubeMats[0];
+        this.program.uniforms.normalMat = MatUtils.normal3d(cubeMats[0]);
+        this.program.uniforms.finalMat = MatUtils.multMats3d(this.mats.scene, cubeMats[0]);
+        this.program.uniforms.finalLightMat = MatUtils.multMats3d(this.program.depthMap.light.viewMat, cubeMats[0]);
+        this.program.uniforms.color = [0, 0, 1];
+        this.setLight();
+        this.#renderCube();
+
+        this.program.uniforms.modelMat = cubeMats[1];
+        this.program.uniforms.normalMat = MatUtils.normal3d(cubeMats[1]);
+        this.program.uniforms.finalMat = MatUtils.multMats3d(this.mats.scene, cubeMats[1]);
+        this.program.uniforms.finalLightMat = MatUtils.multMats3d(this.program.depthMap.light.viewMat, cubeMats[1]);
         this.program.uniforms.color = [0, 0, 1];
         this.setLight();
         this.#renderCube();

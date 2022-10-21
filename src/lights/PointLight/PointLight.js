@@ -7,7 +7,7 @@ class PointLight extends Light {
     }
 
     async init(conf, depthMapConf, initialUniforms) {
-        await super.init("PointLight", conf, depthMapConf, initialUniforms);
+        await super.init("PointLight", conf, { ...depthMapConf, cubeMap: true }, initialUniforms);
 
         const { depthMap } = this.program;
 
@@ -16,40 +16,6 @@ class PointLight extends Light {
             lightPosition: this.gl.getUniformLocation(depthMap.program, "u_lightPosition"),
             far: this.gl.getUniformLocation(depthMap.program, "u_far"),
         });
-        depthMap.texture = this.createTexture({
-            name: "depthMap",
-            settings: {
-                cubeMap: true,
-                width: depthMapConf.size,
-                height: depthMapConf.size,
-                internalFormat: this.gl.DEPTH_COMPONENT32F,
-                format: this.gl.DEPTH_COMPONENT,
-                type: this.gl.FLOAT,
-                bindTarget: this.gl.TEXTURE_CUBE_MAP,
-                texTarget: this.gl.TEXTURE_CUBE_MAP_POSITIVE_X,
-            },
-            setParams: () => {
-                this.gl.texParameteri(this.gl.TEXTURE_CUBE_MAP, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
-                this.gl.texParameteri(this.gl.TEXTURE_CUBE_MAP, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
-                this.gl.texParameteri(this.gl.TEXTURE_CUBE_MAP, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
-                this.gl.texParameteri(this.gl.TEXTURE_CUBE_MAP, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
-                this.gl.texParameteri(this.gl.TEXTURE_CUBE_MAP, this.gl.TEXTURE_COMPARE_MODE, this.gl.COMPARE_REF_TO_TEXTURE);
-            },
-        });
-        depthMap.framebuffer = this.createFramebuffer({
-            name: "depthMap",
-            bindTexture: () => {
-                this.gl.framebufferTexture2D(
-                    this.gl.FRAMEBUFFER,
-                    this.gl.DEPTH_ATTACHMENT,
-                    this.gl.TEXTURE_CUBE_MAP_POSITIVE_X,
-                    depthMap.texture.texture,
-                    0
-                );
-            },
-        });
-
-        this.program.uniforms.depthMap = depthMap.texture.unit;
     }
 
     lightForDepthMap = (position) => {

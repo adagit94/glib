@@ -15,8 +15,8 @@ class Light extends Framer {
                 {
                     name: "light",
                     paths: {
-                        vShader: `src/lights/${lightType}/pointLight.vert`,
-                        fShader: `src/lights/${lightType}/pointLight.frag`,
+                        vShader: `src/lights/${lightType}/light.vert`,
+                        fShader: `src/lights/${lightType}/light.frag`,
                     },
                 },
                 {
@@ -29,28 +29,67 @@ class Light extends Framer {
             ],
         });
 
-        this.program = this.programs.light;
-        this.program.locations = {
-            ...this.program.locations,
-            modelMat: this.gl.getUniformLocation(this.program.program, "u_modelMat"),
-            normalMat: this.gl.getUniformLocation(this.program.program, "u_normalMat"),
-            lightColor: this.gl.getUniformLocation(this.program.program, "u_lightColor"),
-            depthMap: this.gl.getUniformLocation(this.program.program, "u_depthMap"),
-            far: this.gl.getUniformLocation(this.program.program, "u_far"),
-            ambientColor: this.gl.getUniformLocation(this.program.program, "u_ambientColor"),
-            lightPosition: this.gl.getUniformLocation(this.program.program, "u_lightPosition"),
-            cameraPosition: this.gl.getUniformLocation(this.program.program, "u_cameraPosition"),
-            shininess: this.gl.getUniformLocation(this.program.program, "u_shininess"),
-        };
-        this.program.uniforms = initialUniforms.light;
+        const program = this.program = this.programs.light;
+        const depthMap = program.depthMap = this.programs.depthMap;
 
-        this.program.depthMap = this.programs.depthMap;
-        this.program.depthMap.uniforms = initialUniforms.depthMap;
-        this.program.depthMap.locations = {
-            position: this.program.depthMap.locations.position,
-            finalLightMat: this.gl.getUniformLocation(this.program.depthMap.program, "u_finalLightMat"),
+        program.locations = {
+            ...program.locations,
+            modelMat: this.gl.getUniformLocation(program.program, "u_modelMat"),
+            normalMat: this.gl.getUniformLocation(program.program, "u_normalMat"),
+            lightColor: this.gl.getUniformLocation(program.program, "u_lightColor"),
+            depthMap: this.gl.getUniformLocation(program.program, "u_depthMap"),
+            far: this.gl.getUniformLocation(program.program, "u_far"),
+            ambientColor: this.gl.getUniformLocation(program.program, "u_ambientColor"),
+            lightPosition: this.gl.getUniformLocation(program.program, "u_lightPosition"),
+            cameraPosition: this.gl.getUniformLocation(program.program, "u_cameraPosition"),
+            shininess: this.gl.getUniformLocation(program.program, "u_shininess"),
         };
-        this.program.depthMap.light = { projectionMat: depthMapConf.lightProjectionMat };
+        program.uniforms = initialUniforms.light;
+        
+        depthMap.uniforms = initialUniforms.depthMap;
+        depthMap.locations = {
+            position: program.depthMap.locations.position,
+            finalLightMat: this.gl.getUniformLocation(program.depthMap.program, "u_finalLightMat"),
+        };
+        depthMap.light = { projectionMat: depthMapConf.lightProjectionMat };
+
+        const texBindTarget = depthMapConf.cubeMap ? this.gl.TEXTURE_CUBE_MAP : this.gl.TEXTURE_2D
+        const texTarget = depthMapConf.cubeMap ? this.gl.TEXTURE_CUBE_MAP_POSITIVE_X : this.gl.TEXTURE_2D
+        
+        depthMap.texture = this.createTexture({
+            name: "depthMap",
+            settings: {
+                cubeMap: depthMapConf.cubeMap,
+                width: depthMapConf.size,
+                height: depthMapConf.size,
+                internalFormat: this.gl.DEPTH_COMPONENT32F,
+                format: this.gl.DEPTH_COMPONENT,
+                type: this.gl.FLOAT,
+                bindTarget: texBindTarget,
+                texTarget,
+            },
+            setParams: () => {
+                this.gl.texParameteri(texBindTarget, this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
+                this.gl.texParameteri(texBindTarget, this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR);
+                this.gl.texParameteri(texBindTarget, this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
+                this.gl.texParameteri(texBindTarget, this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
+                this.gl.texParameteri(texBindTarget, this.gl.TEXTURE_COMPARE_MODE, this.gl.COMPARE_REF_TO_TEXTURE);
+            },
+        });
+        depthMap.framebuffer = this.createFramebuffer({
+            name: "depthMap",
+            bindTexture: () => {
+                this.gl.framebufferTexture2D(
+                    this.gl.FRAMEBUFFER,
+                    this.gl.DEPTH_ATTACHMENT,
+                    texTarget,
+                    depthMap.texture.texture,
+                    0
+                );
+            },
+        });
+
+        program.uniforms.depthMap = depthMap.texture.unit;
     }
 
     setUniforms() {
