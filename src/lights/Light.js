@@ -43,6 +43,9 @@ class Light extends Framer {
             lightPosition: this.gl.getUniformLocation(program.program, "u_lightPosition"),
             cameraPosition: this.gl.getUniformLocation(program.program, "u_cameraPosition"),
             shininess: this.gl.getUniformLocation(program.program, "u_shininess"),
+            distanceConst: this.gl.getUniformLocation(program.program, "u_distanceConst"),
+            distanceLin: this.gl.getUniformLocation(program.program, "u_distanceLin"),
+            distanceQuad: this.gl.getUniformLocation(program.program, "u_distanceQuad"),
         };
         program.uniforms = initialUniforms.light;
         
@@ -104,6 +107,9 @@ class Light extends Framer {
         this.gl.uniform3f(this.program.locations.lightPosition, ...this.program.uniforms.lightPosition);
         this.gl.uniform3f(this.program.locations.cameraPosition, ...this.program.uniforms.cameraPosition);
         this.gl.uniform1f(this.program.locations.shininess, this.program.uniforms.shininess);
+        this.gl.uniform1f(this.program.locations.distanceConst, this.program.uniforms.distanceConst ?? 1);
+        this.gl.uniform1f(this.program.locations.distanceLin, this.program.uniforms.distanceLin);
+        this.gl.uniform1f(this.program.locations.distanceQuad, this.program.uniforms.distanceQuad);
     }
 
     setLight() {

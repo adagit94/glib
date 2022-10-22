@@ -10,6 +10,9 @@ uniform vec3 u_lightPosition;
 uniform vec3 u_lightColor;
 uniform vec3 u_cameraPosition;
 uniform float u_shininess;
+uniform float u_distanceConst;
+uniform float u_distanceLin;
+uniform float u_distanceQuad;
 uniform samplerCubeShadow u_depthMap;
 
 in vec3 v_normal;
@@ -32,18 +35,26 @@ void main() {
     vec3 normal = normalize(v_normal);
     vec3 surfaceToLight = normalize(u_lightPosition - v_surfacePos);
 
-    float diffuseLight = max(dot(normal, surfaceToLight), 0.);
-    vec3 diffuseColor = diffuseLight * u_lightColor;
+    vec3 diffuseColor = vec3(0);
     vec3 specular = vec3(0);
+    float visibility = 0.;
 
-    if(diffuseLight > 0. && !isnan(u_shininess)) {
-        vec3 surfaceToCamera = normalize(u_cameraPosition - v_surfacePos);
-        vec3 halfVec = normalize(surfaceToLight + surfaceToCamera);
+    float diffuseLight = max(dot(normal, surfaceToLight), 0.);
+    
+    if(diffuseLight > 0.) {
+        float lightToSurface = distance(v_surfacePos, u_lightPosition);
+        float distanceFactor = 1. / (u_distanceConst + u_distanceLin * lightToSurface + u_distanceQuad * pow(lightToSurface, 2.));
+        
+        diffuseColor = diffuseLight * u_lightColor * distanceFactor;
+        visibility = getVisibility();
 
-        specular = pow(max(dot(normal, halfVec), 0.), u_shininess) * u_lightColor;
+        if(!isnan(u_shininess)) {
+            vec3 surfaceToCamera = normalize(u_cameraPosition - v_surfacePos);
+            vec3 halfVec = normalize(surfaceToLight + surfaceToCamera);
+
+            specular = pow(max(dot(normal, halfVec), 0.), u_shininess) * u_lightColor * distanceFactor;
+        }
     }
-
-    float visibility = getVisibility();
 
     color = vec4(u_color, 1);
     color.rgb *= u_ambientColor + diffuseColor * visibility;

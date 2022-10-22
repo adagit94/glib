@@ -9,13 +9,17 @@ class SpotLight extends Light {
     async init(conf, depthMapConf, initialUniforms) {
         await super.init("SpotLight", conf, { ...depthMapConf, cubeMap: false }, initialUniforms);
 
-        this.program.locations.finalLightMat = this.gl.getUniformLocation(this.program.program, "u_finalLightMat");
+        Object.assign(this.program.locations, {
+            finalLightMat: this.gl.getUniformLocation(this.program.program, "u_finalLightMat"),
+            cosLimit: this.gl.getUniformLocation(this.program.program, "u_cosLimit")
+        });
     }
 
     setUniforms() {
         super.setUniforms();
 
         this.gl.uniformMatrix4fv(this.program.locations.finalLightMat, false, this.program.uniforms.finalLightMat);
+        this.gl.uniform1f(this.program.locations.cosLimit, this.program.uniforms.cosLimit);
     }
 
     lightForDepthMap = (position, target) => {
