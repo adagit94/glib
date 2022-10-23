@@ -26,10 +26,11 @@ class Playground extends SpotLight {
         const cube = new Cube(0.2, wireframe);
         const geometry = (this.#geometry = { plane, cube });
 
+        // const cameraPosition = [Math.cos(Math.PI / 8) * 16, 0, Math.sin(Math.PI / 8) * 16];
         const cameraPosition = [Math.cos(0) * 16, 0, Math.sin(0) * 16];
-        // const cameraPosition = [Math.cos(0) * 16, 0, Math.sin(0) * 16];
         const viewMat = MatUtils.view3d(cameraPosition, [0, 0, 0]); // [-7, 1.25, 2]
-        const lFar = 100;
+        const lNear = 1;
+        const lFar = 30;
 
         this.mats.scene = MatUtils.multMats3d(this.mats.projection, [viewMat]);
 
@@ -52,7 +53,7 @@ class Playground extends SpotLight {
             },
             {
                 size: 800,
-                lightProjectionMat: MatUtils.perspective(Math.PI / 2, 1, 0.1, lFar),
+                lightProjectionMat: MatUtils.perspective(Math.PI / 2, 1, lNear, lFar),
             },
             {
                 light: {
@@ -61,8 +62,8 @@ class Playground extends SpotLight {
                     shininess: 1024,
                     far: lFar,
                     cameraPosition,
-                    outerLimit: Math.cos(Math.PI / 12),
-                    innerLimit: Math.cos(Math.PI / 16),
+                    outerLimit: Math.cos(Math.PI / 3),
+                    innerLimit: Math.cos(Math.PI / 18),
                     distanceLin: 0.01,
                     distanceQuad: 0.0125,
                 },
@@ -83,10 +84,10 @@ class Playground extends SpotLight {
 
     renderScene = () => {
         const tDivider = 8;
-        // const lPos = [Math.cos(0) * 6, 0, Math.sin(0) * 6];
-        const lPos = [Math.cos(0) * 5, 0, Math.sin(0) * 16];
+        const lPos = [Math.cos(Math.PI / 4) * 4, 0, Math.sin(Math.PI / 2)];
+        // const lPos = [Math.cos(Math.PI / 8) * 16, 0, Math.sin(Math.PI / 8) * 16];;
 
-        this.lightForDepthMap({ position: lPos, direction: [-1, 0, Math.sin(0) * 16] });
+        this.lightForDepthMap({ position: lPos, direction: [-Math.cos(Math.PI / 4) * 4, 0, -Math.sin(Math.PI / 2)] });
 
         const planeMats = [
             MatUtils.multMats3d(this.#geometry.plane.mat, [
@@ -117,8 +118,8 @@ class Playground extends SpotLight {
         this.renderDepthMap([
             { mat: planeMats[0], render: this.#renderPlane },
             { mat: planeMats[1], render: this.#renderPlane },
-            // { mat: cubeMats[0], render: this.#renderCube },
-            // { mat: cubeMats[1], render: this.#renderCube },
+            { mat: cubeMats[0], render: this.#renderCube },
+            { mat: cubeMats[1], render: this.#renderCube },
         ]);
 
         this.program.uniforms.modelMat = planeMats[0];
@@ -139,21 +140,21 @@ class Playground extends SpotLight {
         this.setLight();
         this.#renderPlane();
 
-        // this.program.uniforms.modelMat = cubeMats[0];
-        // this.program.uniforms.normalMat = MatUtils.normal3d(cubeMats[0]);
-        // this.program.uniforms.finalMat = MatUtils.multMats3d(this.mats.scene, cubeMats[0]);
-        // this.program.uniforms.finalLightMat = MatUtils.multMats3d(this.program.depthMap.light.viewMat, cubeMats[0]);
-        // this.program.uniforms.color = [0, 0, 1];
-        // this.setLight();
-        // this.#renderCube();
+        this.program.uniforms.modelMat = cubeMats[0];
+        this.program.uniforms.normalMat = MatUtils.normal3d(cubeMats[0]);
+        this.program.uniforms.finalMat = MatUtils.multMats3d(this.mats.scene, cubeMats[0]);
+        this.program.uniforms.finalLightMat = MatUtils.multMats3d(this.program.depthMap.light.viewMat, cubeMats[0]);
+        this.program.uniforms.color = [0, 0, 1];
+        this.setLight();
+        this.#renderCube();
 
-        // this.program.uniforms.modelMat = cubeMats[1];
-        // this.program.uniforms.normalMat = MatUtils.normal3d(cubeMats[1]);
-        // this.program.uniforms.finalMat = MatUtils.multMats3d(this.mats.scene, cubeMats[1]);
-        // this.program.uniforms.finalLightMat = MatUtils.multMats3d(this.program.depthMap.light.viewMat, cubeMats[1]);
-        // this.program.uniforms.color = [0, 0, 1];
-        // this.setLight();
-        // this.#renderCube();
+        this.program.uniforms.modelMat = cubeMats[1];
+        this.program.uniforms.normalMat = MatUtils.normal3d(cubeMats[1]);
+        this.program.uniforms.finalMat = MatUtils.multMats3d(this.mats.scene, cubeMats[1]);
+        this.program.uniforms.finalLightMat = MatUtils.multMats3d(this.program.depthMap.light.viewMat, cubeMats[1]);
+        this.program.uniforms.color = [0, 0, 1];
+        this.setLight();
+        this.#renderCube();
     };
 
     #renderPlane = () => {

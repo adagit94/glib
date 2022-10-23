@@ -23,6 +23,13 @@ out vec4 color;
 
 const float visibilityBias = 0.002;
 
+float getDistanceFactor() {
+    float lightToSurface = distance(v_surfacePos, u_lightPosition);
+    float distanceFactor = 1. / (u_distanceConst + u_distanceLin * lightToSurface + u_distanceQuad * pow(lightToSurface, 2.));
+
+    return distanceFactor;
+}
+
 float getVisibility() {
     vec3 lightToSurface = v_surfacePos - u_lightPosition;
     float currentDepth = length(lightToSurface) / u_far;
@@ -40,19 +47,21 @@ void main() {
     float visibility = 0.;
 
     float diffuseLight = max(dot(normal, surfaceToLight), 0.);
-    
+
     if(diffuseLight > 0.) {
-        float lightToSurface = distance(v_surfacePos, u_lightPosition);
-        float distanceFactor = 1. / (u_distanceConst + u_distanceLin * lightToSurface + u_distanceQuad * pow(lightToSurface, 2.));
-        
-        diffuseColor = diffuseLight * u_lightColor * distanceFactor;
-        visibility = getVisibility();
+        float distanceFactor = getDistanceFactor();
+        diffuseLight *= distanceFactor;
 
-        if(!isnan(u_shininess)) {
-            vec3 surfaceToCamera = normalize(u_cameraPosition - v_surfacePos);
-            vec3 halfVec = normalize(surfaceToLight + surfaceToCamera);
+        if(diffuseLight > 0.) {
+            diffuseColor = diffuseLight * u_lightColor;
+            visibility = getVisibility();
 
-            specular = pow(max(dot(normal, halfVec), 0.), u_shininess) * u_lightColor * distanceFactor;
+            if(!isnan(u_shininess)) {
+                vec3 surfaceToCamera = normalize(u_cameraPosition - v_surfacePos);
+                vec3 halfVec = normalize(surfaceToLight + surfaceToCamera);
+
+                specular = pow(max(dot(normal, halfVec), 0.), u_shininess) * u_lightColor * distanceFactor;
+            }
         }
     }
 
