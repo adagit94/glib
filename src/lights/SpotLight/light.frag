@@ -6,10 +6,12 @@ precision highp sampler2DShadow;
 uniform vec3 u_color;
 uniform vec3 u_ambientColor;
 uniform vec3 u_lightPosition;
+uniform vec3 u_lightDirection;
 uniform vec3 u_lightColor;
 uniform vec3 u_cameraPosition;
 uniform float u_shininess;
-uniform float u_cosLimit;
+uniform float u_outerLimit;
+uniform float u_innerLimit;
 uniform float u_distanceConst;
 uniform float u_distanceLin;
 uniform float u_distanceQuad;
@@ -41,22 +43,41 @@ void main() {
     float visibility = 0.;
 
     float diffuseLight = max(dot(normal, surfaceToLight), 0.);
-    if(diffuseLight < u_cosLimit) {
-        diffuseLight = 0.;
-    }
 
     if(diffuseLight > 0.) {
-        float lightToSurface = distance(v_surfacePos, u_lightPosition);
-        float distanceFactor = 1. / (u_distanceConst + u_distanceLin * lightToSurface + u_distanceQuad * pow(lightToSurface, 2.));
+        float lightSurfaceCos = dot(normalize(u_lightDirection), -surfaceToLight);
+        float coneIntensity = step(u_outerLimit, lightSurfaceCos);
 
-        diffuseColor = diffuseLight * u_lightColor * distanceFactor;
-        visibility = getVisibility();
+        if(coneIntensity == 1.) {
+            bool insideConeBorderRange = lightSurfaceCos <= u_innerLimit && lightSurfaceCos >= u_outerLimit;
 
-        if(!isnan(u_shininess)) {
-            vec3 surfaceToCamera = normalize(u_cameraPosition - v_surfacePos);
-            vec3 halfVec = normalize(surfaceToLight + surfaceToCamera);
+            if(insideConeBorderRange) {
+                float range = u_innerLimit - u_outerLimit;
+                float inRangeVal = u_innerLimit - lightSurfaceCos;
 
-            specular = pow(max(dot(normal, halfVec), 0.), u_shininess) * u_color * distanceFactor;
+                coneIntensity -= inRangeVal / range;
+            }
+        }
+
+        diffuseLight *= coneIntensity;
+
+        if(diffuseLight > 0.) {
+            float lightToSurface = distance(v_surfacePos, u_lightPosition);
+            float distanceFactor = 1. / (u_distanceConst + u_distanceLin * lightToSurface + u_distanceQuad * pow(lightToSurface, 2.));
+
+            diffuseLight *= distanceFactor;
+
+            if(diffuseLight > 0.) {
+                diffuseColor = diffuseLight * u_lightColor;
+                visibility = getVisibility();
+
+                if(!isnan(u_shininess)) {
+                    vec3 surfaceToCamera = normalize(u_cameraPosition - v_surfacePos);
+                    vec3 halfVec = normalize(surfaceToLight + surfaceToCamera);
+
+                    specular = pow(max(dot(normal, halfVec), 0.), u_shininess) * u_color * distanceFactor * coneIntensity;
+                }
+            }
         }
     }
 

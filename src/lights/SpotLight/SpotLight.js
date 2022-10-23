@@ -11,7 +11,9 @@ class SpotLight extends Light {
 
         Object.assign(this.program.locations, {
             finalLightMat: this.gl.getUniformLocation(this.program.program, "u_finalLightMat"),
-            cosLimit: this.gl.getUniformLocation(this.program.program, "u_cosLimit")
+            lightDirection: this.gl.getUniformLocation(this.program.program, "u_lightDirection"),
+            innerLimit: this.gl.getUniformLocation(this.program.program, "u_innerLimit"),
+            outerLimit: this.gl.getUniformLocation(this.program.program, "u_outerLimit"),
         });
     }
 
@@ -19,14 +21,19 @@ class SpotLight extends Light {
         super.setUniforms();
 
         this.gl.uniformMatrix4fv(this.program.locations.finalLightMat, false, this.program.uniforms.finalLightMat);
-        this.gl.uniform1f(this.program.locations.cosLimit, this.program.uniforms.cosLimit);
+        this.gl.uniform3f(this.program.locations.lightDirection, ...this.program.uniforms.lightDirection);
+        this.gl.uniform1f(this.program.locations.innerLimit, this.program.uniforms.innerLimit);
+        this.gl.uniform1f(this.program.locations.outerLimit, this.program.uniforms.outerLimit);
     }
 
-    lightForDepthMap = (position, target) => {
+    lightForDepthMap = (viewSettings) => {
         const { depthMap, uniforms } = this.program;
+        const { position, direction } = viewSettings;
 
-        uniforms.lightPosition = position;
-        depthMap.light.viewMat = MatUtils.multMats3d(depthMap.light.projectionMat, MatUtils.view3d(position, target));
+        if (position) uniforms.lightPosition = position;
+        if (direction) uniforms.lightDirection = direction;
+
+        depthMap.light.viewMat = MatUtils.multMats3d(depthMap.light.projectionMat, MatUtils.view3d(uniforms.lightPosition, uniforms.lightDirection));
     };
 
     renderModelsToDepthMap = (models) => {

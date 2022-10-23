@@ -23,7 +23,7 @@ class Playground extends SpotLight {
 
         const wireframe = false;
         const plane = new Plane(0.8, 1, 1, wireframe);
-        const cube = new Cube(0.20, wireframe);
+        const cube = new Cube(0.2, wireframe);
         const geometry = (this.#geometry = { plane, cube });
 
         const cameraPosition = [Math.cos(0) * 16, 0, Math.sin(0) * 16];
@@ -61,7 +61,8 @@ class Playground extends SpotLight {
                     shininess: 1024,
                     far: lFar,
                     cameraPosition,
-                    cosLimit: Math.cos(Math.PI / 12),
+                    outerLimit: Math.cos(Math.PI / 12),
+                    innerLimit: Math.cos(Math.PI / 16),
                     distanceLin: 0.01,
                     distanceQuad: 0.0125,
                 },
@@ -85,10 +86,10 @@ class Playground extends SpotLight {
         // const lPos = [Math.cos(0) * 6, 0, Math.sin(0) * 6];
         const lPos = [Math.cos(0) * 5, 0, Math.sin(0) * 16];
 
-        this.lightForDepthMap(lPos, [-1, 0, Math.sin(0) * 16]);
+        this.lightForDepthMap({ position: lPos, direction: [-1, 0, Math.sin(0) * 16] });
 
         const planeMats = [
-            MatUtils.multMats3d(this.#geometry.plane.mat, [ 
+            MatUtils.multMats3d(this.#geometry.plane.mat, [
                 MatUtils.translated3d(-2.4, 2.4, -8),
                 // MatUtils.rotated3d("y", -Math.PI / 2),
                 MatUtils.rotated3d("x", -Math.PI / 2),
