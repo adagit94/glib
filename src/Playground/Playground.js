@@ -9,33 +9,17 @@ import SquareCuboid from "../shapes/3d/SquareCuboid.js";
 import Framer from "../Framer/Framer.js";
 import SpotLight from "../lights/SpotLight/SpotLight.js";
 
-class Playground extends SpotLight {
+class Playground extends Framer {
     constructor() {
-        super({ canvasSelector: "#glFrame", pespectiveConf: { fov: Math.PI / 4, near: 1, far: 200 } });
-
-        this.#initData();
-    }
-
-    #geometry;
-
-    async #initData() {
-        // const generator = (this = new PhongLight(this.gl, this.aspectRatio, { fov: Math.PI / 4, near: 0.1, far: 100 }));
-
         const wireframe = false;
         const plane = new Plane(0.8, 1, 1, wireframe);
         const cube = new Cube(0.2, wireframe);
         const geometry = (this.#geometry = { plane, cube });
-
-        // const cameraPosition = [Math.cos(Math.PI / 8) * 16, 0, Math.sin(Math.PI / 8) * 16];
-        const cameraPosition = [Math.cos(0) * 16, 0, Math.sin(0) * 16];
-        const viewMat = MatUtils.view3d(cameraPosition, [0, 0, 0]); // [-7, 1.25, 2]
-        const lNear = 1;
-        const lFar = 30;
-
-        this.mats.scene = MatUtils.multMats3d(this.mats.projection, [viewMat]);
-
-        await this.init(
-            {
+        
+        super({
+            canvasSelector: "#glFrame",
+            pespectiveConf: { fov: Math.PI / 4, near: 1, far: 200 },
+            init: {
                 buffers: {
                     plane: {
                         vertices: geometry.plane.vertices,
@@ -51,6 +35,19 @@ class Playground extends SpotLight {
                     },
                 },
             },
+        });
+
+
+
+        // const cameraPosition = [0, 0, 0];
+        const cameraPosition = [Math.cos(0) * 32, 0, Math.sin(0) * 32];
+        const viewMat = MatUtils.view3d(cameraPosition, [0, 0, -2]); // [-7, 1.25, 2]
+        const lNear = 1;
+        const lFar = 30;
+
+        this.mats.scene = MatUtils.multMats3d(this.mats.projection, [viewMat]);
+
+        this.init(
             {
                 size: 800,
                 lightProjectionMat: MatUtils.perspective(Math.PI / 2, 1, lNear, lFar),
@@ -62,8 +59,8 @@ class Playground extends SpotLight {
                     shininess: 1024,
                     far: lFar,
                     cameraPosition,
-                    outerLimit: Math.cos(Math.PI / 3),
-                    innerLimit: Math.cos(Math.PI / 18),
+                    outerLimit: Math.cos(Math.PI / 2),
+                    innerLimit: Math.cos(Math.PI / 4),
                     distanceLin: 0.01,
                     distanceQuad: 0.0125,
                 },
@@ -82,37 +79,32 @@ class Playground extends SpotLight {
         this.requestAnimationFrame();
     }
 
+    #geometry;
+
     renderScene = () => {
         const tDivider = 8;
-        const lPos = [Math.cos(Math.PI / 4) * 4, 0, Math.sin(Math.PI / 2)];
+        const lPos = [0, 0, 0];
         // const lPos = [Math.cos(Math.PI / 8) * 16, 0, Math.sin(Math.PI / 8) * 16];;
 
-        this.lightForDepthMap({ position: lPos, direction: [-Math.cos(Math.PI / 4) * 4, 0, -Math.sin(Math.PI / 2)] });
+        // this.lightForDepthMap({ position: lPos, direction: [0, 0, -1] });
+        this.lightForDepthMap(lPos);
 
         const planeMats = [
             MatUtils.multMats3d(this.#geometry.plane.mat, [
-                MatUtils.translated3d(-2.4, 2.4, -8),
-                // MatUtils.rotated3d("y", -Math.PI / 2),
+                MatUtils.translated3d(0, 2.4, -16),
                 MatUtils.rotated3d("x", -Math.PI / 2),
                 MatUtils.scaled3d(6, 6, 6),
             ]),
             MatUtils.multMats3d(this.#geometry.plane.mat, [
-                MatUtils.translated3d(-11, 5, 8),
-                MatUtils.rotated3d("y", -Math.PI / 2),
-                MatUtils.rotated3d("x", -Math.PI / 2),
-                MatUtils.scaled3d(16, 16, 16),
+                MatUtils.translated3d(0, -2.4, 16),
+                MatUtils.rotated3d("x", Math.PI / 2),
+                MatUtils.scaled3d(6, 6, 6),
             ]),
         ];
 
         const cubeMats = [
-            MatUtils.multMats3d(MatUtils.translated3d(0, 0, -5), [
-                // MatUtils.init3dRotationMat("x", -Math.PI / 2),
-                MatUtils.scaled3d(10, 10, 10),
-            ]),
-            MatUtils.multMats3d(MatUtils.translated3d(-5, 0, -0), [
-                // MatUtils.init3dRotationMat("x", -Math.PI / 2),
-                MatUtils.scaled3d(10, 10, 10),
-            ]),
+            MatUtils.multMats3d(MatUtils.translated3d(0, 0, -10), [MatUtils.scaled3d(10, 10, 10)]),
+            MatUtils.multMats3d(MatUtils.translated3d(0, 0, 10), [MatUtils.scaled3d(10, 10, 10)]),
         ];
 
         this.renderDepthMap([
@@ -125,7 +117,7 @@ class Playground extends SpotLight {
         this.program.uniforms.modelMat = planeMats[0];
         this.program.uniforms.normalMat = MatUtils.normal3d(planeMats[0]);
         this.program.uniforms.finalMat = MatUtils.multMats3d(this.mats.scene, planeMats[0]);
-        this.program.uniforms.finalLightMat = MatUtils.multMats3d(this.program.depthMap.light.viewMat, planeMats[0]);
+        // this.program.uniforms.finalLightMat = MatUtils.multMats3d(this.program.depthMap.light.viewMat, planeMats[0]);
         this.program.uniforms.color = [1, 1, 1];
 
         this.setLight();
@@ -134,7 +126,7 @@ class Playground extends SpotLight {
         this.program.uniforms.modelMat = planeMats[1];
         this.program.uniforms.normalMat = MatUtils.normal3d(planeMats[1]);
         this.program.uniforms.finalMat = MatUtils.multMats3d(this.mats.scene, planeMats[1]);
-        this.program.uniforms.finalLightMat = MatUtils.multMats3d(this.program.depthMap.light.viewMat, planeMats[1]);
+        // this.program.uniforms.finalLightMat = MatUtils.multMats3d(this.program.depthMap.light.viewMat, planeMats[1]);
         this.program.uniforms.color = [1, 1, 1];
 
         this.setLight();
@@ -143,7 +135,7 @@ class Playground extends SpotLight {
         this.program.uniforms.modelMat = cubeMats[0];
         this.program.uniforms.normalMat = MatUtils.normal3d(cubeMats[0]);
         this.program.uniforms.finalMat = MatUtils.multMats3d(this.mats.scene, cubeMats[0]);
-        this.program.uniforms.finalLightMat = MatUtils.multMats3d(this.program.depthMap.light.viewMat, cubeMats[0]);
+        // this.program.uniforms.finalLightMat = MatUtils.multMats3d(this.program.depthMap.light.viewMat, cubeMats[0]);
         this.program.uniforms.color = [0, 0, 1];
         this.setLight();
         this.#renderCube();
@@ -151,7 +143,7 @@ class Playground extends SpotLight {
         this.program.uniforms.modelMat = cubeMats[1];
         this.program.uniforms.normalMat = MatUtils.normal3d(cubeMats[1]);
         this.program.uniforms.finalMat = MatUtils.multMats3d(this.mats.scene, cubeMats[1]);
-        this.program.uniforms.finalLightMat = MatUtils.multMats3d(this.program.depthMap.light.viewMat, cubeMats[1]);
+        // this.program.uniforms.finalLightMat = MatUtils.multMats3d(this.program.depthMap.light.viewMat, cubeMats[1]);
         this.program.uniforms.color = [0, 0, 1];
         this.setLight();
         this.#renderCube();

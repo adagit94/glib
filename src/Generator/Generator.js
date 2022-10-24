@@ -1,11 +1,6 @@
 import MatUtils from "../utils/MatUtils.js";
 
 class Generator {
-    static #LOCAL_FETCH_CONF = {
-        mode: "same-origin",
-        method: "GET",
-    };
-
     static #PERSPECTIVE_CONF = { fov: Math.PI / 4, near: 0.1, far: 100 };
 
     static #ATTRIBUTE_INDICES = {
@@ -15,7 +10,7 @@ class Generator {
     };
 
     constructor(conf) {
-        let { canvasSelector, mode, perspectiveConf } = conf;
+        let { canvasSelector, mode, perspectiveConf, init: initConf } = conf;
 
         const gl = (this.gl = document.querySelector(canvasSelector).getContext("webgl2"));
         gl.canvas.width = gl.canvas.clientWidth;
@@ -39,81 +34,54 @@ class Generator {
                 );
                 break;
         }
+
+        this.#init(initConf);
     }
 
     gl;
     mode;
-    programs = {};
-    buffers = {};
+    programs;
+    buffers;
+    textures;
+    framebuffers;
     mats = {};
-    textures = {};
-    framebuffers = {};
+    lights = {};
 
-    async init(conf) {
+    #init(conf) {
         const { programs, buffers, textures, framebuffers } = conf;
-        let toAwait = [];
 
-        toAwait.push(this.createPrograms(programs));
-        if (textures) toAwait.push(this.createTextures(textures));
+        this.programs = {};
+        this.buffers = {};
+        this.textures = {};
+        this.framebuffers = {};
 
+        if (programs) this.createPrograms(programs);
         this.createBuffers(buffers);
+        if (textures) this.createTextures(textures);
         if (framebuffers) this.createFramebuffers(framebuffers);
-
-        await Promise.all(toAwait);
     }
 
-    async createPrograms(programsConfs) {
-        let shaderTypes = [];
-        let fetches = [];
-
-        programsConfs.forEach((programConf) => {
-            const paths = Object.entries(programConf.paths);
-            let programShaderTypes = [];
-
-            paths.forEach(([shader, filePath]) => {
-                let shaderType;
-
-                switch (shader) {
-                    case "vShader":
-                        shaderType = this.gl.VERTEX_SHADER;
-                        break;
-
-                    case "fShader":
-                        shaderType = this.gl.FRAGMENT_SHADER;
-                        break;
-                }
-
-                programShaderTypes.push(shaderType);
-                fetches.push(fetch(filePath, Generator.#LOCAL_FETCH_CONF));
-            });
-
-            shaderTypes.push(programShaderTypes);
-        });
-
-        let shadersSources = await Promise.all(fetches);
-        shadersSources = await Promise.all(shadersSources.map((res) => res.text()));
-
-        for (let prog = 0, shaderOffset = 0; prog < programsConfs.length; prog++) {
-            const programConf = programsConfs[prog];
+    createPrograms(programsConfs) {
+        for (const programConf of programsConfs) {
             let programData = (this.programs[programConf.name] = {});
             const program = this.gl.createProgram();
 
-            for (const shaderType of shaderTypes[prog]) {
-                const shader = this.gl.createShader(shaderType);
-                const shaderCode = shadersSources[shaderOffset];
-
-                this.gl.shaderSource(shader, shaderCode);
-                this.gl.compileShader(shader);
-                this.gl.attachShader(program, shader);
-
-                shaderOffset++;
-            }
+            this.#prepareShader(program, this.gl.VERTEX_SHADER, programConf.vShader)
+            this.#prepareShader(program, this.gl.FRAGMENT_SHADER, programConf.fShader)
 
             this.gl.linkProgram(program);
 
             programData.program = program;
             programData.locations = this.#initCommonLocations(program);
         }
+    }
+
+    #prepareShader(program, shaderType, codeStr) {
+        const shader = this.gl.createShader(shaderType);
+
+        this.gl.shaderSource(shader, codeStr);
+        this.gl.compileShader(shader);
+        this.gl.attachShader(program, shader);
     }
 
     createBuffers(buffersData) {
@@ -171,13 +139,10 @@ class Generator {
         return buffer;
     }
 
-    async createTextures(texturesConfs) {
-        const imageLoads = Promise.all(
-            texturesConfs.filter((textureConf) => textureConf.path).map((textureConf) => this.createTextureFromImage(textureConf))
-        );
-        texturesConfs.filter((textureConf) => !textureConf.path).forEach((textureConf) => this.createTexture(textureConf));
-
-        await imageLoads;
+    createTextures(texturesConfs) {
+        for (const textureConf of texturesConfs) {
+            textureConf.path ? this.createTextureFromImage(textureConf) : this.createTexture(textureConf);
+        }
     }
 
     createTexture(textureConf, textureImage) {
@@ -218,14 +183,12 @@ class Generator {
     }
 
     createTextureFromImage(textureConf) {
-        return new Promise((resolve) => {
-            let textureImage = new Image();
+        let textureImage = new Image();
 
-            textureImage.src = textureConf.path;
-            textureImage.onload = () => {
-                resolve(this.createTexture(textureConf, textureImage));
-            };
-        });
+        textureImage.src = textureConf.path;
+        textureImage.onload = () => {
+            this.createTexture(textureConf, textureImage);
+        };
     }
 
     createFramebuffers(framebuffersConfs) {

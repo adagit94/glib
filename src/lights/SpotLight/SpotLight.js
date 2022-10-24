@@ -2,12 +2,8 @@ import MatUtils from "../../utils/MatUtils.js";
 import Light from "../Light.js";
 
 class SpotLight extends Light {
-    constructor(conf) {
-        super(conf);
-    }
-
-    async init(conf, depthMapConf, initialUniforms) {
-        await super.init("SpotLight", conf, { ...depthMapConf, cubeMap: false }, initialUniforms);
+    constructor(ctx, name, depthMapConf, initialUniforms) {
+        super(ctx, "spot", name, { ...depthMapConf, cubeMap: false }, initialUniforms);
 
         Object.assign(this.program.locations, {
             finalLightMat: this.gl.getUniformLocation(this.program.program, "u_finalLightMat"),

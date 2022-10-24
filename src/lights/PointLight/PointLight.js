@@ -2,16 +2,10 @@ import MatUtils from "../../utils/MatUtils.js";
 import Light from "../Light.js";
 
 class PointLight extends Light {
-    constructor(conf) {
-        super(conf);
-    }
+    constructor(ctx, name, depthMapConf, initialUniforms) {
+        super(ctx, "point", name, { ...depthMapConf, cubeMap: true }, initialUniforms);
 
-    async init(conf, depthMapConf, initialUniforms) {
-        await super.init("PointLight", conf, { ...depthMapConf, cubeMap: true }, initialUniforms);
-
-        const { depthMap } = this.program;
-
-        Object.assign(depthMap.locations, {
+        Object.assign(this.program.depthMap.locations, {
             modelMat: this.gl.getUniformLocation(depthMap.program, "u_modelMat"),
             lightPosition: this.gl.getUniformLocation(depthMap.program, "u_lightPosition"),
             far: this.gl.getUniformLocation(depthMap.program, "u_far"),
