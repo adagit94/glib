@@ -10,7 +10,7 @@ class Generator {
     };
 
     constructor(conf) {
-        let { canvasSelector, mode, perspectiveConf, init: initConf } = conf;
+        let { canvasSelector, mode, perspectiveConf } = conf;
 
         const gl = (this.gl = document.querySelector(canvasSelector).getContext("webgl2"));
         gl.canvas.width = gl.canvas.clientWidth;
@@ -35,7 +35,12 @@ class Generator {
                 break;
         }
 
-        this.#init(initConf);
+        gl.enable(gl.DEPTH_TEST);
+        gl.clearDepth(1);
+
+        // gl.enable(gl.BLEND)
+        // gl.blendFunc(gl.ONE, gl.ONE)
+        // gl.blendEquation(gl.FUNC_ADD)
     }
 
     gl;
@@ -44,10 +49,11 @@ class Generator {
     buffers;
     textures;
     framebuffers;
+    geometry = {};
     mats = {};
     lights = {};
 
-    #init(conf) {
+    init(conf) {
         const { programs, buffers, textures, framebuffers } = conf;
 
         this.programs = {};

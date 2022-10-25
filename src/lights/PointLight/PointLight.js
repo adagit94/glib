@@ -5,15 +5,19 @@ class PointLight extends Light {
     constructor(ctx, name, depthMapConf, initialUniforms) {
         super(ctx, "point", name, { ...depthMapConf, cubeMap: true }, initialUniforms);
 
-        Object.assign(this.program.depthMap.locations, {
-            modelMat: this.gl.getUniformLocation(depthMap.program, "u_modelMat"),
-            lightPosition: this.gl.getUniformLocation(depthMap.program, "u_lightPosition"),
-            far: this.gl.getUniformLocation(depthMap.program, "u_far"),
+        Object.assign(this.depthMap.locations, {
+            modelMat: this.gl.getUniformLocation(this.depthMap.program, "u_modelMat"),
+            lightPosition: this.gl.getUniformLocation(this.depthMap.program, "u_lightPosition"),
+            far: this.gl.getUniformLocation(this.depthMap.program, "u_far"),
+        });
+
+        Object.assign(this.locations, {
+            far: this.gl.getUniformLocation(this.program, "u_far"),
         });
     }
 
     lightForDepthMap = (position) => {
-        const { depthMap, uniforms } = this.program;
+        const { depthMap, uniforms } = this;
 
         uniforms.lightPosition = depthMap.uniforms.lightPosition = position;
         depthMap.light.viewMats = [];
@@ -50,7 +54,7 @@ class PointLight extends Light {
     };
 
     renderModelsToDepthMap = (models) => {
-        const { depthMap } = this.program;
+        const { depthMap } = this;
 
         for (let side = 0; side < 6; side++) {
             this.gl.framebufferTexture2D(
@@ -75,12 +79,18 @@ class PointLight extends Light {
         }
     };
 
+    setUniforms() {
+        super.setUniforms();
+
+        this.gl.uniform1f(this.locations.far, this.uniforms.far);
+    }
+
     setDepthMapUniforms() {
         super.setDepthMapUniforms();
 
-        this.gl.uniformMatrix4fv(this.program.depthMap.locations.modelMat, false, this.program.depthMap.uniforms.modelMat);
-        this.gl.uniform3f(this.program.depthMap.locations.lightPosition, ...this.program.depthMap.uniforms.lightPosition);
-        this.gl.uniform1f(this.program.depthMap.locations.far, this.program.depthMap.uniforms.far);
+        this.gl.uniformMatrix4fv(this.depthMap.locations.modelMat, false, this.depthMap.uniforms.modelMat);
+        this.gl.uniform3f(this.depthMap.locations.lightPosition, ...this.depthMap.uniforms.lightPosition);
+        this.gl.uniform1f(this.depthMap.locations.far, this.depthMap.uniforms.far);
     }
 }
 

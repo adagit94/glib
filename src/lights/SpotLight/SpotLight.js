@@ -5,25 +5,25 @@ class SpotLight extends Light {
     constructor(ctx, name, depthMapConf, initialUniforms) {
         super(ctx, "spot", name, { ...depthMapConf, cubeMap: false }, initialUniforms);
 
-        Object.assign(this.program.locations, {
-            finalLightMat: this.gl.getUniformLocation(this.program.program, "u_finalLightMat"),
-            lightDirection: this.gl.getUniformLocation(this.program.program, "u_lightDirection"),
-            innerLimit: this.gl.getUniformLocation(this.program.program, "u_innerLimit"),
-            outerLimit: this.gl.getUniformLocation(this.program.program, "u_outerLimit"),
+        Object.assign(this.locations, {
+            finalLightMat: this.gl.getUniformLocation(this.program, "u_finalLightMat"),
+            lightDirection: this.gl.getUniformLocation(this.program, "u_lightDirection"),
+            innerLimit: this.gl.getUniformLocation(this.program, "u_innerLimit"),
+            outerLimit: this.gl.getUniformLocation(this.program, "u_outerLimit"),
         });
     }
 
     setUniforms() {
         super.setUniforms();
 
-        this.gl.uniformMatrix4fv(this.program.locations.finalLightMat, false, this.program.uniforms.finalLightMat);
-        this.gl.uniform3f(this.program.locations.lightDirection, ...this.program.uniforms.lightDirection);
-        this.gl.uniform1f(this.program.locations.innerLimit, this.program.uniforms.innerLimit);
-        this.gl.uniform1f(this.program.locations.outerLimit, this.program.uniforms.outerLimit);
+        this.gl.uniformMatrix4fv(this.locations.finalLightMat, false, this.uniforms.finalLightMat);
+        this.gl.uniform3f(this.locations.lightDirection, ...this.uniforms.lightDirection);
+        this.gl.uniform1f(this.locations.innerLimit, this.uniforms.innerLimit);
+        this.gl.uniform1f(this.locations.outerLimit, this.uniforms.outerLimit);
     }
 
     lightForDepthMap = (viewSettings) => {
-        const { depthMap, uniforms } = this.program;
+        const { depthMap, uniforms } = this;
         const { position, direction } = viewSettings;
 
         if (position) uniforms.lightPosition = position;
@@ -33,7 +33,7 @@ class SpotLight extends Light {
     };
 
     renderModelsToDepthMap = (models) => {
-        const { depthMap } = this.program;
+        const { depthMap } = this;
 
         for (const model of models) {
             depthMap.uniforms.finalLightMat = MatUtils.multMats3d(depthMap.light.viewMat, model.mat);
