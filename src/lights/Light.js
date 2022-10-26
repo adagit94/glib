@@ -2,7 +2,6 @@ import SHADERS from "./shaders.js";
 
 class Light {
     constructor(ctx, type, name, depthMapConf, initialUniforms) {
-        this.#ctx = ctx;
         this.gl = ctx.gl;
 
         ctx.createPrograms([
@@ -49,7 +48,7 @@ class Light {
             },
             uniforms: initialUniforms.depthMap,
             texture: ctx.createTexture({
-                name: "depthMap",
+                name: `${name}DepthMap`,
                 settings: {
                     cubeMap: depthMapConf.cubeMap,
                     width: depthMapConf.size,
@@ -71,16 +70,14 @@ class Light {
             light: { projectionMat: depthMapConf.lightProjectionMat },
         };
         this.depthMap.framebuffer = ctx.createFramebuffer({
-            name: "depthMap",
+            name: `${name}DepthMap`,
             bindTexture: () => {
                 this.gl.framebufferTexture2D(this.gl.FRAMEBUFFER, this.gl.DEPTH_ATTACHMENT, texTarget, this.depthMap.texture.texture, 0);
             },
-        })
-
+        });
         this.uniforms.depthMap = this.depthMap.texture.unit;
     }
 
-    #ctx;
     program;
     gl;
     locations;
@@ -125,8 +122,6 @@ class Light {
     }
 
     setDepthMap() {
-        console.log("this.depthMap.program", this.depthMap.program)
-        
         this.gl.useProgram(this.depthMap.program);
         this.setDepthMapUniforms();
     }

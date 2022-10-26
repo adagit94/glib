@@ -43,9 +43,9 @@ class Playground extends Framer {
         });
 
         // const cameraPosition = [0, 0, 0];
-        const cameraPosition = [Math.cos(0) * 32, 0, Math.sin(0) * 32];
-        const viewMat = MatUtils.view3d(cameraPosition, [0, 0, 0]); // [-7, 1.25, 2]
-        const lNear = 1;
+        const cameraPosition = [Math.cos(Math.PI / 2) * 2, 0.1, Math.sin(Math.PI / 2) * 2];
+        const viewMat = MatUtils.view3d(cameraPosition, [0, 0, -1]); // [-7, 1.25, 2]
+        const lNear = 0.1;
         const lFar = 30;
 
         this.mats.scene = MatUtils.multMats3d(this.mats.projection, [viewMat]);
@@ -59,13 +59,13 @@ class Playground extends Framer {
                 },
                 {
                     light: {
-                        ambientColor: [1, 1, 1],
-                        lightColor: [0, 0, 0],
+                        ambientColor: [0, 0, 0],
+                        lightColor: [1, 0, 0],
                         shininess: 1024,
                         far: lFar,
                         cameraPosition,
-                        outerLimit: Math.cos(Math.PI / 12),
-                        innerLimit: Math.cos(Math.PI / 14),
+                        outerLimit: Math.cos(Math.PI / 5),
+                        innerLimit: Math.cos(Math.PI / 25),
                         distanceLin: 0.01,
                         distanceQuad: 0.0125,
                     },
@@ -74,49 +74,51 @@ class Playground extends Framer {
                     },
                 }
             ),
-            // second: new SpotLight(
-            //     this,
-            //     "second",
-            //     {
-            //         size: 800,
-            //         lightProjectionMat: MatUtils.perspective(Math.PI / 2, 1, lNear, lFar),
-            //     },
-            //     {
-            //         light: {
-            //             ambientColor: [1, 0, 0],
-            //             lightColor: [0, 0, 0],
-            //             shininess: 1024,
-            //             far: lFar,
-            //             cameraPosition,
-            //             outerLimit: Math.cos(Math.PI / 2),
-            //             innerLimit: Math.cos(Math.PI / 4),
-            //             distanceLin: 0.01,
-            //             distanceQuad: 0.0125,
-            //         },
-            //         depthMap: {
-            //             far: lFar,
-            //         },
-            //     }
-            // ),
+            second: new SpotLight(
+                this,
+                "second",
+                {
+                    size: 800,
+                    lightProjectionMat: MatUtils.perspective(Math.PI / 2, 1, lNear, lFar),
+                },
+                {
+                    light: {
+                        ambientColor: [0, 0, 0],
+                        lightColor: [0, 0, 1],
+                        shininess: 1024,
+                        far: lFar,
+                        cameraPosition,
+                        outerLimit: Math.cos(Math.PI / 5),
+                        innerLimit: Math.cos(Math.PI / 25),
+                        distanceLin: 0.01,
+                        distanceQuad: 0.0125,
+                    },
+                    depthMap: {
+                        far: lFar,
+                    },
+                }
+            ),
         };
 
         this.animate = false;
         this.requestAnimationFrame();
     }
-
+    
     renderScene = () => {
+        console.log(this.framebuffers.firstDepthMap)
+        
         const tDivider = 8;
-        const lPos = [0, 0, 0];
+        const lPos = [0, 0, 1];
         const { first: firstSpotLight, second: secondSpotLight } = this.lights.spot;
 
         // const lPos = [Math.cos(Math.PI / 8) * 16, 0, Math.sin(Math.PI / 8) * 16];;
 
         firstSpotLight.lightForDepthMap({ position: lPos, direction: [0, 0, -1] });
+        // secondSpotLight.lightForDepthMap({ position: lPos, direction: [0, 0, -1] });
         // firstSpotLight.lightForDepthMap(lPos);
-
         const planeMats = [
             MatUtils.multMats3d(this.geometry.plane.mat, [
-                MatUtils.translated3d(0, 2.4, -16),
+                MatUtils.translated3d(0, 2.4, -18),
                 MatUtils.rotated3d("x", -Math.PI / 2),
                 MatUtils.scaled3d(6, 6, 6),
             ]),
@@ -134,9 +136,9 @@ class Playground extends Framer {
 
         firstSpotLight.renderDepthMap([
             { mat: planeMats[0], render: this.#renderPlane },
-            { mat: planeMats[1], render: this.#renderPlane },
-            { mat: cubeMats[0], render: this.#renderCube },
-            { mat: cubeMats[1], render: this.#renderCube },
+            // { mat: planeMats[1], render: this.#renderPlane },
+            // { mat: cubeMats[0], render: this.#renderCube },
+            // { mat: cubeMats[1], render: this.#renderCube },
         ]);
 
         firstSpotLight.uniforms.modelMat = planeMats[0];
@@ -147,31 +149,47 @@ class Playground extends Framer {
 
         firstSpotLight.setLight();
         this.#renderPlane();
+        
+        // secondSpotLight.renderDepthMap([
+        //     { mat: planeMats[0], render: this.#renderPlane },
+        //     // { mat: planeMats[1], render: this.#renderPlane },
+        //     // { mat: cubeMats[0], render: this.#renderCube },
+        //     // { mat: cubeMats[1], render: this.#renderCube },
+        // ]);
 
-        firstSpotLight.uniforms.modelMat = planeMats[1];
-        firstSpotLight.uniforms.normalMat = MatUtils.normal3d(planeMats[1]);
-        firstSpotLight.uniforms.finalMat = MatUtils.multMats3d(this.mats.scene, planeMats[1]);
-        firstSpotLight.uniforms.finalLightMat = MatUtils.multMats3d(firstSpotLight.depthMap.light.viewMat, planeMats[1]);
-        firstSpotLight.uniforms.color = [1, 1, 1];
+        // secondSpotLight.uniforms.modelMat = planeMats[0];
+        // secondSpotLight.uniforms.normalMat = MatUtils.normal3d(planeMats[0]);
+        // secondSpotLight.uniforms.finalMat = MatUtils.multMats3d(this.mats.scene, planeMats[0]);
+        // secondSpotLight.uniforms.finalLightMat = MatUtils.multMats3d(secondSpotLight.depthMap.light.viewMat, planeMats[0]);
+        // secondSpotLight.uniforms.color = [1, 1, 1];
 
-        firstSpotLight.setLight();
-        this.#renderPlane();
+        // secondSpotLight.setLight();
+        // this.#renderPlane();
 
-        firstSpotLight.uniforms.modelMat = cubeMats[0];
-        firstSpotLight.uniforms.normalMat = MatUtils.normal3d(cubeMats[0]);
-        firstSpotLight.uniforms.finalMat = MatUtils.multMats3d(this.mats.scene, cubeMats[0]);
-        firstSpotLight.uniforms.finalLightMat = MatUtils.multMats3d(firstSpotLight.depthMap.light.viewMat, cubeMats[0]);
-        firstSpotLight.uniforms.color = [0, 0, 1];
-        firstSpotLight.setLight();
-        this.#renderCube();
+        // firstSpotLight.uniforms.modelMat = planeMats[1];
+        // firstSpotLight.uniforms.normalMat = MatUtils.normal3d(planeMats[1]);
+        // firstSpotLight.uniforms.finalMat = MatUtils.multMats3d(this.mats.scene, planeMats[1]);
+        // firstSpotLight.uniforms.finalLightMat = MatUtils.multMats3d(firstSpotLight.depthMap.light.viewMat, planeMats[1]);
+        // firstSpotLight.uniforms.color = [1, 1, 1];
 
-        firstSpotLight.uniforms.modelMat = cubeMats[1];
-        firstSpotLight.uniforms.normalMat = MatUtils.normal3d(cubeMats[1]);
-        firstSpotLight.uniforms.finalMat = MatUtils.multMats3d(this.mats.scene, cubeMats[1]);
-        firstSpotLight.uniforms.finalLightMat = MatUtils.multMats3d(firstSpotLight.depthMap.light.viewMat, cubeMats[1]);
-        firstSpotLight.uniforms.color = [0, 0, 1];
-        firstSpotLight.setLight();
-        this.#renderCube();
+        // firstSpotLight.setLight();
+        // this.#renderPlane();
+
+        // firstSpotLight.uniforms.modelMat = cubeMats[0];
+        // firstSpotLight.uniforms.normalMat = MatUtils.normal3d(cubeMats[0]);
+        // firstSpotLight.uniforms.finalMat = MatUtils.multMats3d(this.mats.scene, cubeMats[0]);
+        // firstSpotLight.uniforms.finalLightMat = MatUtils.multMats3d(firstSpotLight.depthMap.light.viewMat, cubeMats[0]);
+        // firstSpotLight.uniforms.color = [0, 0, 1];
+        // firstSpotLight.setLight();
+        // this.#renderCube();
+
+        // firstSpotLight.uniforms.modelMat = cubeMats[1];
+        // firstSpotLight.uniforms.normalMat = MatUtils.normal3d(cubeMats[1]);
+        // firstSpotLight.uniforms.finalMat = MatUtils.multMats3d(this.mats.scene, cubeMats[1]);
+        // firstSpotLight.uniforms.finalLightMat = MatUtils.multMats3d(firstSpotLight.depthMap.light.viewMat, cubeMats[1]);
+        // firstSpotLight.uniforms.color = [0, 0, 1];
+        // firstSpotLight.setLight();
+        // this.#renderCube();
 
         console.log(this);
         console.log(this.lights);

@@ -2,7 +2,6 @@ import MatUtils from "../utils/MatUtils.js";
 
 class Generator {
     static #PERSPECTIVE_CONF = { fov: Math.PI / 4, near: 0.1, far: 100 };
-
     static #ATTRIBUTE_INDICES = {
         position: 0,
         normal: 1,
@@ -38,9 +37,9 @@ class Generator {
         gl.enable(gl.DEPTH_TEST);
         gl.clearDepth(1);
 
-        // gl.enable(gl.BLEND)
-        // gl.blendFunc(gl.ONE, gl.ONE)
-        // gl.blendEquation(gl.FUNC_ADD)
+        gl.enable(gl.BLEND)
+        gl.blendFunc(gl.ONE, gl.ONE)
+        gl.blendEquation(gl.FUNC_ADD)
     }
 
     gl;
@@ -208,7 +207,6 @@ class Generator {
         const framebuffer = (this.framebuffers[name] = this.gl.createFramebuffer());
 
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, framebuffer);
-
         bindTexture();
 
         return framebuffer;
