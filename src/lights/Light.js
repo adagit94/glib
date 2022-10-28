@@ -71,8 +71,9 @@ class Light {
         };
         this.depthMap.framebuffer = ctx.createFramebuffer({
             name: `${name}DepthMap`,
-            bindTexture: () => {
+            setTexture: () => {
                 this.gl.framebufferTexture2D(this.gl.FRAMEBUFFER, this.gl.DEPTH_ATTACHMENT, texTarget, this.depthMap.texture.texture, 0);
+                this.gl.clear(this.gl.DEPTH_BUFFER_BIT);
             },
         });
         this.uniforms.depthMap = this.depthMap.texture.unit;
@@ -108,12 +109,12 @@ class Light {
     renderDepthMap = (models) => {
         this.gl.viewport(0, 0, this.depthMap.texture.settings.width, this.depthMap.texture.settings.height);
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.depthMap.framebuffer);
-
+        
         this.renderModelsToDepthMap(models);
-
+        
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
+        this.gl.clear(this.gl.DEPTH_BUFFER_BIT);
         this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
-        this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
         this.gl.activeTexture(this.gl[`TEXTURE${this.depthMap.texture.unit}`]);
     };
 

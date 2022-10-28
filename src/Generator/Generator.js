@@ -35,11 +35,7 @@ class Generator {
         }
 
         gl.enable(gl.DEPTH_TEST);
-        gl.clearDepth(1);
-
-        gl.enable(gl.BLEND)
-        gl.blendFunc(gl.ONE, gl.ONE)
-        gl.blendEquation(gl.FUNC_ADD)
+        // gl.clearDepth(1);
     }
 
     gl;
@@ -203,11 +199,11 @@ class Generator {
     }
 
     createFramebuffer(framebufferConf) {
-        const { name, bindTexture } = framebufferConf;
+        const { name, setTexture } = framebufferConf;
         const framebuffer = (this.framebuffers[name] = this.gl.createFramebuffer());
 
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, framebuffer);
-        bindTexture();
+        setTexture();
 
         return framebuffer;
     }
