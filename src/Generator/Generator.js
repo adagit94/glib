@@ -35,7 +35,6 @@ class Generator {
         }
 
         gl.enable(gl.DEPTH_TEST);
-        // gl.clearDepth(1);
     }
 
     gl;
@@ -46,7 +45,7 @@ class Generator {
     framebuffers;
     geometry = {};
     mats = {};
-    lights = {};
+    lightSystem;
 
     init(conf) {
         const { programs, buffers, textures, framebuffers } = conf;
@@ -62,9 +61,11 @@ class Generator {
         if (framebuffers) this.createFramebuffers(framebuffers);
     }
 
-    createPrograms(programsConfs) {
+    createPrograms(programsConfs, merge = true) {
+        let newPrograms = {}
+        
         for (const programConf of programsConfs) {
-            let programData = (this.programs[programConf.name] = {});
+            let programData = (newPrograms[programConf.name] = {});
             const program = this.gl.createProgram();
 
             this.#prepareShader(program, this.gl.VERTEX_SHADER, programConf.vShader)
@@ -75,6 +76,10 @@ class Generator {
             programData.program = program;
             programData.locations = this.#initCommonLocations(program);
         }
+
+        if (merge) Object.assign(this.programs, newPrograms)
+
+        return newPrograms
     }
 
     #prepareShader(program, shaderType, codeStr) {
@@ -146,11 +151,11 @@ class Generator {
         }
     }
 
-    createTexture(textureConf, textureImage) {
+    createTexture(textureConf, textureImage, merge = true) {
         const { path, settings } = textureConf;
         const unit = Object.keys(this.textures).length;
         const texture = this.gl.createTexture();
-        const texData = (this.textures[textureConf.name] = { texture, unit, settings });
+        const newTexData = { texture, unit, settings };
 
         this.gl.activeTexture(this.gl[`TEXTURE${unit}`]);
 
@@ -177,10 +182,12 @@ class Generator {
                 );
             }
         }
-
+        
         textureConf.setParams?.();
 
-        return texData;
+        if (merge) this.textures[textureConf.name] = newTexData
+
+        return newTexData;
     }
 
     createTextureFromImage(textureConf) {
@@ -198,12 +205,14 @@ class Generator {
         }
     }
 
-    createFramebuffer(framebufferConf) {
+    createFramebuffer(framebufferConf, merge = true) {
         const { name, setTexture } = framebufferConf;
-        const framebuffer = (this.framebuffers[name] = this.gl.createFramebuffer());
+        const framebuffer = this.gl.createFramebuffer();
 
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, framebuffer);
         setTexture();
+
+        if (merge) this.framebuffers[name] = framebuffer
 
         return framebuffer;
     }
