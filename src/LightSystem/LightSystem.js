@@ -1,4 +1,5 @@
-import SHADERS from "../shaders.js";
+import SHADERS from "./shaders.js";
+import MatUtils from "../utils/MatUtils.js";
 import PointLight from "./lights/PointLight/PointLight.js";
 import SpotLight from "./lights/SpotLight/SpotLight.js";
 
@@ -60,7 +61,8 @@ class LightSystem {
     #ctx;
     #gl;
     #programs;
-    lights = {};
+    #lights = {};
+    #models = {};
 
     #getCommonLightLocations(program) {
         return {
@@ -85,44 +87,55 @@ class LightSystem {
     }
 
     addLight(type, name, depthMapConf, initialUniforms) {
-        let light;
-
         switch (type) {
             case "spot":
-                light = new SpotLight(this.#ctx, depthMapConf, initialUniforms);
+                this.#lights[name] = new SpotLight(this.#ctx, depthMapConf, initialUniforms);
                 break;
 
             case "point":
-                light = new PointLight(this.#ctx, depthMapConf, initialUniforms);
+                this.#lights[name] = new PointLight(this.#ctx, depthMapConf, initialUniforms);
                 break;
         }
-
-        this.lights[name] = light;
     }
 
-    renderLights(models) {
-        const lights = Object.values(this.lights);
+    getLight(name) {
+        return this.#lights[name];
+    }
+
+    setModels(models) {
+        Object.assign(this.#models, models);
+    }
+
+    renderLights() {
+        const lights = Object.values(this.#lights);
 
         for (const light of lights) {
             light.prepareLight();
-            this.#genDepthMap(models, light);
-            this.#setLight(light);
+
+            this.#genDepthMap(light);
+            this.#genLight(light);
         }
     }
 
-    #genDepthMap = (models, light) => {
+    #genDepthMap = (light) => {
         this.#gl.viewport(0, 0, light.depthMap.texture.settings.width, light.depthMap.texture.settings.height);
         this.#gl.bindFramebuffer(this.#gl.FRAMEBUFFER, light.depthMap.framebuffer);
 
-        let setDepthMap;
-
         if (light instanceof SpotLight) {
-            setDepthMap = this.#setSpotDepthMap;
+            this.#renderModelsToDepthMap(light, light.depthMap.light.viewMat, this.#setSpotDepthMap);
         } else if (light instanceof PointLight) {
-            setDepthMap = this.#setPointDepthMap;
+            for (let side = 0; side < 6; side++) {
+                this.#gl.framebufferTexture2D(
+                    this.#gl.FRAMEBUFFER,
+                    this.#gl.DEPTH_ATTACHMENT,
+                    this.#gl.TEXTURE_CUBE_MAP_POSITIVE_X + side,
+                    light.depthMap.texture.texture,
+                    0
+                );
+                this.#gl.clear(this.#gl.DEPTH_BUFFER_BIT);
+                this.#renderModelsToDepthMap(light, light.depthMap.light.viewMats[side], this.#setPointDepthMap);
+            }
         }
-
-        light.renderModelsToDepthMap(models, setDepthMap);
 
         this.#gl.bindFramebuffer(this.#gl.FRAMEBUFFER, null);
         this.#gl.clear(this.#gl.DEPTH_BUFFER_BIT);
@@ -130,62 +143,64 @@ class LightSystem {
         this.#gl.activeTexture(this.#gl[`TEXTURE${light.depthMap.texture.unit}`]);
     };
 
-    #setSpotDepthMap(light) {
+    #setSpotDepthMap = (light) => {
         const { spotDepthMap } = this.#programs;
 
         this.#gl.useProgram(spotDepthMap.program);
-        this.#setCommonDepthMapUniforms(spotDepthMap.locations, light);
-    }
 
-    #setPointDepthMap(light) {
+        this.#setCommonDepthMapUniforms(spotDepthMap.locations, light);
+    };
+
+    #setPointDepthMap = (light) => {
         const { pointDepthMap } = this.#programs;
 
         this.#gl.useProgram(pointDepthMap.program);
-        this.#setPointDepthMapUniforms(pointDepthMap.locations, light);
-    }
 
-    #setCommonDepthMapUniforms(locations, light) {
-        this.#gl.uniformMatrix4fv(locations.finalLightMat, false, light.depthMap.uniforms.finalLightMat);
-    }
-
-    #setPointDepthMapUniforms(locations, light) {
         this.#setCommonDepthMapUniforms(locations, light);
-
         this.#gl.uniformMatrix4fv(locations.modelMat, false, light.depthMap.uniforms.modelMat);
-        this.#gl.uniform3f(locations.lightPosition, ...light.depthMap.uniforms.lightPosition);
+        this.#gl.uniform3f(locations.lightPosition, ...light.uniforms.lightPosition);
         this.#gl.uniform1f(locations.far, light.depthMap.uniforms.far);
-    }
+    };
 
-    #setLight(light) {
-        let lightProgram;
-        let setUniforms;
+    #setCommonDepthMapUniforms = (locations, light) => {
+        this.#gl.uniformMatrix4fv(locations.finalLightMat, false, light.depthMap.uniforms.finalLightMat);
+    };
+
+    #genLight = (light) => {
+        let setLight;
 
         if (light instanceof SpotLight) {
-            lightProgram = this.#programs.spotLight;
-            setUniforms = this.#setSpotUniforms;
+            setLight = this.#setSpot;
         } else if (light instanceof PointLight) {
-            lightProgram = this.#programs.pointLight;
-            setUniforms = this.#setPointUniforms;
+            setLight = this.#setPoint;
         }
 
-        this.#gl.useProgram(lightProgram.program);
-        setUniforms(lightProgram.locations, light);
-    }
+        this.#renderModels(light, setLight);
+    };
 
-    #setSpotUniforms(locations, light) {
-        this.#setCommonUniforms(locations, light);
+    #setSpot = (light) => {
+        const { spotLight } = this.#programs;
 
-        this.#gl.uniformMatrix4fv(locations.finalLightMat, false, light.uniforms.finalLightMat);
-        this.#gl.uniform3f(locations.lightDirection, ...light.uniforms.lightDirection);
-        this.#gl.uniform1f(locations.innerLimit, light.uniforms.innerLimit);
-        this.#gl.uniform1f(locations.outerLimit, light.uniforms.outerLimit);
-    }
+        this.#gl.useProgram(spotLight.program);
 
-    #setPointUniforms(locations, light) {
-        this.#setCommonUniforms(locations, light);
+        console.log("loc", spotLight.locations.finalLightMat)
+        console.log("val", light.uniforms.finalLightMat)
+        
+        this.#setCommonUniforms(spotLight.locations, light);
+        this.#gl.uniformMatrix4fv(spotLight.locations.finalLightMat, false, light.uniforms.finalLightMat);
+        this.#gl.uniform3f(spotLight.locations.lightDirection, ...light.uniforms.lightDirection);
+        this.#gl.uniform1f(spotLight.locations.innerLimit, light.uniforms.innerLimit);
+        this.#gl.uniform1f(spotLight.locations.outerLimit, light.uniforms.outerLimit);
+    };
 
-        this.#gl.uniform1f(locations.far, light.uniforms.far);
-    }
+    #setPoint = (light) => {
+        const { pointLight } = this.#programs;
+
+        this.#gl.useProgram(pointLight.program);
+
+        this.#setCommonUniforms(pointLight.locations, light);
+        this.#gl.uniform1f(pointLight.locations.far, light.uniforms.far);
+    };
 
     #setCommonUniforms(locations, light) {
         this.#gl.uniform3f(locations.color, ...light.uniforms.color);
@@ -202,6 +217,36 @@ class LightSystem {
         this.#gl.uniform1f(locations.distanceLin, light.uniforms.distanceLin);
         this.#gl.uniform1f(locations.distanceQuad, light.uniforms.distanceQuad);
     }
+
+    #renderModels = (light, setLight) => {
+        for (const model of Object.values(this.#models)) {
+            const matSets = Array.isArray(model.mats) ? model.mats : [model.mats];
+
+            for (const matSet of matSets) {
+                light.uniforms.finalMat = matSet.final;
+                light.uniforms.modelMat = matSet.model;
+                light.uniforms.normalMat = MatUtils.normal3d(matSet.model);
+                light.uniforms.finalLightMat = light.depthMap.uniforms.finalLightMat; // not needed in case of point light
+
+                setLight(light);
+                model.render();
+            }
+        }
+    }
+
+    #renderModelsToDepthMap = (light, lightMat, setDepthMap) => {
+        for (const model of Object.values(this.#models)) {
+            const matSets = Array.isArray(model.mats) ? model.mats : [model.mats];
+
+            for (const matSet of matSets) {
+                light.depthMap.uniforms.finalLightMat = MatUtils.multMats3d(lightMat, matSet.model);
+                light.depthMap.uniforms.modelMat = matSet.model; // not needed in case of spot light
+
+                setDepthMap(light);
+                model.render();
+            }
+        }
+    };
 }
 
 export default LightSystem;

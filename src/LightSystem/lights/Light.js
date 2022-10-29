@@ -46,21 +46,14 @@ class Light {
         this.uniforms.depthMap = this.depthMap.texture.unit;
     }
 
-    program;
     gl;
-    locations;
     uniforms;
     depthMap;
-    settings = {}
+    settings = {};
 
-    getMatUniforms(secondToModelMat, modelMat) {
-        return {
-            modelMat: modelMat,
-            normalMat: MatUtils.normal3d(modelMat),
-            finalMat: MatUtils.multMats3d(secondToModelMat, modelMat),
-        };
+    setSettings(settings) {
+        Object.assign(this.settings, settings);
     }
-    
 }
 
 export default Light;

@@ -1,3 +1,4 @@
+import MatUtils from "../../../utils/MatUtils.js";
 import Light from "../Light.js";
 
 class SpotLight extends Light {
@@ -13,21 +14,6 @@ class SpotLight extends Light {
         if (direction) uniforms.lightDirection = direction;
 
         depthMap.light.viewMat = MatUtils.multMats3d(depthMap.light.projectionMat, MatUtils.view3d(uniforms.lightPosition, uniforms.lightDirection));
-    };
-
-    renderModelsToDepthMap = (models, setDepthMap) => {
-        const { depthMap } = this;
-
-        for (const model of models) {
-            const mats = Array.isArray(model.mats) ? model.mats : [model.mats];
-
-            for (const mat of mats) {
-                depthMap.uniforms.finalLightMat = MatUtils.multMats3d(depthMap.light.viewMat, mat);
-
-                setDepthMap(this);
-                model.render();
-            }
-        }
     };
 
     getMatUniforms(secondToModelMat, modelMat) {
