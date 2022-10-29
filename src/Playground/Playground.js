@@ -8,6 +8,7 @@ import SkeletonCube from "../shapes/3d/SkeletonCube.js";
 import SquareCuboid from "../shapes/3d/SquareCuboid.js";
 import Framer from "../Framer/Framer.js";
 import SpotLight from "../LightSystem/lights/SpotLight/SpotLight.js";
+import LightSystem from "../LightSystem/LightSystem.js";
 
 class Playground extends Framer {
     constructor() {
@@ -49,56 +50,61 @@ class Playground extends Framer {
         const lFar = 30;
 
         this.mats.scene = MatUtils.multMats3d(this.mats.projection, [viewMat]);
-        this.lights.spot = {
-            first: new SpotLight(
-                this,
-                "first",
-                {
-                    size: 800,
-                    lightProjectionMat: MatUtils.perspective(Math.PI / 2, 1, lNear, lFar),
+        const lightSystem = (this.lightSystem = new LightSystem(this));
+
+        lightSystem.addLight(
+            "spot",
+            "first",
+            {
+                size: 800,
+                lightProjectionMat: MatUtils.perspective(Math.PI / 2, 1, lNear, lFar),
+            },
+            {
+                light: {
+                    ambientColor: [0, 0, 0],
+                    lightColor: [1, 0, 0],
+                    shininess: 1024,
+                    far: lFar,
+                    cameraPosition,
+                    outerLimit: Math.cos(Math.PI / 5),
+                    innerLimit: Math.cos(Math.PI / 25),
+                    distanceLin: 0.01,
+                    distanceQuad: 0.0125,
                 },
-                {
-                    light: {
-                        ambientColor: [0, 0, 0],
-                        lightColor: [1, 0, 0],
-                        shininess: 1024,
-                        far: lFar,
-                        cameraPosition,
-                        outerLimit: Math.cos(Math.PI / 5),
-                        innerLimit: Math.cos(Math.PI / 25),
-                        distanceLin: 0.01,
-                        distanceQuad: 0.0125,
-                    },
-                    depthMap: {
-                        far: lFar,
-                    },
-                }
-            ),
-            second: new SpotLight(
-                this,
-                "second",
-                {
-                    size: 800,
-                    lightProjectionMat: MatUtils.perspective(Math.PI / 2, 1, lNear, lFar),
+                depthMap: {
+                    far: lFar,
                 },
-                {
-                    light: {
-                        ambientColor: [0, 0, 0],
-                        lightColor: [0, 0, 1],
-                        shininess: 1024,
-                        far: lFar,
-                        cameraPosition,
-                        outerLimit: Math.cos(Math.PI / 5),
-                        innerLimit: Math.cos(Math.PI / 25),
-                        distanceLin: 0.01,
-                        distanceQuad: 0.0125,
-                    },
-                    depthMap: {
-                        far: lFar,
-                    },
-                }
-            ),
-        };
+            }
+        );
+
+        lightSystem.addLight(
+            "spot",
+            "second",
+            {
+                size: 800,
+                lightProjectionMat: MatUtils.perspective(Math.PI / 2, 1, lNear, lFar),
+            },
+            {
+                size: 800,
+                lightProjectionMat: MatUtils.perspective(Math.PI / 2, 1, lNear, lFar),
+            },
+            {
+                light: {
+                    ambientColor: [0, 0, 0],
+                    lightColor: [0, 0, 1],
+                    shininess: 1024,
+                    far: lFar,
+                    cameraPosition,
+                    outerLimit: Math.cos(Math.PI / 5),
+                    innerLimit: Math.cos(Math.PI / 25),
+                    distanceLin: 0.01,
+                    distanceQuad: 0.0125,
+                },
+                depthMap: {
+                    far: lFar,
+                },
+            }
+        );
 
         this.animate = false;
         this.requestAnimationFrame();
@@ -128,20 +134,22 @@ class Playground extends Framer {
         // const lPos = [Math.cos(Math.PI / 8) * 16, 0, Math.sin(Math.PI / 8) * 16];;
 
         const planeColor = [1, 1, 1];
-        const depthMapModelsConf = [
+        const models = [
             { mats: planeMats[0], render: this.#renderPlane },
             // { mat: planeMats[1], render: this.#renderPlane },
             // { mat: cubeMats[0], render: this.#renderCube },
             // { mat: cubeMats[1], render: this.#renderCube },
         ];
 
+        this.lightSystem.renderLights(models)
+
         firstSpotLight.prepareLight({ position: lPos, direction: [0, 0, -1] });
-        firstSpotLight.genDepthMap(depthMapModelsConf);
+        firstSpotLight.genDepthMap(models);
         firstSpotLight.setLight({ ...firstSpotLight.getMatUniforms(this.mats.scene, planeMats[0]), color: planeColor });
         this.#renderPlane();
 
         secondSpotLight.prepareLight({ position: lPos, direction: [0, 0, -1] });
-        secondSpotLight.genDepthMap(depthMapModelsConf);
+        secondSpotLight.genDepthMap(models);
         secondSpotLight.setLight({ ...secondSpotLight.getMatUniforms(this.mats.scene, planeMats[0]), color: planeColor });
         this.#renderPlane();
 

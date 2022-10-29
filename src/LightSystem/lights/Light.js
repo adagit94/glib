@@ -51,6 +51,16 @@ class Light {
     locations;
     uniforms;
     depthMap;
+    settings = {}
+
+    getMatUniforms(secondToModelMat, modelMat) {
+        return {
+            modelMat: modelMat,
+            normalMat: MatUtils.normal3d(modelMat),
+            finalMat: MatUtils.multMats3d(secondToModelMat, modelMat),
+        };
+    }
+    
 }
 
 export default Light;
