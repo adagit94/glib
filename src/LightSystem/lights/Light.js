@@ -1,5 +1,3 @@
-import MatUtils from "../../utils/MatUtils.js";
-
 class Light {
     constructor(ctx, depthMapConf, initialUniforms) {
         this.gl = ctx.gl;

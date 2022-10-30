@@ -2,6 +2,7 @@ import SHADERS from "./shaders.js";
 import MatUtils from "../utils/MatUtils.js";
 import PointLight from "./lights/PointLight/PointLight.js";
 import SpotLight from "./lights/SpotLight/SpotLight.js";
+import LightSystemUtils from "./LightSystemUtils.js";
 
 class LightSystem {
     constructor(ctx) {
@@ -111,7 +112,7 @@ class LightSystem {
 
     removeLight(name) {
         delete this.#lights[name];
-        
+
         delete this.#lights._values;
         this.#lights._values = Object.values(this.#lights);
     }
@@ -125,7 +126,7 @@ class LightSystem {
             this.#models = models;
         } else {
             Object.assign(this.#models, models);
-            delete this.#models._values
+            delete this.#models._values;
         }
 
         this.#models._values = Object.values(this.#models);
@@ -145,7 +146,7 @@ class LightSystem {
         this.#gl.bindFramebuffer(this.#gl.FRAMEBUFFER, light.depthMap.framebuffer);
 
         if (light instanceof SpotLight) {
-            this.#renderModelsToDepthMap(light, light.depthMap.light.viewMat, this.#setSpotDepthMap);
+            this.#renderModels(light, LightSystemUtils.prepareSpotDepthMapUniforms, this.#setSpotDepthMap, light.depthMap.light.viewMat);
         } else if (light instanceof PointLight) {
             for (let side = 0; side < 6; side++) {
                 this.#gl.framebufferTexture2D(
@@ -156,7 +157,7 @@ class LightSystem {
                     0
                 );
                 this.#gl.clear(this.#gl.DEPTH_BUFFER_BIT);
-                this.#renderModelsToDepthMap(light, light.depthMap.light.viewMats[side], this.#setPointDepthMap);
+                this.#renderModels(light, LightSystemUtils.preparePointDepthMapUniforms, this.#setPointDepthMap, light.depthMap.light.viewMats[side]);
             }
         }
 
@@ -191,14 +192,17 @@ class LightSystem {
 
     #genLight = (light) => {
         let setLight;
+        let prepareUniforms;
 
         if (light instanceof SpotLight) {
             setLight = this.#setSpot;
+            prepareUniforms = LightSystemUtils.prepareSpotUniforms;
         } else if (light instanceof PointLight) {
             setLight = this.#setPoint;
+            prepareUniforms = LightSystemUtils.preparePointUniforms;
         }
 
-        this.#renderModels(light, setLight);
+        this.#renderModels(light, prepareUniforms, setLight);
     };
 
     #setSpot = (light) => {
@@ -238,31 +242,13 @@ class LightSystem {
         this.#gl.uniform1f(locations.distanceQuad, light.uniforms.distanceQuad);
     }
 
-    #renderModels = (light, setLight) => {
+    #renderModels = (light, prepareUniforms, setProgram, lightMat) => {
         for (const model of this.#models._values) {
-            const matSets = Array.isArray(model.mats) ? model.mats : [model.mats];
+            const uniformsSets = Array.isArray(model.uniforms) ? model.uniforms : [model.uniforms];
 
-            for (const matSet of matSets) {
-                light.uniforms.finalMat = matSet.final;
-                light.uniforms.modelMat = matSet.model;
-                light.uniforms.normalMat = MatUtils.normal3d(matSet.model);
-                light.uniforms.finalLightMat = light.depthMap.uniforms.finalLightMat; // not needed in case of point light
-
-                setLight(light);
-                model.render();
-            }
-        }
-    };
-
-    #renderModelsToDepthMap = (light, lightMat, setDepthMap) => {
-        for (const model of this.#models._values) {
-            const matSets = Array.isArray(model.mats) ? model.mats : [model.mats];
-            
-            for (const matSet of matSets) {
-                light.depthMap.uniforms.finalLightMat = MatUtils.multMats3d(lightMat, matSet.model);
-                light.depthMap.uniforms.modelMat = matSet.model; // not needed in case of spot light
-
-                setDepthMap(light);
+            for (const uniformsSet of uniformsSets) {
+                prepareUniforms(light, uniformsSet, lightMat);
+                setProgram(light);
                 model.render();
             }
         }

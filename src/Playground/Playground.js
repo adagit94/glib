@@ -38,7 +38,7 @@ class Playground extends Framer {
         });
 
         // const cameraPosition = [0, 0, 0];
-        const cameraPosition = [Math.cos(Math.PI / 2) * 1, 0.1, Math.sin(Math.PI / 2) * 1];
+        const cameraPosition = [Math.cos(0) * 10, 0.1, Math.sin(0) * 10];
         const viewMat = MatUtils.view3d(cameraPosition, [0, 0, -1]); // [-7, 1.25, 2]
         const lNear = 0.1;
         const lFar = 30;
@@ -46,9 +46,6 @@ class Playground extends Framer {
         this.mats.scene = MatUtils.multMats3d(this.mats.projection, [viewMat]);
         const lightSystem = (this.lightSystem = new LightSystem(this));
 
-        const lPos = [Math.cos(Math.PI / 2) * 1, 0.1, Math.sin(Math.PI / 2) * 1];
-        const lDir = [0, 0, -1];
-        
         lightSystem.addLight(
             "spot",
             "first",
@@ -58,14 +55,15 @@ class Playground extends Framer {
             },
             {
                 light: {
-                    color: [1, 1, 1],
                     ambientColor: [0, 0, 0],
-                    lightColor: [1, 0, 0],
+                    lightColor: [1, 1, 1],
                     shininess: 1024,
                     far: lFar,
                     cameraPosition,
-                    outerLimit: Math.cos(Math.PI / 5),
-                    innerLimit: Math.cos(Math.PI / 25),
+                    outerLimit: Math.cos(Math.PI / 1),
+                    innerLimit: Math.cos(Math.PI / 2),
+                    // outerLimit: Math.cos(Math.PI / 18),
+                    // innerLimit: Math.cos(Math.PI / 20),
                     distanceLin: 0.01,
                     distanceQuad: 0.0125,
                 },
@@ -73,7 +71,7 @@ class Playground extends Framer {
                     far: lFar,
                 },
             },
-            { position: lPos, direction: lDir }
+            { position: [Math.cos(Math.PI / 2) * 10, 0.1, Math.sin(Math.PI / 2) * 10], direction: [0, 0, -1] }
         );
 
         lightSystem.addLight(
@@ -85,14 +83,13 @@ class Playground extends Framer {
             },
             {
                 light: {
-                    color: [1, 1, 1],
                     ambientColor: [0, 0, 0],
                     lightColor: [0, 0, 1],
                     shininess: 1024,
                     far: lFar,
                     cameraPosition,
-                    outerLimit: Math.cos(Math.PI / 5),
-                    innerLimit: Math.cos(Math.PI / 25),
+                    outerLimit: Math.cos(Math.PI / 18),
+                    innerLimit: Math.cos(Math.PI / 20),
                     distanceLin: 0.01,
                     distanceQuad: 0.0125,
                 },
@@ -100,7 +97,7 @@ class Playground extends Framer {
                     far: lFar,
                 },
             },
-            { position: lPos, direction: lDir }
+            { position: [Math.cos(Math.PI / 2) * 1, 0.1, Math.sin(Math.PI / 2) * 1], direction: [0.15, 0, -1] }
         );
 
         this.animate = false;
@@ -113,9 +110,11 @@ class Playground extends Framer {
         const firstSpotLight = this.lightSystem.getLight("first");
         const secondSpotLight = this.lightSystem.getLight("second");
 
+        secondSpotLight.active = false;
+
         const planeMats = [
             MatUtils.multMats3d(this.geometry.plane.mat, [
-                MatUtils.translated3d(-2.5, 2.4, -7.5),
+                MatUtils.translated3d(-2.5, 2.4, -10),
                 MatUtils.rotated3d("x", -Math.PI / 2),
                 MatUtils.scaled3d(6, 6, 6),
             ]),
@@ -126,21 +125,34 @@ class Playground extends Framer {
             ]),
         ];
         const cubeMats = [
-            MatUtils.multMats3d(MatUtils.translated3d(0, 0, -10), [MatUtils.scaled3d(10, 10, 10)]),
+            MatUtils.multMats3d(MatUtils.translated3d(0, 0, -5), [MatUtils.scaled3d(10, 10, 10)]),
             MatUtils.multMats3d(MatUtils.translated3d(0, 0, 10), [MatUtils.scaled3d(10, 10, 10)]),
         ];
 
         // const lPos = [Math.cos(Math.PI / 8) * 16, 0, Math.sin(Math.PI / 8) * 16];;
 
         // this.lightSystem.getLight("second").active = false
-        
+
         this.lightSystem.setModels({
             plane: {
-                mats: {
-                    model: planeMats[0],
-                    final: MatUtils.multMats3d(this.mats.scene, planeMats[0]),
+                uniforms: {
+                    color: [1, 1, 1],
+                    mats: {
+                        model: planeMats[0],
+                        final: MatUtils.multMats3d(this.mats.scene, planeMats[0]),
+                    },
                 },
                 render: this.#renderPlane,
+            },
+            cube: {
+                uniforms: {
+                    color: [1, 1, 1],
+                    mats: {
+                        model: cubeMats[0],
+                        final: MatUtils.multMats3d(this.mats.scene, cubeMats[0]),
+                    },
+                },
+                render: this.#renderCube,
             },
         });
         this.lightSystem.renderLights();
