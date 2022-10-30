@@ -49,11 +49,7 @@ class Light {
     gl;
     uniforms;
     depthMap;
-    settings = {};
-
-    setSettings(settings) {
-        Object.assign(this.settings, settings);
-    }
+    active = true;
 }
 
 export default Light;

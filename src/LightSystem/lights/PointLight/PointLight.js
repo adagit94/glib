@@ -5,9 +5,9 @@ class PointLight extends Light {
         super(ctx, { ...depthMapConf, cubeMap: true }, initialUniforms);
     }
 
-    prepareLight = () => {
+    prepare = (settings) => {
         const { depthMap, uniforms } = this;
-        const { position } = this.settings;
+        const { position } = settings;
 
         uniforms.lightPosition = position;
         depthMap.light.viewMats = [];

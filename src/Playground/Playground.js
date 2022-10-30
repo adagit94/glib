@@ -46,6 +46,9 @@ class Playground extends Framer {
         this.mats.scene = MatUtils.multMats3d(this.mats.projection, [viewMat]);
         const lightSystem = (this.lightSystem = new LightSystem(this));
 
+        const lPos = [Math.cos(Math.PI / 2) * 1, 0.1, Math.sin(Math.PI / 2) * 1];
+        const lDir = [0, 0, -1];
+        
         lightSystem.addLight(
             "spot",
             "first",
@@ -69,7 +72,8 @@ class Playground extends Framer {
                 depthMap: {
                     far: lFar,
                 },
-            }
+            },
+            { position: lPos, direction: lDir }
         );
 
         lightSystem.addLight(
@@ -95,7 +99,8 @@ class Playground extends Framer {
                 depthMap: {
                     far: lFar,
                 },
-            }
+            },
+            { position: lPos, direction: lDir }
         );
 
         this.animate = false;
@@ -127,12 +132,8 @@ class Playground extends Framer {
 
         // const lPos = [Math.cos(Math.PI / 8) * 16, 0, Math.sin(Math.PI / 8) * 16];;
 
-        const lPos = [Math.cos(Math.PI / 2) * 1, 0.1, Math.sin(Math.PI / 2) * 1];
-        const lDir = [0, 0, -1];
-
-        firstSpotLight.setSettings({ position: lPos, direction: lDir });
-        secondSpotLight.setSettings({ position: lPos, direction: lDir });
-
+        // this.lightSystem.getLight("second").active = false
+        
         this.lightSystem.setModels({
             plane: {
                 mats: {

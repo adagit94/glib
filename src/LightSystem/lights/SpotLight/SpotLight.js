@@ -6,9 +6,9 @@ class SpotLight extends Light {
         super(ctx, { ...depthMapConf, cubeMap: false }, initialUniforms);
     }
 
-    prepareLight = () => {
+    prepare = (settings) => {
         const { depthMap, uniforms } = this;
-        const { position, direction } = this.settings;
+        const { position, direction } = settings;
 
         if (position) uniforms.lightPosition = position;
         if (direction) uniforms.lightDirection = direction;

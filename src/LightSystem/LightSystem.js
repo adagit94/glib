@@ -86,34 +86,45 @@ class LightSystem {
         };
     }
 
-    addLight(type, name, depthMapConf, initialUniforms) {
+    addLight(type, name, depthMapConf, initialUniforms, settings) {
+        let light;
+
         switch (type) {
             case "spot":
-                this.#lights[name] = new SpotLight(this.#ctx, depthMapConf, initialUniforms);
+                light = new SpotLight(this.#ctx, depthMapConf, initialUniforms);
                 break;
 
             case "point":
-                this.#lights[name] = new PointLight(this.#ctx, depthMapConf, initialUniforms);
+                light = new PointLight(this.#ctx, depthMapConf, initialUniforms);
                 break;
         }
+
+        if (settings) light.prepare(settings);
+        this.#lights[name] = light;
+
+        return light;
     }
 
     getLight(name) {
         return this.#lights[name];
     }
 
-    setModels(models) {
-        Object.assign(this.#models, models);
+    setModels(models, replace) {
+        if (replace) {
+            this.#models = models;
+        } else {
+            Object.assign(this.#models, models);
+        }
     }
 
     renderLights() {
         const lights = Object.values(this.#lights);
 
         for (const light of lights) {
-            light.prepareLight();
-
-            this.#genDepthMap(light);
-            this.#genLight(light);
+            if (light.active) {
+                this.#genDepthMap(light);
+                this.#genLight(light);
+            }
         }
     }
 
@@ -183,9 +194,6 @@ class LightSystem {
 
         this.#gl.useProgram(spotLight.program);
 
-        console.log("loc", spotLight.locations.finalLightMat)
-        console.log("val", light.uniforms.finalLightMat)
-        
         this.#setCommonUniforms(spotLight.locations, light);
         this.#gl.uniformMatrix4fv(spotLight.locations.finalLightMat, false, light.uniforms.finalLightMat);
         this.#gl.uniform3f(spotLight.locations.lightDirection, ...light.uniforms.lightDirection);
@@ -232,7 +240,7 @@ class LightSystem {
                 model.render();
             }
         }
-    }
+    };
 
     #renderModelsToDepthMap = (light, lightMat, setDepthMap) => {
         for (const model of Object.values(this.#models)) {
