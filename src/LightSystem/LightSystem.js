@@ -100,9 +100,20 @@ class LightSystem {
         }
 
         if (settings) light.prepare(settings);
+
         this.#lights[name] = light;
 
+        delete this.#lights._values;
+        this.#lights._values = Object.values(this.#lights);
+
         return light;
+    }
+
+    removeLight(name) {
+        delete this.#lights[name];
+        
+        delete this.#lights._values;
+        this.#lights._values = Object.values(this.#lights);
     }
 
     getLight(name) {
@@ -114,13 +125,14 @@ class LightSystem {
             this.#models = models;
         } else {
             Object.assign(this.#models, models);
+            delete this.#models._values
         }
+
+        this.#models._values = Object.values(this.#models);
     }
 
     renderLights() {
-        const lights = Object.values(this.#lights);
-
-        for (const light of lights) {
+        for (const light of this.#lights._values) {
             if (light.active) {
                 this.#genDepthMap(light);
                 this.#genLight(light);
@@ -227,7 +239,7 @@ class LightSystem {
     }
 
     #renderModels = (light, setLight) => {
-        for (const model of Object.values(this.#models)) {
+        for (const model of this.#models._values) {
             const matSets = Array.isArray(model.mats) ? model.mats : [model.mats];
 
             for (const matSet of matSets) {
@@ -243,9 +255,9 @@ class LightSystem {
     };
 
     #renderModelsToDepthMap = (light, lightMat, setDepthMap) => {
-        for (const model of Object.values(this.#models)) {
+        for (const model of this.#models._values) {
             const matSets = Array.isArray(model.mats) ? model.mats : [model.mats];
-
+            
             for (const matSet of matSets) {
                 light.depthMap.uniforms.finalLightMat = MatUtils.multMats3d(lightMat, matSet.model);
                 light.depthMap.uniforms.modelMat = matSet.model; // not needed in case of spot light
