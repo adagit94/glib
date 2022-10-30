@@ -8,7 +8,7 @@ class Playground extends Framer {
     constructor() {
         super({
             canvasSelector: "#glFrame",
-            pespectiveConf: { fov: Math.PI / 4, near: 1, far: 200 },
+            pespectiveConf: { fov: Math.PI / 2, near: 1, far: 80 },
         });
 
         const wireframe = false;
@@ -38,10 +38,10 @@ class Playground extends Framer {
         });
 
         // const cameraPosition = [0, 0, 0];
-        const cameraPosition = [Math.cos(0) * 10, 0.1, Math.sin(0) * 10];
+        const cameraPosition = [-Math.cos(Math.PI / 8) * 10, 0.1, Math.sin(Math.PI / 8) * 10];
         const viewMat = MatUtils.view3d(cameraPosition, [0, 0, -1]); // [-7, 1.25, 2]
-        const lNear = 0.1;
-        const lFar = 30;
+        const lNear = 1;
+        const lFar = 80;
 
         this.mats.scene = MatUtils.multMats3d(this.mats.projection, [viewMat]);
         const lightSystem = (this.lightSystem = new LightSystem(this));
@@ -56,14 +56,12 @@ class Playground extends Framer {
             {
                 light: {
                     ambientColor: [0, 0, 0],
-                    lightColor: [1, 1, 1],
-                    shininess: 1024,
+                    lightColor: [1, 0, 0],
+                    // shininess: 1024,
                     far: lFar,
                     cameraPosition,
-                    outerLimit: Math.cos(Math.PI / 1),
-                    innerLimit: Math.cos(Math.PI / 2),
-                    // outerLimit: Math.cos(Math.PI / 18),
-                    // innerLimit: Math.cos(Math.PI / 20),
+                    outerLimit: Math.cos(Math.PI / 26),
+                    innerLimit: Math.cos(Math.PI / 28),
                     distanceLin: 0.01,
                     distanceQuad: 0.0125,
                 },
@@ -71,7 +69,7 @@ class Playground extends Framer {
                     far: lFar,
                 },
             },
-            { position: [Math.cos(Math.PI / 2) * 10, 0.1, Math.sin(Math.PI / 2) * 10], direction: [0, 0, -1] }
+            { position: [-Math.cos(Math.PI / 2.5) * 10, 0.2, Math.sin(Math.PI / 2.5) * 10], direction: [0.25, 0, -1] }
         );
 
         lightSystem.addLight(
@@ -85,11 +83,11 @@ class Playground extends Framer {
                 light: {
                     ambientColor: [0, 0, 0],
                     lightColor: [0, 0, 1],
-                    shininess: 1024,
+                    // shininess: 1024,
                     far: lFar,
                     cameraPosition,
-                    outerLimit: Math.cos(Math.PI / 18),
-                    innerLimit: Math.cos(Math.PI / 20),
+                    outerLimit: Math.cos(Math.PI / 26),
+                    innerLimit: Math.cos(Math.PI / 28),
                     distanceLin: 0.01,
                     distanceQuad: 0.0125,
                 },
@@ -97,7 +95,7 @@ class Playground extends Framer {
                     far: lFar,
                 },
             },
-            { position: [Math.cos(Math.PI / 2) * 1, 0.1, Math.sin(Math.PI / 2) * 1], direction: [0.15, 0, -1] }
+            { position: [Math.cos(Math.PI / 2.5) * 10, 0.2, Math.sin(Math.PI / 2.5) * 10], direction: [-0.25, 0, -1] }
         );
 
         this.animate = false;
@@ -110,11 +108,12 @@ class Playground extends Framer {
         const firstSpotLight = this.lightSystem.getLight("first");
         const secondSpotLight = this.lightSystem.getLight("second");
 
-        secondSpotLight.active = false;
+        // firstSpotLight.active = false
+        // secondSpotLight.active = false;
 
         const planeMats = [
             MatUtils.multMats3d(this.geometry.plane.mat, [
-                MatUtils.translated3d(-2.5, 2.4, -10),
+                MatUtils.translated3d(-2.5, 2.4, -3),
                 MatUtils.rotated3d("x", -Math.PI / 2),
                 MatUtils.scaled3d(6, 6, 6),
             ]),
@@ -125,7 +124,7 @@ class Playground extends Framer {
             ]),
         ];
         const cubeMats = [
-            MatUtils.multMats3d(MatUtils.translated3d(0, 0, -5), [MatUtils.scaled3d(10, 10, 10)]),
+            MatUtils.multMats3d(MatUtils.translated3d(0, 0, 0), [MatUtils.scaled3d(10, 10, 10)]),
             MatUtils.multMats3d(MatUtils.translated3d(0, 0, 10), [MatUtils.scaled3d(10, 10, 10)]),
         ];
 

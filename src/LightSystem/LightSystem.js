@@ -9,8 +9,7 @@ class LightSystem {
         this.#ctx = ctx;
         this.#gl = ctx.gl;
 
-        ctx.gl.enable(ctx.gl.BLEND);
-        ctx.gl.blendFunc(ctx.gl.ONE, ctx.gl.ONE);
+        ctx.gl.blendFuncSeparate(ctx.gl.ONE, ctx.gl.ONE, ctx.gl.ONE, ctx.gl.ZERO);
         ctx.gl.blendEquation(ctx.gl.FUNC_ADD);
 
         this.#programs = ctx.createPrograms(
@@ -133,12 +132,23 @@ class LightSystem {
     }
 
     renderLights() {
-        for (const light of this.#lights._values) {
+        const lights = this.#lights._values;
+        let activeLights = 0;
+
+        for (const light of lights) {
             if (light.active) {
+                if (activeLights === 1) {
+                    this.#gl.enable(this.#gl.BLEND);
+                }
+
                 this.#genDepthMap(light);
                 this.#genLight(light);
+
+                activeLights++;
             }
         }
+
+        this.#gl.disable(this.#gl.BLEND);
     }
 
     #genDepthMap = (light) => {
@@ -162,7 +172,6 @@ class LightSystem {
         }
 
         this.#gl.bindFramebuffer(this.#gl.FRAMEBUFFER, null);
-        this.#gl.clear(this.#gl.DEPTH_BUFFER_BIT);
         this.#gl.viewport(0, 0, this.#gl.canvas.width, this.#gl.canvas.height);
         this.#gl.activeTexture(this.#gl[`TEXTURE${light.depthMap.texture.unit}`]);
     };

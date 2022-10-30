@@ -35,6 +35,7 @@ class Generator {
         }
 
         gl.enable(gl.DEPTH_TEST);
+        gl.depthFunc(gl.LEQUAL);
     }
 
     gl;
