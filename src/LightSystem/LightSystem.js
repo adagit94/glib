@@ -1,5 +1,4 @@
 import SHADERS from "./shaders.js";
-import MatUtils from "../utils/MatUtils.js";
 import PointLight from "./lights/PointLight/PointLight.js";
 import SpotLight from "./lights/SpotLight/SpotLight.js";
 import LightSystemUtils from "./LightSystemUtils.js";
@@ -74,9 +73,10 @@ class LightSystem {
             lightPosition: this.#gl.getUniformLocation(program, "u_lightPosition"),
             cameraPosition: this.#gl.getUniformLocation(program, "u_cameraPosition"),
             shininess: this.#gl.getUniformLocation(program, "u_shininess"),
-            distanceConst: this.#gl.getUniformLocation(program, "u_distanceConst"),
-            distanceLin: this.#gl.getUniformLocation(program, "u_distanceLin"),
-            distanceQuad: this.#gl.getUniformLocation(program, "u_distanceQuad"),
+            lightDistanceLin: this.#gl.getUniformLocation(program, "u_lightDistanceLin"),
+            lightDistanceQuad: this.#gl.getUniformLocation(program, "u_lightDistanceQuad"),
+            cameraDistanceLin: this.#gl.getUniformLocation(program, "u_cameraDistanceLin"),
+            cameraDistanceQuad: this.#gl.getUniformLocation(program, "u_cameraDistanceQuad"),
         };
     }
 
@@ -189,10 +189,10 @@ class LightSystem {
 
         this.#gl.useProgram(pointDepthMap.program);
 
-        this.#setCommonDepthMapUniforms(locations, light);
-        this.#gl.uniformMatrix4fv(locations.modelMat, false, light.depthMap.uniforms.modelMat);
-        this.#gl.uniform3f(locations.lightPosition, ...light.uniforms.lightPosition);
-        this.#gl.uniform1f(locations.far, light.depthMap.uniforms.far);
+        this.#setCommonDepthMapUniforms(pointDepthMap.locations, light);
+        this.#gl.uniformMatrix4fv(pointDepthMap.locations.modelMat, false, light.depthMap.uniforms.modelMat);
+        this.#gl.uniform3f(pointDepthMap.locations.lightPosition, ...light.uniforms.lightPosition);
+        this.#gl.uniform1f(pointDepthMap.locations.far, light.depthMap.uniforms.far);
     };
 
     #setCommonDepthMapUniforms = (locations, light) => {
@@ -246,9 +246,10 @@ class LightSystem {
         this.#gl.uniform3f(locations.lightPosition, ...light.uniforms.lightPosition);
         this.#gl.uniform3f(locations.cameraPosition, ...light.uniforms.cameraPosition);
         this.#gl.uniform1f(locations.shininess, light.uniforms.shininess);
-        this.#gl.uniform1f(locations.distanceConst, light.uniforms.distanceConst ?? 1);
-        this.#gl.uniform1f(locations.distanceLin, light.uniforms.distanceLin);
-        this.#gl.uniform1f(locations.distanceQuad, light.uniforms.distanceQuad);
+        this.#gl.uniform1f(locations.lightDistanceLin, light.uniforms.lightDistanceLin);
+        this.#gl.uniform1f(locations.lightDistanceQuad, light.uniforms.lightDistanceQuad);
+        this.#gl.uniform1f(locations.cameraDistanceLin, light.uniforms.cameraDistanceLin);
+        this.#gl.uniform1f(locations.cameraDistanceQuad, light.uniforms.cameraDistanceQuad);
     }
 
     #renderModels = (light, prepareUniforms, setProgram, lightMat) => {
