@@ -13,12 +13,12 @@ class SpotLight extends Light {
         if (position) uniforms.lightPosition = position;
         if (direction) uniforms.lightDirection = direction;
 
-        depthMap.light.viewMat = MatUtils.multMats3d(depthMap.light.projectionMat, MatUtils.view3d(uniforms.lightPosition, uniforms.lightDirection));
+        depthMap.light.viewMat = MatUtils.mult3d(depthMap.light.projectionMat, MatUtils.view3d(uniforms.lightPosition, uniforms.lightDirection));
     };
 
     getMatUniforms(secondToModelMat, modelMat) {
         return Object.assign(super.getMatUniforms(secondToModelMat, modelMat), {
-            finalLightMat: MatUtils.multMats3d(this.depthMap.light.viewMat, modelMat),
+            finalLightMat: MatUtils.mult3d(this.depthMap.light.viewMat, modelMat),
         });
     }
 }

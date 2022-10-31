@@ -11,16 +11,16 @@ class LightSystemUtils {
     }
 
     static #prepareCommonDepthMapUniforms(light, uniformsSet, lightMat) {
-        light.depthMap.uniforms.finalLightMat = MatUtils.multMats3d(lightMat, uniformsSet.mats.model);
+        light.depthMap.uniforms.finalLightMat = MatUtils.mult3d(lightMat, uniformsSet.mats.model);
     }
 
     static prepareSpotUniforms(light, uniformsSet) {
-        LightSystemUtils.#prepareCommonUniforms(light, uniformsSet)
-        light.uniforms.finalLightMat = MatUtils.multMats3d(light.depthMap.light.viewMat, uniformsSet.mats.model);
+        LightSystemUtils.#prepareCommonUniforms(light, uniformsSet);
+        light.uniforms.finalLightMat = MatUtils.mult3d(light.depthMap.light.viewMat, uniformsSet.mats.model);
     }
 
     static preparePointUniforms(light, uniformsSet) {
-        LightSystemUtils.#prepareCommonUniforms(light, uniformsSet)
+        LightSystemUtils.#prepareCommonUniforms(light, uniformsSet);
     }
 
     static #prepareCommonUniforms(light, uniformsSet) {

@@ -189,7 +189,7 @@ class MatUtils {
 
   static normal3d = (modelMat) => MatUtils.transposed3d(MatUtils.inverted3d(modelMat))
 
-  static multMats2d = (baseMat, multMats) => {
+  static mult2d = (baseMat, multMats) => {
     if (!Array.isArray(multMats)) multMats = [multMats];
 
     let matToMult = baseMat;
@@ -221,7 +221,7 @@ class MatUtils {
     return new Float32Array(matToMult);
   };
 
-  static multMats3d = (baseMat, multMats) => {
+  static mult3d = (baseMat, multMats) => {
     if (!Array.isArray(multMats)) multMats = [multMats];
 
     let matToMult = baseMat;

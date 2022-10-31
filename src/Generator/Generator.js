@@ -40,12 +40,12 @@ class Generator {
 
     gl;
     mode;
-    programs;
-    buffers;
-    textures;
-    framebuffers;
-    geometry = {};
+    programs = {};
+    buffers = {};
+    textures = {};
+    framebuffers = {};
     mats = {};
+    shapes = {};
     lightSystem;
 
     init(conf) {
@@ -57,20 +57,20 @@ class Generator {
         this.framebuffers = {};
 
         if (programs) this.createPrograms(programs);
-        this.createBuffers(buffers);
+        if (buffers) this.createBufferSets(buffers);
         if (textures) this.createTextures(textures);
         if (framebuffers) this.createFramebuffers(framebuffers);
     }
 
     createPrograms(programsConfs, merge = true) {
-        let newPrograms = {}
-        
+        let newPrograms = {};
+
         for (const programConf of programsConfs) {
             let programData = (newPrograms[programConf.name] = {});
             const program = this.gl.createProgram();
 
-            this.#prepareShader(program, this.gl.VERTEX_SHADER, programConf.vShader)
-            this.#prepareShader(program, this.gl.FRAGMENT_SHADER, programConf.fShader)
+            this.#prepareShader(program, this.gl.VERTEX_SHADER, programConf.vShader);
+            this.#prepareShader(program, this.gl.FRAGMENT_SHADER, programConf.fShader);
 
             this.gl.linkProgram(program);
 
@@ -78,9 +78,9 @@ class Generator {
             programData.locations = this.#initCommonLocations(program);
         }
 
-        if (merge) Object.assign(this.programs, newPrograms)
+        if (merge) Object.assign(this.programs, newPrograms);
 
-        return newPrograms
+        return newPrograms;
     }
 
     #prepareShader(program, shaderType, codeStr) {
@@ -91,40 +91,47 @@ class Generator {
         this.gl.attachShader(program, shader);
     }
 
-    createBuffers(buffersData) {
-        const commonBuffersSettings = { size: this.mode === "3d" ? 3 : 2 };
-
-        Object.entries(buffersData).forEach(([setName, data]) => {
-            const { vertices, indices, normals, textureCoords } = data;
-            const drawMethod = data.drawMethod ?? this.gl.STATIC_DRAW;
-
-            const vao = this.gl.createVertexArray();
-
-            this.gl.bindVertexArray(vao);
-
-            let buffersSet = (this.buffers[setName] = {
-                vao,
-                vertices: this.#createVertexBuffer(Generator.#ATTRIBUTE_INDICES.position, vertices, commonBuffersSettings, drawMethod),
-            });
-
-            if (indices) {
-                buffersSet.indices = this.#createIndexBuffer(indices, drawMethod);
-            }
-
-            if (normals) {
-                buffersSet.normals = this.#createVertexBuffer(Generator.#ATTRIBUTE_INDICES.normal, normals, commonBuffersSettings, drawMethod);
-            }
-
-            if (textureCoords) {
-                buffersSet.textureCoords = this.#createVertexBuffer(
-                    Generator.#ATTRIBUTE_INDICES.textureCoords,
-                    textureCoords,
-                    { size: 2, normalize: true },
-                    drawMethod
-                );
-            }
-        });
+    createBufferSets(bufferSets) {
+        for (const bufferSet of bufferSets) {
+            this.createBufferSet(bufferSet)
+        };
     }
+
+    createBufferSet = (conf, merge = true) => {
+        const commonBuffersSettings = { size: this.mode === "3d" ? 3 : 2 };
+        const { vertices, indices, normals, textureCoords } = conf.data;
+        const drawMethod = conf.drawMethod ?? this.gl.STATIC_DRAW;
+
+        const vao = this.gl.createVertexArray();
+
+        this.gl.bindVertexArray(vao);
+
+        let buffersSet = {
+            vao,
+            vertices: this.#createVertexBuffer(Generator.#ATTRIBUTE_INDICES.position, vertices, commonBuffersSettings, drawMethod),
+        };
+
+        if (indices?.length) {
+            buffersSet.indices = this.#createIndexBuffer(indices, drawMethod);
+        }
+
+        if (normals?.length) {
+            buffersSet.normals = this.#createVertexBuffer(Generator.#ATTRIBUTE_INDICES.normal, normals, commonBuffersSettings, drawMethod);
+        }
+
+        if (textureCoords?.length) {
+            buffersSet.textureCoords = this.#createVertexBuffer(
+                Generator.#ATTRIBUTE_INDICES.textureCoords,
+                textureCoords,
+                { size: 2, normalize: true },
+                drawMethod
+            );
+        }
+
+        if (merge) this.buffers[conf.name] = buffersSet
+
+        return buffersSet
+    };
 
     #createVertexBuffer(index, bufferData, settings, drawMethod = this.gl.STATIC_DRAW) {
         const buffer = this.gl.createBuffer();
@@ -183,10 +190,10 @@ class Generator {
                 );
             }
         }
-        
+
         textureConf.setParams?.();
 
-        if (merge) this.textures[textureConf.name] = newTexData
+        if (merge) this.textures[textureConf.name] = newTexData;
 
         return newTexData;
     }
@@ -213,7 +220,7 @@ class Generator {
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, framebuffer);
         setTexture();
 
-        if (merge) this.framebuffers[name] = framebuffer
+        if (merge) this.framebuffers[name] = framebuffer;
 
         return framebuffer;
     }

@@ -1,7 +1,7 @@
 import MatUtils from "../utils/MatUtils.js";
 import Cube from "../shapes/3d/Cube.js";
 import Plane from "../shapes/3d/Plane.js";
-import Framer from "../Framer/Framer.js";
+import Framer from "../Generator/Framer/Framer.js";
 import LightSystem from "../LightSystem/LightSystem.js";
 
 class Playground extends Framer {
@@ -12,30 +12,9 @@ class Playground extends Framer {
         });
 
         const wireframe = false;
-        const plane = new Plane(0.8, 1, 1, wireframe);
-        const cube = new Cube(0.2, wireframe);
 
-        let { geometry } = this;
-
-        geometry.plane = plane;
-        geometry.cube = cube;
-
-        this.init({
-            buffers: {
-                plane: {
-                    vertices: geometry.plane.vertices,
-                    indices: geometry.plane.indices,
-                    normals: geometry.plane.normals,
-                    textureCoords: geometry.plane.textureCoords,
-                },
-                cube: {
-                    vertices: geometry.cube.vertices,
-                    indices: geometry.cube.indices,
-                    normals: geometry.cube.normals,
-                    textureCoords: geometry.cube.textureCoords,
-                },
-            },
-        });
+        new Plane("plane", this, 0.8, 1, 1, wireframe);
+        new Cube("cube", this, 0.2, wireframe);
 
         // const cameraPosition = [0, 0, 0];
         const cameraPosition = [Math.cos(Math.PI / 8) * 10, 0.1, Math.sin(Math.PI / 8) * 10];
@@ -43,7 +22,7 @@ class Playground extends Framer {
         const lNear = 1;
         const lFar = 80;
 
-        this.mats.scene = MatUtils.multMats3d(this.mats.projection, [viewMat]);
+        this.mats.scene = MatUtils.mult3d(this.mats.projection, [viewMat]);
         const lightSystem = (this.lightSystem = new LightSystem(this));
 
         lightSystem.addLight(
@@ -146,20 +125,20 @@ class Playground extends Framer {
         // thirdSpotLight.active = false;
 
         const planeMats = [
-            MatUtils.multMats3d(this.geometry.plane.mat, [
+            MatUtils.mult3d(this.shapes.plane.mats.origin, [
                 MatUtils.translated3d(-2.5, 2.4, -5),
                 MatUtils.rotated3d("x", -Math.PI / 2),
                 MatUtils.scaled3d(6, 6, 6),
             ]),
-            MatUtils.multMats3d(this.geometry.plane.mat, [
+            MatUtils.mult3d(this.shapes.plane.mats.origin, [
                 MatUtils.translated3d(0, -2.4, 16),
                 MatUtils.rotated3d("x", Math.PI / 2),
                 MatUtils.scaled3d(6, 6, 6),
             ]),
         ];
         const cubeMats = [
-            MatUtils.multMats3d(MatUtils.translated3d(0, 0, 0), [MatUtils.scaled3d(10, 10, 10)]),
-            MatUtils.multMats3d(MatUtils.translated3d(0, 0, 10), [MatUtils.scaled3d(10, 10, 10)]),
+            MatUtils.mult3d(MatUtils.translated3d(0, 0, 0), [MatUtils.scaled3d(10, 10, 10)]),
+            MatUtils.mult3d(MatUtils.translated3d(0, 0, 10), [MatUtils.scaled3d(10, 10, 10)]),
         ];
 
         // const lPos = [Math.cos(Math.PI / 8) * 16, 0, Math.sin(Math.PI / 8) * 16];;
@@ -172,37 +151,23 @@ class Playground extends Framer {
                     color: [1, 1, 1],
                     mats: {
                         model: planeMats[0],
-                        final: MatUtils.multMats3d(this.mats.scene, planeMats[0]),
+                        final: MatUtils.mult3d(this.mats.scene, planeMats[0]),
                     },
                 },
-                render: this.#renderPlane,
+                render: this.shapes.plane.render,
             },
             cube: {
                 uniforms: {
                     color: [1, 1, 1],
                     mats: {
                         model: cubeMats[0],
-                        final: MatUtils.multMats3d(this.mats.scene, cubeMats[0]),
+                        final: MatUtils.mult3d(this.mats.scene, cubeMats[0]),
                     },
                 },
-                render: this.#renderCube,
+                render: this.shapes.cube.render,
             },
         });
         this.lightSystem.renderLights();
-    };
-
-    #renderPlane = () => {
-        this.gl.bindVertexArray(this.buffers.plane.vao);
-        this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.buffers.plane.indices);
-
-        this.gl.drawElements(this.gl.TRIANGLES, this.geometry.plane.indices.length, this.gl.UNSIGNED_SHORT, 0);
-    };
-
-    #renderCube = () => {
-        this.gl.bindVertexArray(this.buffers.cube.vao);
-        this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.buffers.cube.indices);
-
-        this.gl.drawElements(this.gl.TRIANGLES, this.geometry.cube.indices.length, this.gl.UNSIGNED_SHORT, 0);
     };
 }
 

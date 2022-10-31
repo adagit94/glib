@@ -1,4 +1,6 @@
-class Cube {
+import Shape from "../Shape.js"
+
+class Cube extends Shape {
     static #NORMALS = [
         0, 0, 1,
         0, 0, 1,
@@ -115,55 +117,59 @@ class Cube {
         1, 0,
     ]
     
-    constructor(sideLength, wireframe) {
-        const sideHalfLength = sideLength / 2
+    constructor(name, ctx, sideLength, wireframe) {
+        super(name, ctx, () => {
+            const sideHalfLength = sideLength / 2
         
-        this.vertices = [
-            // FRONT
-            sideHalfLength, sideHalfLength, sideHalfLength, // 0
-            sideHalfLength, -sideHalfLength, sideHalfLength, // 1
-            -sideHalfLength, -sideHalfLength, sideHalfLength, // 2
-            -sideHalfLength, sideHalfLength, sideHalfLength, // 3
-
-            // BACK
-            sideHalfLength, sideHalfLength, -sideHalfLength, // 4
-            sideHalfLength, -sideHalfLength, -sideHalfLength, // 5
-            -sideHalfLength, -sideHalfLength, -sideHalfLength, // 6
-            -sideHalfLength, sideHalfLength, -sideHalfLength, // 7           
-
-            // TOP
-            sideHalfLength, sideHalfLength, sideHalfLength, // 8
-            sideHalfLength, sideHalfLength, -sideHalfLength, // 9
-            -sideHalfLength, sideHalfLength, -sideHalfLength, // 10
-            -sideHalfLength, sideHalfLength, sideHalfLength, // 11
-
-            // BOTTOM
-            sideHalfLength, -sideHalfLength, sideHalfLength, // 12
-            sideHalfLength, -sideHalfLength, -sideHalfLength, // 13
-            -sideHalfLength, -sideHalfLength, -sideHalfLength, // 14
-            -sideHalfLength, -sideHalfLength, sideHalfLength, // 15
-
-            // RIGHT
-            sideHalfLength, sideHalfLength, sideHalfLength, // 16
-            sideHalfLength, sideHalfLength, -sideHalfLength, // 17
-            sideHalfLength, -sideHalfLength, -sideHalfLength, // 18
-            sideHalfLength, -sideHalfLength, sideHalfLength, // 19
-
-            // LEFT
-            -sideHalfLength, sideHalfLength, sideHalfLength, // 20
-            -sideHalfLength, sideHalfLength, -sideHalfLength, // 21
-            -sideHalfLength, -sideHalfLength, -sideHalfLength, // 22
-            -sideHalfLength, -sideHalfLength, sideHalfLength, // 23
-        ]
-
-        this.indices = wireframe ? Cube.#WIREFRAME_INDICES : Cube.#INDICES
-        this.normals = Cube.#NORMALS
-        this.textureCoords = Cube.#TEXTURE_COORDS
+            return {
+                vertices: [
+                    // FRONT
+                    sideHalfLength, sideHalfLength, sideHalfLength, // 0
+                    sideHalfLength, -sideHalfLength, sideHalfLength, // 1
+                    -sideHalfLength, -sideHalfLength, sideHalfLength, // 2
+                    -sideHalfLength, sideHalfLength, sideHalfLength, // 3
+        
+                    // BACK
+                    sideHalfLength, sideHalfLength, -sideHalfLength, // 4
+                    sideHalfLength, -sideHalfLength, -sideHalfLength, // 5
+                    -sideHalfLength, -sideHalfLength, -sideHalfLength, // 6
+                    -sideHalfLength, sideHalfLength, -sideHalfLength, // 7           
+        
+                    // TOP
+                    sideHalfLength, sideHalfLength, sideHalfLength, // 8
+                    sideHalfLength, sideHalfLength, -sideHalfLength, // 9
+                    -sideHalfLength, sideHalfLength, -sideHalfLength, // 10
+                    -sideHalfLength, sideHalfLength, sideHalfLength, // 11
+        
+                    // BOTTOM
+                    sideHalfLength, -sideHalfLength, sideHalfLength, // 12
+                    sideHalfLength, -sideHalfLength, -sideHalfLength, // 13
+                    -sideHalfLength, -sideHalfLength, -sideHalfLength, // 14
+                    -sideHalfLength, -sideHalfLength, sideHalfLength, // 15
+        
+                    // RIGHT
+                    sideHalfLength, sideHalfLength, sideHalfLength, // 16
+                    sideHalfLength, sideHalfLength, -sideHalfLength, // 17
+                    sideHalfLength, -sideHalfLength, -sideHalfLength, // 18
+                    sideHalfLength, -sideHalfLength, sideHalfLength, // 19
+        
+                    // LEFT
+                    -sideHalfLength, sideHalfLength, sideHalfLength, // 20
+                    -sideHalfLength, sideHalfLength, -sideHalfLength, // 21
+                    -sideHalfLength, -sideHalfLength, -sideHalfLength, // 22
+                    -sideHalfLength, -sideHalfLength, sideHalfLength, // 23
+                ],
+                indices: wireframe ? Cube.#WIREFRAME_INDICES : Cube.#INDICES,
+                normals: Cube.#NORMALS,
+                textureCoords: Cube.#TEXTURE_COORDS
+            }
+        }, wireframe)
     }
 
-    vertices
-    indices
-    normals
+    render = () => {
+        this.bindVao()
+        this.drawElements(this.wireframe ? this.gl.LINES : this.gl.TRIANGLES)
+    }
 }
 
 export default Cube

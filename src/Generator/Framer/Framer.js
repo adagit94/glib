@@ -1,8 +1,8 @@
-import Generator from "../Generator/Generator.js";
+import Generator from "../Generator.js";
 
 class Framer extends Generator {
     constructor(conf) {
-        super(conf)
+        super(conf);
     }
 
     animate = false;
@@ -16,7 +16,7 @@ class Framer extends Generator {
         };
 
         window.requestAnimationFrame(this.#render);
-    };
+    }
 
     #render = () => {
         const now = Date.now() / 1000;
@@ -35,4 +35,4 @@ class Framer extends Generator {
     };
 }
 
-export default Framer
+export default Framer;
