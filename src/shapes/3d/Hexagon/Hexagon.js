@@ -1,17 +1,10 @@
+import Shape from "../../Shape.js";
 import HexagonUtils from "./HexagonUtils.js";
 
-class Hexagon {
-    constructor(squareSide) {
-        const { vertices, indices, normals } = HexagonUtils.getHexagonData(squareSide);
-
-        this.vertices = vertices;
-        this.indices = indices;
-        this.normals = normals;
+class Hexagon extends Shape {
+    constructor(name, ctx, squareSide) {
+        super(name, ctx, () => HexagonUtils.getHexagonData(squareSide))
     }
-
-    vertices
-    indices
-    normals
 }
 
 export default Hexagon;
