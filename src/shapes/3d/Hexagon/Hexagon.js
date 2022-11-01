@@ -5,6 +5,11 @@ class Hexagon extends Shape {
     constructor(name, ctx, squareSide) {
         super(name, ctx, () => HexagonUtils.getHexagonData(squareSide))
     }
+
+    render = () => {
+        this.bindVao()
+        this.drawElements(this.gl.TRIANGLES)
+    }
 }
 
 export default Hexagon;

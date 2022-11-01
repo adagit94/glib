@@ -9,7 +9,7 @@ class Playground extends Framer {
     constructor() {
         super({
             canvasSelector: "#glFrame",
-            pespectiveConf: { fov: Math.PI / 2, near: 1, far: 80 },
+            pespectiveConf: { fov: Math.PI / 2, near: 0.1, far: 100 },
         });
 
         const hex = new Hexagon("hex", this, 0.25);
@@ -17,10 +17,10 @@ class Playground extends Framer {
         hex.mats.model = MatUtils.translated3d(0, 0, 0)
 
         // const cameraPosition = [0, 0, 0];
-        const cameraPosition = [Math.cos(Math.PI / 8) * 10, 0.1, Math.sin(Math.PI / 8) * 10];
+        const cameraPosition = [Math.cos(Math.PI / 8) * 5, 0.1, Math.sin(Math.PI / 8) * 5];
         const viewMat = MatUtils.view3d(cameraPosition, [0, 0, -1]); // [-7, 1.25, 2]
-        const lNear = 1;
-        const lFar = 80;
+        const lNear = 0.1;
+        const lFar = 100;
 
         this.mats.scene = MatUtils.mult3d(this.mats.projection, [viewMat]);
         const lightSystem = (this.lightSystem = new LightSystem(this));
@@ -30,7 +30,7 @@ class Playground extends Framer {
             "pointOne",
             {
                 size: 800,
-                lightProjectionMat: MatUtils.perspective(Math.PI / 2, 1, lNear, lFar), // should fov be predefined?
+                lightProjectionMat: MatUtils.perspective(Math.PI / 2, 0.1, lNear, lFar), // should fov be predefined?
             },
             {
                 light: {
@@ -50,7 +50,7 @@ class Playground extends Framer {
                     far: lFar,
                 },
             },
-            { position: [Math.cos(Math.PI / 2.5) * 10, 0.2, Math.sin(Math.PI / 2.5) * 10] }
+            { position: [Math.cos(Math.PI / 2) * 5, 0.2, Math.sin(Math.PI / 2) * 5] }
         );
 
         this.animate = false;
@@ -67,26 +67,18 @@ class Playground extends Framer {
 
         // this.lightSystem.getLight("second").active = false
 
+        console.log("this.shapes.hex", this.shapes.hex)
+        
         this.lightSystem.setModels({
-            plane: {
+            hex: {
                 uniforms: {
                     color: [1, 1, 1],
                     mats: {
-                        model: planeMats[0],
-                        final: MatUtils.mult3d(this.mats.scene, planeMats[0]),
+                        model: this.shapes.hex.mats.model,
+                        final: MatUtils.mult3d(this.mats.scene, this.shapes.hex.mats.model),
                     },
                 },
-                render: this.shapes.plane.render,
-            },
-            cube: {
-                uniforms: {
-                    color: [1, 1, 1],
-                    mats: {
-                        model: cubeMats[0],
-                        final: MatUtils.mult3d(this.mats.scene, cubeMats[0]),
-                    },
-                },
-                render: this.shapes.cube.render,
+                render: this.shapes.hex.render,
             },
         });
         this.lightSystem.renderLights();
