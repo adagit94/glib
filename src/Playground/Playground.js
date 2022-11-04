@@ -12,13 +12,11 @@ class Playground extends Framer {
             pespectiveConf: { fov: Math.PI / 2, near: 0.1, far: 100 },
         });
 
-        const hex = new Hexagon("hex", this, 0.25);
-
-        hex.mats.model = MatUtils.translated3d(0, 0, 0);
+        new Hexagon("hex", this, 0.25);
 
         // const cameraPosition = [0, 0, 0];
-        const cameraPosition = [Math.cos(Math.PI / 2 + Math.PI / 4) * 1.75, 0.1, Math.sin(Math.PI / 2 + Math.PI / 4) * 1.75];
-        const viewMat = MatUtils.view3d(cameraPosition, [1, 0, -1]); // [-7, 1.25, 2]
+        const cameraPosition = [Math.cos(Math.PI / 4) * 2.5, 0.1, -Math.sin(Math.PI / 4) * 2.5];
+        const viewMat = MatUtils.view3d(cameraPosition, [0, 0, 1]); // [-7, 1.25, 2]
         const lNear = 0.1;
         const lFar = 100;
 
@@ -50,10 +48,10 @@ class Playground extends Framer {
                     far: lFar,
                 },
             },
-            { position: [Math.cos(Math.PI / 8) * 10, 0, -Math.sin(Math.PI / 8) * 10] }
+            { position: [Math.cos(Math.PI / 4) * 2.5, -2.5, -Math.sin(Math.PI / 4) * 2.5] }
         );
 
-        this.animate = false;
+        this.animate = true;
         this.requestAnimationFrame();
         console.log(this);
     }
@@ -68,6 +66,8 @@ class Playground extends Framer {
 
         console.log("this.shapes.hex", this.shapes.hex);
 
+        this.shapes.hex.mats.model = MatUtils.rotated3d("y", -this.animData.deltaTime / 10);
+        
         this.lightSystem.setModels({
             hex: {
                 uniforms: {

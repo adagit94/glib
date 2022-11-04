@@ -21,10 +21,10 @@ export default class HexagonUtils {
                 // bottom back right
                 squareSide / 2, -2 * squareSide, -squareSide, // 12
                 squareSide * 2.5, 0, -squareSide, // 13
-                squareSide * 2.5, 0, 0, // 14
+                squareSide * 3.5, 0, 0, // 14
                 squareSide * 1.5, -2 * squareSide, 0, // 15
                 squareSide * 1.5, -squareSide, -squareSide * 2, // 16
-                squareSide * 1.5, -squareSide, squareSide, // 17
+                squareSide * 2.5, -squareSide, squareSide, // 17
             ],
             indices: [
                 // bottom

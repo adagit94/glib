@@ -245,14 +245,14 @@ export default {
             }
         
             color = vec4(u_color, 1);
-            // color.rgb *= u_ambientColor + diffuseColor;
-            // color.rgb += specular;
+            color.rgb *= u_ambientColor + diffuseColor;
+            color.rgb += specular;
         }
         `,
         depthMap: {
             vShader: `#version 300 es
 
-            uniform mat4 u_finalLightMat;
+        uniform mat4 u_finalLightMat;
             uniform mat4 u_modelMat;
             
             in vec3 a_position;
