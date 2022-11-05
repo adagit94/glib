@@ -14,18 +14,17 @@ class Playground extends Framer {
 
         new Hexagon("hex", this, 0.25);
 
-        // const cameraPosition = [0, 0, 0];
-        const cameraPosition = [Math.cos(Math.PI / 4) * 2.5, 0.1, -Math.sin(Math.PI / 4) * 2.5];
-        const viewMat = MatUtils.view3d(cameraPosition, [0, 0, 1]); // [-7, 1.25, 2]
+        // const cameraPosition = [0, -10, 0];
+        const cameraPosition = [-Math.cos(Math.PI / 4) * 1.5, 0.1, -Math.sin(Math.PI / 4) * 1.5];
+        const viewMat = MatUtils.view3d(cameraPosition, [1, 0, 1]); // [-7, 1.25, 2]
+        // const viewMat = MatUtils.view3d(cameraPosition, [0, 1, 0]); // [-7, 1.25, 2]
         const lNear = 0.1;
         const lFar = 100;
 
         this.mats.scene = MatUtils.mult3d(this.mats.projection, [viewMat]);
         const lightSystem = (this.lightSystem = new LightSystem(this));
 
-        lightSystem.addLight(
-            "point",
-            "pointOne",
+        const lightParams = [
             {
                 size: 800,
                 lightProjectionMat: MatUtils.perspective(Math.PI / 2, 0.1, lNear, lFar), // should fov be predefined?
@@ -48,10 +47,12 @@ class Playground extends Framer {
                     far: lFar,
                 },
             },
-            { position: [Math.cos(Math.PI / 4) * 2.5, -2.5, -Math.sin(Math.PI / 4) * 2.5] }
-        );
+        ];
 
-        this.animate = true;
+        lightSystem.addLight("point", "pointOne", ...lightParams, { position: [Math.cos(Math.PI / 8) * 2, -2, Math.sin(Math.PI / 8) * 2] });
+        // lightSystem.addLight("point", "pointTwo", ...lightParams, { position: [0, -10, 0] });
+
+        this.animate = false;
         this.requestAnimationFrame();
         console.log(this);
     }
@@ -66,8 +67,9 @@ class Playground extends Framer {
 
         console.log("this.shapes.hex", this.shapes.hex);
 
-        this.shapes.hex.mats.model = MatUtils.rotated3d("y", -this.animData.deltaTime / 10);
-        
+        // this.shapes.hex.mats.model = MatUtils.rotated3d("y", -this.animData.deltaTime / 10);
+        this.shapes.hex.mats.model = MatUtils.identity3d();
+
         this.lightSystem.setModels({
             hex: {
                 uniforms: {
