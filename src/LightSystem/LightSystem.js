@@ -253,8 +253,20 @@ class LightSystem {
     }
 
     #renderModels = (light, prepareUniforms, setProgram, lightMat) => {
+        const dmRender = !!lightMat;
+
         for (const model of this.#models._values) {
-            const uniformsSets = Array.isArray(model.uniforms) ? model.uniforms : [model.uniforms];
+            const { culling, uniforms } = model;
+            const uniformsSets = Array.isArray(uniforms) ? uniforms : [uniforms];
+
+            if (dmRender) {
+                if (culling?.preventDmFront) {
+                    this.#gl.disable(this.#gl.CULL_FACE);
+                } else {
+                    this.#gl.enable(this.#gl.CULL_FACE);
+                    this.#gl.cullFace(this.#gl.FRONT);
+                }
+            }
 
             for (const uniformsSet of uniformsSets) {
                 prepareUniforms(light, uniformsSet, lightMat);
@@ -262,6 +274,8 @@ class LightSystem {
                 model.render();
             }
         }
+
+        this.#gl.disable(this.#gl.CULL_FACE);
     };
 }
 
