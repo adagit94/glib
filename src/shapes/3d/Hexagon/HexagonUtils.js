@@ -57,6 +57,63 @@ export default class HexagonUtils {
                 -squareSide * 1.5, -2 * squareSide, 0, // 39
                 -squareSide * 1.5, -squareSide, -squareSide * 2, // 40
                 -squareSide * 2.5, -squareSide, 0, // 41
+
+
+                // top
+                -squareSide / 2, 2 * squareSide, squareSide, // 42
+                -squareSide / 2, 2 * squareSide, -squareSide, // 43
+                squareSide / 2, 2 * squareSide, -squareSide, // 44
+                squareSide / 2, 2 * squareSide, squareSide, // 45
+                -squareSide * 1.5, 2 * squareSide, 0, // 46
+                squareSide * 1.5, 2 * squareSide, 0, // 47
+
+                // top back middle
+                -squareSide / 2, 2 * squareSide, -squareSide, // 48
+                -squareSide / 2, 0, -squareSide * 3, // 49
+                squareSide / 2, 0, -squareSide * 3, // 50
+                squareSide / 2, 2 * squareSide, -squareSide, // 51
+                -squareSide * 1.5, squareSide, -squareSide * 2, // 52
+                squareSide * 1.5, squareSide, -squareSide * 2, // 53
+
+                // top back right
+                squareSide / 2, 2 * squareSide, -squareSide, // 54
+                squareSide * 2.5, 0, -squareSide * 1.5, // 55
+                squareSide * 3.5, 0, -squareSide, // 56
+                squareSide * 1.5, 2 * squareSide, 0, // 57
+                squareSide * 1.5, squareSide, -squareSide * 2, // 58
+                squareSide * 2.5, squareSide, 0, // 59
+
+                // top front right
+                squareSide * 1.5, 2 * squareSide, 0, // 60
+                squareSide * 3.5, 0, squareSide, // 61
+                squareSide * 2.5, 0, squareSide * 1.5, // 62
+                squareSide / 2, 2 * squareSide, squareSide, // 63
+                squareSide * 2.5, squareSide, 0, // 64
+                squareSide * 1.5, squareSide, squareSide * 2, // 65
+
+                // top front middle
+                -squareSide / 2, 2 * squareSide, squareSide, // 66
+                -squareSide / 2, 0, squareSide * 3, // 67
+                squareSide / 2, 0, squareSide * 3, // 68
+                squareSide / 2, 2 * squareSide, squareSide, // 69
+                -squareSide * 1.5, squareSide, squareSide * 2, // 70
+                squareSide * 1.5, squareSide, squareSide * 2, // 71
+
+                // top front left
+                -squareSide * 1.5, 2 * squareSide, 0, // 72
+                -squareSide * 3.5, 0, squareSide, // 73
+                -squareSide * 2.5, 0, squareSide * 1.5, // 74
+                -squareSide / 2, 2 * squareSide, squareSide, // 75
+                -squareSide * 2.5, squareSide, 0, // 76
+                -squareSide * 1.5, squareSide, squareSide * 2, // 77
+
+                // top back left
+                -squareSide / 2, 2 * squareSide, -squareSide, // 78
+                -squareSide * 2.5, 0, -squareSide * 1.5, // 79
+                -squareSide * 3.5, 0, -squareSide, // 80
+                -squareSide * 1.5, 2 * squareSide, 0, // 81
+                -squareSide * 1.5, squareSide, -squareSide * 2, // 82
+                -squareSide * 2.5, squareSide, 0, // 83
             ],
             indices: [
                 // bottom
@@ -100,6 +157,49 @@ export default class HexagonUtils {
                 38, 39, 36,
                 36, 40, 37,
                 39, 41, 38,
+
+
+                // top
+                42, 43, 44,
+                44, 45, 42,
+                42, 46, 43,
+                45, 47, 44,
+
+                // top back middle
+                48, 49, 50,
+                50, 51, 48,
+                48, 52, 49,
+                51, 53, 50,
+
+                // top back right
+                54, 55, 56,
+                56, 57, 54,
+                54, 58, 55,
+                57, 59, 56,
+
+                // top front right
+                60, 61, 62,
+                62, 63, 60,
+                60, 64, 61,
+                63, 65, 62,
+
+                // top front middle
+                66, 67, 68,
+                68, 69, 66,
+                66, 70, 67,
+                69, 71, 68,
+
+                // top front left
+                72, 73, 74,
+                74, 75, 72,
+                72, 76, 73,
+                75, 77, 74,
+
+                // top back left
+                78, 79, 80,
+                80, 81, 78,
+                78, 82, 79,
+                81, 83, 80,
             ],
             normals: [
                 // bottom
@@ -157,6 +257,63 @@ export default class HexagonUtils {
                 -1, -1, -1,
                 -1, -1, -1,
                 -1, -1, -1,
+
+                
+                // top
+                0, 1, 0,
+                0, 1, 0,
+                0, 1, 0,
+                0, 1, 0,
+                0, 1, 0,
+                0, 1, 0,
+
+                // top back middle
+                0, 1, -1,
+                0, 1, -1,
+                0, 1, -1,
+                0, 1, -1,
+                0, 1, -1,
+                0, 1, -1,
+
+                // top back right
+                1, 1, -1,
+                1, 1, -1,
+                1, 1, -1,
+                1, 1, -1,
+                1, 1, -1,
+                1, 1, -1,
+
+                // top front right
+                1, 1, 1,
+                1, 1, 1,
+                1, 1, 1,
+                1, 1, 1,
+                1, 1, 1,
+                1, 1, 1,
+
+                // top back middle
+                0, 1, 1,
+                0, 1, 1,
+                0, 1, 1,
+                0, 1, 1,
+                0, 1, 1,
+                0, 1, 1,
+
+                // top front left
+                -1, 1, 1,
+                -1, 1, 1,
+                -1, 1, 1,
+                -1, 1, 1,
+                -1, 1, 1,
+                -1, 1, 1,
+
+                // top back left
+                -1, 1, -1,
+                -1, 1, -1,
+                -1, 1, -1,
+                -1, 1, -1,
+                -1, 1, -1,
+                -1, 1, -1,
             ]
         }
     }

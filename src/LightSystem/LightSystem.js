@@ -156,6 +156,7 @@ class LightSystem {
         this.#gl.bindFramebuffer(this.#gl.FRAMEBUFFER, light.depthMap.framebuffer);
 
         if (light instanceof SpotLight) {
+            this.#gl.clear(this.#gl.DEPTH_BUFFER_BIT);
             this.#renderModels(light, LightSystemUtils.prepareSpotDepthMapUniforms, this.#setSpotDepthMap, light.depthMap.light.viewMat);
         } else if (light instanceof PointLight) {
             for (let side = 0; side < 6; side++) {
