@@ -1,23 +1,43 @@
-class Cone {
-    constructor(circleData, height) {
-        this.#initCone(circleData, height);
+import Shape from "../Shape.js";
+
+class Cone extends Shape {
+    constructor(name, ctx, baseR, height, density) {
+        super(name, ctx, () => {
+            let vertices = [], normals = []
+            
+            const angleStep = Math.PI * 2 / density
+
+            for (let v = 0; v < density; v++) {
+                const angle = v * angleStep;
+                const cos = Math.cos(angle)
+                const sin = Math.sin(angle)
+                const normal = [cos, 1, sin * -1]
+                
+                // top triangle vertex
+                vertices.push(0, height, 0)
+                normals.push(...normal)
+                
+                // first bottom triangle vertex
+                vertices.push(cos * baseR, 0, sin * baseR)
+                normals.push(...normal)
+                
+                // second bottom triangle vertex
+                {
+                    const angle = (v + 1) * angleStep;
+                    const cos = Math.cos(angle)
+                    const sin = Math.sin(angle)
+
+                    vertices.push(cos * baseR, 0, sin * baseR)
+                    normals.push(...normal)
+                }
+            }
+
+            return { vertices, normals }
+        })
     }
 
-    #initCone(circleData, height) {
-        const { r, vertices } = circleData;
-        const angle = Math.PI * 2;
-        const angleStep = angle / (vertices - 1);
-        let coordinates = [0, height, 0];
-
-        for (let vertex = 0; vertex < vertices; vertex++) {
-            const rad = angleStep * vertex;
-            const x = Math.cos(rad) * r;
-            const z = Math.sin(rad) * r;
-
-            coordinates.push(x, 0, z);
-        }
-
-        this.coordinates = coordinates;
+    render = () => {
+        this.drawArrays(this.gl.TRIANGLES)
     }
 }
 
