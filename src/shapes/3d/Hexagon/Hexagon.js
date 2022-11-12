@@ -7,7 +7,6 @@ class Hexagon extends Shape {
     }
 
     render = () => {
-        this.bindVao()
         this.drawElements(this.gl.TRIANGLES)
     }
 }

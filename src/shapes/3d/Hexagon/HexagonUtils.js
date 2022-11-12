@@ -139,6 +139,18 @@ export default class HexagonUtils {
                 squareSide * 1.5, squareSide, -squareSide * 2, // 97
                 squareSide * 2.5, 0, -squareSide * 1.5, // 98
                 squareSide * 1.5, -squareSide, -squareSide * 2, // 99
+
+                // right corner
+                squareSide * 3.5, 0, squareSide, // 100
+                squareSide * 2.5, squareSide, 0, // 101
+                squareSide * 3.5, 0, -squareSide, // 102
+                squareSide * 2.5, -squareSide, 0, // 103
+
+                // left corner
+                -squareSide * 3.5, 0, squareSide, // 104
+                -squareSide * 2.5, squareSide, 0, // 105
+                -squareSide * 3.5, 0, -squareSide, // 106
+                -squareSide * 2.5, -squareSide, 0, // 107
             ],
             indices: [
                 // bottom
@@ -242,6 +254,14 @@ export default class HexagonUtils {
                 // back right corner
                 96, 97, 98,
                 98, 99, 96,
+
+                // right corner
+                100, 101, 102,
+                102, 103, 100,
+
+                // left corner
+                104, 105, 106,
+                106, 107, 104,
             ],
             normals: [
                 // bottom
@@ -381,6 +401,18 @@ export default class HexagonUtils {
                 1, 0, -1,
                 1, 0, -1,
                 1, 0, -1,
+
+                // right corner
+                1, 0, 0,
+                1, 0, 0,
+                1, 0, 0,
+                1, 0, 0,
+
+                // left corner
+                -1, 0, 0,
+                -1, 0, 0,
+                -1, 0, 0,
+                -1, 0, 0,
             ]
         }
     }

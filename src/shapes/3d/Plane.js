@@ -56,7 +56,6 @@ class Plane extends Shape {
     }
 
     render = () => {
-        this.bindVao()
         this.wireframe ? this.drawArrays(this.gl.LINES) : this.drawElements(this.gl.TRIANGLES)
     }
 }

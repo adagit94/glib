@@ -4,6 +4,8 @@ import Plane from "../shapes/3d/Plane.js";
 import Framer from "../Generator/Framer/Framer.js";
 import LightSystem from "../LightSystem/LightSystem.js";
 import Hexagon from "../shapes/3d/Hexagon/Hexagon.js";
+import Pyramid from "../shapes/3d/Pyramid.js";
+import Octahedron from "../shapes/3d/Octahedron.js";
 
 class Playground extends Framer {
     constructor() {
@@ -12,10 +14,10 @@ class Playground extends Framer {
             pespectiveConf: { fov: Math.PI / 2, near: 0.1, far: 100 },
         });
 
-        new Hexagon("hex", this, 0.25);
+        new Octahedron("pyr", this, 0.25);
 
         // const cameraPosition = [0, 2, 0];
-        const cameraPosition = [Math.cos(Math.PI / 2) * 2, 0, Math.sin(Math.PI / 2) * 2];
+        const cameraPosition = [Math.cos(Math.PI / 2) * 1, 0, Math.sin(Math.PI / 2) * 1];
         const viewMat = MatUtils.view3d(cameraPosition, [0, 0, -1]); // [-7, 1.25, 2]
         // const viewMat = MatUtils.view3d(cameraPosition, [0, 1, 0]); // [-7, 1.25, 2]
         const lNear = 0.1;
@@ -74,7 +76,7 @@ class Playground extends Framer {
         // lightSystem.addLight("point", "pointOne", ...lightParams, { position: [Math.cos(Math.PI / 2) * 2, 0, Math.sin(Math.PI / 2) * 2] });
         // lightSystem.addLight("point", "pointTwo", ...lightParams, { position: [0, -10, 0] });
 
-        this.animate = false;
+        this.animate = true;
         this.requestAnimationFrame();
         console.log(this);
     }
@@ -87,24 +89,22 @@ class Playground extends Framer {
 
         // this.lightSystem.getLight("second").active = false
 
-        console.log("this.shapes.hex", this.shapes.hex);
+        console.log("this.shapes.pyr", this.shapes.pyr);
 
-        // this.shapes.hex.mats.model = MatUtils.rotated3d("y", -this.animData.deltaTime / 20);
-        this.shapes.hex.mats.model = MatUtils.rotated3d("y", Math.PI);
-        // this.shapes.hex.mats.model = MatUtils.rotated3d("y", -3.85);
-        // this.shapes.hex.mats.model = MatUtils.identity3d();
+        this.shapes.pyr.mats.model = MatUtils.rotated3d("y", this.animData.deltaTime / 10);
+        // this.shapes.pyr.mats.model = MatUtils.rotated3d("y", Math.PI);
 
         this.lightSystem.setModels({
             hex: {
                 uniforms: {
                     color: [1, 1, 1],
                     mats: {
-                        model: this.shapes.hex.mats.model,
-                        final: MatUtils.mult3d(this.mats.scene, this.shapes.hex.mats.model),
+                        model: this.shapes.pyr.mats.model,
+                        final: MatUtils.mult3d(this.mats.scene, this.shapes.pyr.mats.model),
                     },
                 },
                 // culling: { preventDmFront: true },
-                render: this.shapes.hex.render,
+                render: this.shapes.pyr.render,
             },
         });
         this.lightSystem.renderLights();

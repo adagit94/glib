@@ -26,10 +26,12 @@ class Shape {
     }
 
     drawArrays(mode, offset = 0) {
+        this.bindVao()
         this.gl.drawArrays(mode, offset, this.geometryData.vertices.length);
     };
 
     drawElements(mode, offset = 0) {
+        this.bindVao()
         this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.buffers.indices);
         this.gl.drawElements(mode, this.geometryData.indices.length, this.gl.UNSIGNED_SHORT, offset);
     };

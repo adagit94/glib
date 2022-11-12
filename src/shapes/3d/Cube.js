@@ -167,7 +167,6 @@ class Cube extends Shape {
     }
 
     render = () => {
-        this.bindVao()
         this.drawElements(this.wireframe ? this.gl.LINES : this.gl.TRIANGLES)
     }
 }
