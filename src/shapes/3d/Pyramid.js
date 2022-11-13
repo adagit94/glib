@@ -1,3 +1,4 @@
+import VecUtils from "../../utils/VecUtils.js";
 import Shape from "../Shape.js";
 
 class Pyramid extends Shape {
@@ -14,61 +15,68 @@ class Pyramid extends Shape {
         13, 14, 15
     ]
 
-    static #NORMALS = [
-        0, -1, 0,
-        0, -1, 0,
-        0, -1, 0,
-        0, -1, 0,
-
-        0, 1, 1,
-        0, 1, 1,
-        0, 1, 1,
-
-        0, 1, -1,
-        0, 1, -1,
-        0, 1, -1,
-
-        1, 1, 0,
-        1, 1, 0,
-        1, 1, 0,
-
-        -1, 1, 0,
-        -1, 1, 0,
-        -1, 1, 0,
-    ]
-    
     constructor(name, ctx, squareSide, height) {
-        super(name, ctx, () => ({
-            vertices: [
-                // bottom square
-                squareSide / 2, 0, squareSide / 2,
-                -squareSide / 2, 0, squareSide / 2,
-                -squareSide / 2, 0, -squareSide / 2,
-                squareSide / 2, 0, -squareSide / 2,
+        super(name, ctx, () => {
+            if (height === undefined) height = squareSide
+            
+            const frontNormal = VecUtils.cross(VecUtils.subtract([squareSide / 2, 0, squareSide / 2], [-squareSide / 2, 0, squareSide / 2]), VecUtils.subtract([0, height, 0], [-squareSide / 2, 0, squareSide / 2]))
+            const backNormal = VecUtils.cross(VecUtils.subtract([0, height, 0], [-squareSide / 2, 0, -squareSide / 2]), VecUtils.subtract([squareSide / 2, 0, -squareSide / 2], [-squareSide / 2, 0, -squareSide / 2]))
+            const rightNormal = VecUtils.cross(VecUtils.subtract([squareSide / 2, 0, -squareSide / 2], [squareSide / 2, 0, squareSide / 2]), VecUtils.subtract([0, height, 0], [squareSide / 2, 0, squareSide / 2]))
+            const leftNormal = VecUtils.cross(VecUtils.subtract([0, height, 0], [-squareSide / 2, 0, squareSide / 2]), VecUtils.subtract([-squareSide / 2, 0, -squareSide / 2], [-squareSide / 2, 0, squareSide / 2]))
 
-                // front triangle
-                squareSide / 2, 0, squareSide / 2,
-                -squareSide / 2, 0, squareSide / 2,
-                0, height ?? squareSide, 0,
+            return {
+                vertices: [
+                    // bottom square
+                    squareSide / 2, 0, squareSide / 2,
+                    -squareSide / 2, 0, squareSide / 2,
+                    -squareSide / 2, 0, -squareSide / 2,
+                    squareSide / 2, 0, -squareSide / 2,
 
-                // back triangle
-                squareSide / 2, 0, -squareSide / 2,
-                -squareSide / 2, 0, -squareSide / 2,
-                0, height ?? squareSide, 0,
+                    // front triangle
+                    squareSide / 2, 0, squareSide / 2,
+                    -squareSide / 2, 0, squareSide / 2,
+                    0, height, 0,
 
-                // right triangle
-                squareSide / 2, 0, squareSide / 2,
-                squareSide / 2, 0, -squareSide / 2,
-                0, height ?? squareSide, 0,
+                    // back triangle
+                    squareSide / 2, 0, -squareSide / 2,
+                    -squareSide / 2, 0, -squareSide / 2,
+                    0, height, 0,
 
-                // left triangle
-                -squareSide / 2, 0, squareSide / 2,
-                -squareSide / 2, 0, -squareSide / 2,
-                0, height ?? squareSide, 0,
-            ],
-            indices: Pyramid.#INDICES,
-            normals: Pyramid.#NORMALS,
-        }))
+                    // right triangle
+                    squareSide / 2, 0, squareSide / 2,
+                    squareSide / 2, 0, -squareSide / 2,
+                    0, height, 0,
+
+                    // left triangle
+                    -squareSide / 2, 0, squareSide / 2,
+                    -squareSide / 2, 0, -squareSide / 2,
+                    0, height, 0,
+                ],
+                indices: Pyramid.#INDICES,
+                normals: [
+                    0, -1, 0,
+                    0, -1, 0,
+                    0, -1, 0,
+                    0, -1, 0,
+
+                    ...frontNormal,
+                    ...frontNormal,
+                    ...frontNormal,
+
+                    ...backNormal,
+                    ...backNormal,
+                    ...backNormal,
+
+                    ...rightNormal,
+                    ...rightNormal,
+                    ...rightNormal,
+
+                    ...leftNormal,
+                    ...leftNormal,
+                    ...leftNormal,
+                ],
+            }
+        })
     }
 
     render = () => {

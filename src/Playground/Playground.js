@@ -15,7 +15,7 @@ class Playground extends Framer {
             pespectiveConf: { fov: Math.PI / 2, near: 0.1, far: 100 },
         });
 
-        new Cone("pyr", this, 0.1, 0.25, 10);
+        new Octahedron("pyr", this, 0.25, 0.1);
 
         // const cameraPosition = [0, 2, 0];
         const cameraPosition = [Math.cos(Math.PI / 2) * 1, 0, Math.sin(Math.PI / 2) * 1];
@@ -57,7 +57,7 @@ class Playground extends Framer {
             "pointOne",
             ...structuredClone(lightParams),
             {
-                position: [Math.cos(Math.PI / 2) * 2, 0.5, Math.sin(Math.PI / 2) * 2],
+                position: [Math.cos(Math.PI / 2) * 2, 0, Math.sin(Math.PI / 2) * 2],
             }
         );
 
@@ -77,7 +77,7 @@ class Playground extends Framer {
         // lightSystem.addLight("point", "pointOne", ...lightParams, { position: [Math.cos(Math.PI / 2) * 2, 0, Math.sin(Math.PI / 2) * 2] });
         // lightSystem.addLight("point", "pointTwo", ...lightParams, { position: [0, -10, 0] });
 
-        this.animate = true;
+        this.animate = false;
         this.requestAnimationFrame();
         console.log(this);
     }
@@ -93,7 +93,7 @@ class Playground extends Framer {
         console.log("this.shapes.pyr", this.shapes.pyr);
 
         this.shapes.pyr.mats.model = MatUtils.rotated3d("y", this.animData.deltaTime / 5);
-        // this.shapes.pyr.mats.model = MatUtils.rotated3d("y", Math.PI);
+        // this.shapes.pyr.mats.model = MatUtils.rotated3d("y", 0);
 
         this.lightSystem.setModels({
             hex: {

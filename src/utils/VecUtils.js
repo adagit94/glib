@@ -2,7 +2,7 @@ class VecUtils {
     static dot = (vecA, vecB) => vecA[0] * vecB[0] + vecA[1] * vecB[1] + vecA[2] * vecB[2];
 
     static cross = (vecA, vecB) =>
-        new Float32Array([vecA[1] * vecB[2] - vecB[1] * vecA[2], vecA[2] * vecB[0] - vecB[2] * vecA[0], vecA[0] * vecB[1] - vecB[0] * vecA[1]]);
+        new Float32Array([vecA[1] * vecB[2] - vecA[2] * vecB[1], vecA[2] * vecB[0] - vecA[0] * vecB[2], vecA[0] * vecB[1] - vecA[1] * vecB[0]]);
 
     static subtract = (vecA, vecB) => new Float32Array([vecA[0] - vecB[0], vecA[1] - vecB[1], vecA[2] - vecB[2]]);
 
