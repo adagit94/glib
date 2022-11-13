@@ -25,15 +25,15 @@ class Shape {
         this.gl.bindVertexArray(this.buffers.vao);
     }
 
-    drawArrays(mode, offset = 0) {
+    drawArrays(mode, settings) {
         this.bindVao()
-        this.gl.drawArrays(mode, offset, this.geometryData.vertices.length);
+        this.gl.drawArrays(mode, settings?.offset ?? 0, settings?.count ?? this.geometryData.vertices.length / (this.ctx.mode === "3d" ? 3 : 2));
     };
 
-    drawElements(mode, offset = 0) {
+    drawElements(mode, settings) {
         this.bindVao()
         this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.buffers.indices);
-        this.gl.drawElements(mode, this.geometryData.indices.length, this.gl.UNSIGNED_SHORT, offset);
+        this.gl.drawElements(mode, settings?.count ?? this.geometryData.indices.length, this.gl.UNSIGNED_SHORT, settings?.offset ?? 0);
     };
 }
 
