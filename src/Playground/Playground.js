@@ -7,6 +7,7 @@ import Hexagon from "../shapes/3d/Hexagon/Hexagon.js";
 import Pyramid from "../shapes/3d/Pyramid.js";
 import Octahedron from "../shapes/3d/Octahedron.js";
 import Cone from "../shapes/3d/Cone.js";
+import Cylinder from "../shapes/3d/Cylinder.js";
 
 class Playground extends Framer {
     constructor() {
@@ -15,7 +16,7 @@ class Playground extends Framer {
             pespectiveConf: { fov: Math.PI / 2, near: 0.1, far: 100 },
         });
 
-        new Octahedron("pyr", this, 0.25, 0.1);
+        new Cylinder("pyr", this, 0.125, 0.25, 100);
 
         // const cameraPosition = [0, 2, 0];
         const cameraPosition = [Math.cos(Math.PI / 2) * 1, 0, Math.sin(Math.PI / 2) * 1];
@@ -35,7 +36,7 @@ class Playground extends Framer {
             {
                 light: {
                     ambientColor: [0, 0, 0],
-                    lightColor: [0, 0, 1],
+                    lightColor: [1, 1, 1],
                     // shininess: 1024,
                     far: lFar,
                     cameraPosition,
@@ -89,8 +90,6 @@ class Playground extends Framer {
         // const lPos = [Math.cos(Math.PI / 8) * 16, 0, Math.sin(Math.PI / 8) * 16];;
 
         // this.lightSystem.getLight("second").active = false
-
-        console.log("this.shapes.pyr", this.shapes.pyr);
 
         this.shapes.pyr.mats.model = MatUtils.rotated3d("y", this.animData.deltaTime / 5);
         // this.shapes.pyr.mats.model = MatUtils.rotated3d("y", 0);
