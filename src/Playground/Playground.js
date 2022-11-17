@@ -8,6 +8,7 @@ import Pyramid from "../shapes/3d/Pyramid.js";
 import Octahedron from "../shapes/3d/Octahedron.js";
 import Cone from "../shapes/3d/Cone.js";
 import Cylinder from "../shapes/3d/Cylinder.js";
+import Sphere from "../shapes/3d/Sphere.js";
 
 class Playground extends Framer {
     constructor() {
@@ -16,7 +17,7 @@ class Playground extends Framer {
             pespectiveConf: { fov: Math.PI / 2, near: 0.1, far: 100 },
         });
 
-        new Cylinder("pyr", this, 0.125, 0.25, 100);
+        new Sphere("pyr", this, 0.25, 100, 100);
 
         // const cameraPosition = [0, 2, 0];
         const cameraPosition = [Math.cos(Math.PI / 2) * 1, 0, Math.sin(Math.PI / 2) * 1];
@@ -58,29 +59,13 @@ class Playground extends Framer {
             "pointOne",
             ...structuredClone(lightParams),
             {
-                position: [Math.cos(Math.PI / 2) * 2, 0, Math.sin(Math.PI / 2) * 2],
+                position: [Math.cos(Math.PI / 2) * 1, 0, Math.sin(Math.PI / 2) * 1],
             }
         );
 
-        // lightSystem.addLight("point", "pointTwo", ...lightParams, {
-        //     position: [Math.cos(Math.PI / 2) * 2, 0, -Math.sin(Math.PI / 2) * 2],
-        // });
-
-        // lightSystem.addLight("spot", "spotOne", ...lightParams, {
-        //     position: [Math.cos(Math.PI / 2) * 2, 0, Math.sin(Math.PI / 2) * 2],
-        //     direction: [0, 0, -1],
-        // });
-
-        // lightSystem.addLight("spot", "spotTwo", ...lightParams, {
-        //     position: [Math.cos(Math.PI / 2) * 2, 0, -Math.sin(Math.PI / 2) * 2],
-        //     direction: [0, 0, 1],
-        // });
-        // lightSystem.addLight("point", "pointOne", ...lightParams, { position: [Math.cos(Math.PI / 2) * 2, 0, Math.sin(Math.PI / 2) * 2] });
-        // lightSystem.addLight("point", "pointTwo", ...lightParams, { position: [0, -10, 0] });
-
         this.animate = false;
         this.requestAnimationFrame();
-        console.log(this);
+        // console.log(this);
     }
 
     renderScene = () => {
@@ -91,7 +76,7 @@ class Playground extends Framer {
 
         // this.lightSystem.getLight("second").active = false
 
-        this.shapes.pyr.mats.model = MatUtils.rotated3d("y", this.animData.deltaTime / 5);
+        this.shapes.pyr.mats.model = MatUtils.rotated3d("x", this.animData.deltaTime / 5);
         // this.shapes.pyr.mats.model = MatUtils.rotated3d("y", 0);
 
         this.lightSystem.setModels({
