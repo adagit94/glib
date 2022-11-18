@@ -18,10 +18,10 @@ class Playground extends Framer {
         });
 
         // new Sphere("pyr", this, 0.25, 100, 100);
-        new Cone("pyr", this, 2, 7.5, 100, { invertNormals: false });
+        new Cone("pyr", this, 2, 2, 100, { opened: true });
 
-        const cameraPosition = [0, 0.5, 10];
-        // const cameraPosition = [Math.cos(Math.PI / 2) * 1, 0, Math.sin(Math.PI / 2) * 1];
+        // const cameraPosition = [0, 0, 0];
+        const cameraPosition = [Math.cos(Math.PI / 2) * 5, 0, Math.sin(Math.PI / 2) * 5];
         const viewMat = MatUtils.view3d(cameraPosition, [0, 0, -1]); // [-7, 1.25, 2]
         // const viewMat = MatUtils.view3d(cameraPosition, [0, 1, 0]); // [-7, 1.25, 2]
         const lNear = 0.1;
@@ -56,8 +56,8 @@ class Playground extends Framer {
         ];
 
         lightSystem.addLight("point", "pointOne", ...structuredClone(lightParams), {
-            // position: [Math.cos(Math.PI / 2) * 1, 0, Math.sin(Math.PI / 2) * 1],
-            position: [0, 0.5, 10],
+            position: [Math.cos(Math.PI / 2) * 5, 0, Math.sin(Math.PI / 2) * 5],
+            // position: [0, 0, 0],
         });
 
         this.animate = false;
@@ -73,6 +73,7 @@ class Playground extends Framer {
 
         // this.lightSystem.getLight("second").active = false
 
+        // this.shapes.pyr.mats.model = MatUtils.rotated3d("x", Math.PI / 2);
         this.shapes.pyr.mats.model = MatUtils.rotated3d("x", this.animData.deltaTime / 10);
         // this.shapes.pyr.mats.model = MatUtils.rotated3d("y", 0);
 
