@@ -17,12 +17,11 @@ class Playground extends Framer {
             pespectiveConf: { fov: Math.PI / 2, near: 0.1, far: 100 },
         });
 
-        // new Sphere("pyr", this, 0.25, 100, 100);
-        new Cone("pyr", this, 2, 2, 100, { opened: true });
+        new Cone("pyr", this, 2, 6, 100, { angle: Math.PI * 2 - Math.PI / 2 });
 
-        // const cameraPosition = [0, 0, 0];
-        const cameraPosition = [Math.cos(Math.PI / 2) * 5, 0, Math.sin(Math.PI / 2) * 5];
-        const viewMat = MatUtils.view3d(cameraPosition, [0, 0, -1]); // [-7, 1.25, 2]
+        // const cameraPosition = [0, 0, 1.75];
+        const cameraPosition = [Math.cos(0) * 7, 0, Math.sin(0) * 7];
+        const viewMat = MatUtils.view3d(cameraPosition, [-1, 0, 0]); // [-7, 1.25, 2]
         // const viewMat = MatUtils.view3d(cameraPosition, [0, 1, 0]); // [-7, 1.25, 2]
         const lNear = 0.1;
         const lFar = 100;
@@ -32,7 +31,7 @@ class Playground extends Framer {
 
         const lightParams = [
             {
-                size: 800,
+                size: 3200,
                 lightProjectionMat: MatUtils.perspective(Math.PI / 2, 1, lNear, lFar), // should fov be predefined?
             },
             {
@@ -56,7 +55,8 @@ class Playground extends Framer {
         ];
 
         lightSystem.addLight("point", "pointOne", ...structuredClone(lightParams), {
-            position: [Math.cos(Math.PI / 2) * 5, 0, Math.sin(Math.PI / 2) * 5],
+            // position: [Math.cos(Math.PI / 8) * 7, 0, -Math.sin(Math.PI / 8) * 7],
+            position: [Math.cos(0) * 7, 4, Math.sin(0) * 7],
             // position: [0, 0, 0],
         });
 
@@ -73,8 +73,9 @@ class Playground extends Framer {
 
         // this.lightSystem.getLight("second").active = false
 
+        this.shapes.pyr.mats.model = MatUtils.mult3d(MatUtils.translated3d(6, -5.75, 0), [MatUtils.rotated3d("z", 0), MatUtils.rotated3d("y", Math.PI / 4)]);
+        // this.shapes.pyr.mats.model = MatUtils.mult3d(MatUtils.translated3d(-5, -5.9, 0), [MatUtils.rotated3d("z", 0), MatUtils.rotated3d("y", this.animData.deltaTime / 10)]);
         // this.shapes.pyr.mats.model = MatUtils.rotated3d("x", Math.PI / 2);
-        this.shapes.pyr.mats.model = MatUtils.rotated3d("x", this.animData.deltaTime / 10);
         // this.shapes.pyr.mats.model = MatUtils.rotated3d("y", 0);
 
         this.lightSystem.setModels({

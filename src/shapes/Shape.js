@@ -4,7 +4,7 @@ class Shape {
         this.gl = ctx.gl;
         this.wireframe = wireframe;
 
-        const { mats, ...geometryData } = init()
+        const { mats, ...geometryData } = init(this)
 
         this.mats = mats ?? {}
         this.geometryData = geometryData
@@ -19,6 +19,7 @@ class Shape {
     gl;
     wireframe;
     geometryData
+    buffers
     mats
 
     bindVao() {

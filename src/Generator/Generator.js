@@ -12,6 +12,7 @@ class Generator {
         let { canvasSelector, mode, perspectiveConf } = conf;
 
         const gl = (this.gl = document.querySelector(canvasSelector).getContext("webgl2"));
+
         gl.canvas.width = gl.canvas.clientWidth;
         gl.canvas.height = gl.canvas.clientHeight;
 
