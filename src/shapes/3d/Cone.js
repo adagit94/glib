@@ -10,53 +10,54 @@ class Cone extends Shape {
             const partialAngle = instance.partialAngle = angle !== Math.PI * 2
             const baseOpened = instance.baseOpened = partialAngle || !!optionals?.baseOpened
             const invertNormals = !baseOpened && !!optionals?.invertNormals
-            const coneAngleDensity = instance.coneAngleDensity = partialAngle ? Math.round(density * (angle / (Math.PI * 2))) : density
+            const coneAngleDensity = partialAngle ? Math.round(density * (angle / (Math.PI * 2))) : density
             const angleStep = angle / coneAngleDensity
+
+            instance.coneCount = coneAngleDensity * 3
+            instance.baseCount = baseOpened ? 2 * (coneAngleDensity + 1) : coneAngleDensity + 2
 
             let coneVertices = [], coneNormals = []
             let coneOpenedSidesVertices = [], coneOpenedSidesNormals = [], coneOpenedSidesIndices = []
             let baseVertices = [], baseNormals = [], baseIndices = []
             
             ;(function initData(baseR, height, invertNormals) {
-                const slopeAngle = Math.atan(baseR / height)
-
-                const coneNy = invertNormals ? -1 : 1
+                const topVertex = [0, height, 0]
                 const baseNy = invertNormals ? 1 : -1
                 
-                coneVertices.push(0, height, 0)
-                coneNormals.push(0, coneNy, 0)
-
                 if (!baseOpened) {
                     baseVertices.push(0, 0, 0)
                     baseNormals.push(0, baseNy, 0)
                 }
-                
+
                 for (let v = 0; v <= coneAngleDensity; v++) {
-                    const angle = v * angleStep;
-                    const cos = Math.cos(angle)
-                    const sin = Math.sin(angle)
+                    const currentAngle = v * angleStep;
+                    const currentX = Math.cos(currentAngle) * baseR
+                    const currentZ = Math.sin(currentAngle) * baseR
+                    const currentVertex = [currentX, 0, currentZ]
 
-                    const vCoords = [cos * baseR, 0, sin * baseR]
-
-                    let nx = cos * Math.cos(slopeAngle)
-                    let ny = Math.sin(slopeAngle)
-                    let nz = sin * Math.cos(slopeAngle)
-
-                    if (invertNormals) {
-                        nx *= -1
-                        ny *= -1
-                        nz *= -1
-                    }
+                    baseVertices.push(...currentVertex)
+                    baseNormals.push(0, baseOpened ? -1 : baseNy, 0)
                     
-                    coneVertices.push(...vCoords)
-                    coneNormals.push(nx, ny, nz)
+                    if (v < coneAngleDensity) {
+                        const nextAngle = (v + 1) * angleStep;
+                        const nextX = Math.cos(nextAngle) * baseR
+                        const nextZ = Math.sin(nextAngle) * baseR
+                        const nextVertex = [nextX, 0, nextZ]
 
-                    if (baseOpened) {
-                        baseVertices.push(...vCoords)
-                        baseNormals.push(0, -1, 0)
-                    } else {
-                        baseVertices.push(...vCoords)
-                        baseNormals.push(0, baseNy, 0)
+                        coneVertices.push(...topVertex)
+                        coneVertices.push(...currentVertex)
+                        coneVertices.push(...nextVertex)
+
+                        let crossVecs = []
+
+                        crossVecs[invertNormals ? 0 : 1] = VecUtils.subtract(nextVertex, currentVertex)
+                        crossVecs[invertNormals ? 1 : 0] = VecUtils.subtract(topVertex, currentVertex)
+
+                        const faceNormal = VecUtils.cross(...crossVecs)
+                        
+                        coneNormals.push(...faceNormal)
+                        coneNormals.push(...faceNormal)
+                        coneNormals.push(...faceNormal)
                     }
                 }
 
@@ -64,7 +65,7 @@ class Cone extends Shape {
             })(baseR, height, invertNormals)
 
             if (baseOpened) {
-                const offset = (coneAngleDensity + 2) * 2
+                const offset = instance.coneCount * 2
 
                 for (let i = 0; i < coneAngleDensity; i++) {
                     const firstIndex = offset + i
@@ -74,94 +75,107 @@ class Cone extends Shape {
                     baseIndices.push(outerConeIndex, outerConeIndex + 1, innerConeIndex)
                     baseIndices.push(outerConeIndex + 1, innerConeIndex + 1, innerConeIndex)
                 }
-            }
 
-            if (partialAngle) {
-                const outerConeR = baseR + (-baseR / height) * (height * Cone.#INNER_CONE_SCALE)
+                if (partialAngle) {
+                    const outerConeR = baseR + (-baseR / height) * (height * Cone.#INNER_CONE_SCALE)
 
-                const outerConeBottomStartVertex = [Math.cos(0) * baseR, 0, Math.sin(0) * baseR]
-                const outerConeTopStartVertex = [Math.cos(0) * outerConeR, height * Cone.#INNER_CONE_SCALE, Math.sin(0) * outerConeR]
-                const innerConeBottomStartVertex = [Math.cos(0) * (baseR * Cone.#INNER_CONE_SCALE), 0, Math.sin(0) * (baseR * Cone.#INNER_CONE_SCALE)]
-                const innerConeTopVertex = [0, height * Cone.#INNER_CONE_SCALE, 0]
+                    const outerConeBottomStartVertex = [Math.cos(0) * baseR, 0, Math.sin(0) * baseR]
+                    const outerConeTopStartVertex = [Math.cos(0) * outerConeR, height * Cone.#INNER_CONE_SCALE, Math.sin(0) * outerConeR]
+                    const innerConeBottomStartVertex = [Math.cos(0) * (baseR * Cone.#INNER_CONE_SCALE), 0, Math.sin(0) * (baseR * Cone.#INNER_CONE_SCALE)]
+                    const innerConeTopVertex = [0, height * Cone.#INNER_CONE_SCALE, 0]
 
-                coneOpenedSidesVertices.push(...outerConeBottomStartVertex)
-                coneOpenedSidesVertices.push(...outerConeTopStartVertex)
-                coneOpenedSidesVertices.push(...innerConeBottomStartVertex)
-                coneOpenedSidesVertices.push(...innerConeTopVertex)
+                    coneOpenedSidesVertices.push(...outerConeBottomStartVertex)
+                    coneOpenedSidesVertices.push(...outerConeTopStartVertex)
+                    coneOpenedSidesVertices.push(...innerConeBottomStartVertex)
+                    coneOpenedSidesVertices.push(...innerConeTopVertex)
 
-                const startSideNormal = VecUtils.cross(VecUtils.subtract(innerConeBottomStartVertex, outerConeBottomStartVertex), VecUtils.subtract(outerConeTopStartVertex, outerConeBottomStartVertex))
-                
-                coneOpenedSidesNormals.push(...startSideNormal)
-                coneOpenedSidesNormals.push(...startSideNormal)
-                coneOpenedSidesNormals.push(...startSideNormal)
-                coneOpenedSidesNormals.push(...startSideNormal)
-
-                const startFirstIndex = (coneAngleDensity + 2) * 2 + (coneAngleDensity + 1) * 2
-                
-                coneOpenedSidesIndices.push(startFirstIndex, startFirstIndex + 1, startFirstIndex + 2)
-                coneOpenedSidesIndices.push(startFirstIndex + 2, startFirstIndex + 3, startFirstIndex + 1)
-
-                const outerConeBottomFinishVertex = [Math.cos(angle) * baseR, 0, Math.sin(angle) * baseR]
-                const outerConeTopFinishVertex = [Math.cos(angle) * outerConeR, height * Cone.#INNER_CONE_SCALE, Math.sin(angle) * outerConeR]
-                const innerConeBottomFinishVertex = [Math.cos(angle) * (baseR * Cone.#INNER_CONE_SCALE), 0, Math.sin(angle) * (baseR * Cone.#INNER_CONE_SCALE)]
-
-                coneOpenedSidesVertices.push(...outerConeBottomFinishVertex)
-                coneOpenedSidesVertices.push(...outerConeTopFinishVertex)
-                coneOpenedSidesVertices.push(...innerConeBottomFinishVertex)
-                coneOpenedSidesVertices.push(...innerConeTopVertex)
-
-                const finishSideNormal = VecUtils.cross(VecUtils.subtract(outerConeTopFinishVertex, outerConeBottomFinishVertex), VecUtils.subtract(innerConeBottomFinishVertex, outerConeBottomFinishVertex))
-                
-                coneOpenedSidesNormals.push(...finishSideNormal)
-                coneOpenedSidesNormals.push(...finishSideNormal)
-                coneOpenedSidesNormals.push(...finishSideNormal)
-                coneOpenedSidesNormals.push(...finishSideNormal)
-
-                const finishFirstIndex = startFirstIndex + 4
-                
-                coneOpenedSidesIndices.push(finishFirstIndex, finishFirstIndex + 1, finishFirstIndex + 2)
-                coneOpenedSidesIndices.push(finishFirstIndex + 2, finishFirstIndex + 3, finishFirstIndex + 1)
-
-                const openedAngleDensity = instance.openedAngleDensity = density - coneAngleDensity
-                const topTriFanAngleStep = (Math.PI * 2 - angle) / openedAngleDensity
-                const outerConeTopVertex = [0, height, 0]
-
-                let apexBaseVertices = []
-                let apexBaseNormals = []
-
-                let apexVertices = []
-                let apexNormals = []
-                
-                apexBaseVertices.push(...innerConeTopVertex)
-                apexBaseNormals.push(0, -1, 0)
-
-                apexVertices.push(...outerConeTopVertex)
-                apexNormals.push(0, 1, 0)
-
-                const slopeAngle = Math.atan(baseR / height)
-                
-                for (let v = 0; v <= openedAngleDensity; v++) {
-                    const vertexAngle = angle + v * topTriFanAngleStep
-                    const cos = Math.cos(vertexAngle)
-                    const sin = Math.sin(vertexAngle)
-
-                    const apexVertex = [cos * outerConeR, height * Cone.#INNER_CONE_SCALE, sin * outerConeR]
-                    const apexNormal = [cos * Math.cos(slopeAngle), Math.sin(slopeAngle), sin * Math.cos(slopeAngle)]
-
-                    apexVertices.push(...apexVertex)
-                    apexNormals.push(...apexNormal)
-
-                    const apexBaseNormal = VecUtils.cross(VecUtils.subtract(innerConeTopVertex, apexVertex), VecUtils.subtract(outerConeTopFinishVertex, apexVertex))
+                    const startSideNormal = VecUtils.cross(VecUtils.subtract(innerConeBottomStartVertex, outerConeBottomStartVertex), VecUtils.subtract(outerConeTopStartVertex, outerConeBottomStartVertex))
                     
-                    apexBaseVertices.push(...apexVertex)
-                    apexBaseNormals.push(...apexBaseNormal)
-                }
+                    coneOpenedSidesNormals.push(...startSideNormal)
+                    coneOpenedSidesNormals.push(...startSideNormal)
+                    coneOpenedSidesNormals.push(...startSideNormal)
+                    coneOpenedSidesNormals.push(...startSideNormal)
 
-                coneOpenedSidesVertices.push(...apexBaseVertices)
-                coneOpenedSidesNormals.push(...apexBaseNormals)
-                
-                coneOpenedSidesVertices.push(...apexVertices)
-                coneOpenedSidesNormals.push(...apexNormals)
+                    const startFirstIndex = instance.coneCount * 2 + (coneAngleDensity + 1) * 2
+
+                    coneOpenedSidesIndices.push(startFirstIndex, startFirstIndex + 1, startFirstIndex + 2)
+                    coneOpenedSidesIndices.push(startFirstIndex + 2, startFirstIndex + 3, startFirstIndex + 1)
+
+                    const outerConeBottomFinishVertex = [Math.cos(angle) * baseR, 0, Math.sin(angle) * baseR]
+                    const outerConeTopFinishVertex = [Math.cos(angle) * outerConeR, height * Cone.#INNER_CONE_SCALE, Math.sin(angle) * outerConeR]
+                    const innerConeBottomFinishVertex = [Math.cos(angle) * (baseR * Cone.#INNER_CONE_SCALE), 0, Math.sin(angle) * (baseR * Cone.#INNER_CONE_SCALE)]
+
+                    coneOpenedSidesVertices.push(...outerConeBottomFinishVertex)
+                    coneOpenedSidesVertices.push(...outerConeTopFinishVertex)
+                    coneOpenedSidesVertices.push(...innerConeBottomFinishVertex)
+                    coneOpenedSidesVertices.push(...innerConeTopVertex)
+
+                    const finishSideNormal = VecUtils.cross(VecUtils.subtract(outerConeTopFinishVertex, outerConeBottomFinishVertex), VecUtils.subtract(innerConeBottomFinishVertex, outerConeBottomFinishVertex))
+                    
+                    coneOpenedSidesNormals.push(...finishSideNormal)
+                    coneOpenedSidesNormals.push(...finishSideNormal)
+                    coneOpenedSidesNormals.push(...finishSideNormal)
+                    coneOpenedSidesNormals.push(...finishSideNormal)
+
+                    const finishFirstIndex = startFirstIndex + 4
+
+                    instance.apexOffset = finishFirstIndex + 4
+                    
+                    coneOpenedSidesIndices.push(finishFirstIndex, finishFirstIndex + 1, finishFirstIndex + 2)
+                    coneOpenedSidesIndices.push(finishFirstIndex + 2, finishFirstIndex + 3, finishFirstIndex + 1)
+
+                    const openedAngleDensity = density - coneAngleDensity
+                    const topTriFanAngleStep = (Math.PI * 2 - angle) / openedAngleDensity
+                    const outerConeTopVertex = [0, height, 0]
+
+                    instance.apexBaseCount = openedAngleDensity + 2
+                    instance.apexCount = openedAngleDensity * 3
+
+                    let apexBaseVertices = []
+                    let apexBaseNormals = []
+
+                    let apexVertices = []
+                    let apexNormals = []
+                    
+                    const apexBaseNormal = VecUtils.cross(VecUtils.subtract(innerConeTopVertex, outerConeTopStartVertex), VecUtils.subtract(outerConeTopFinishVertex, outerConeTopStartVertex))
+                    
+                    apexBaseVertices.push(...innerConeTopVertex)
+                    apexBaseNormals.push(...apexBaseNormal)
+
+                    for (let v = 0; v <= openedAngleDensity; v++) {
+                        const currentVertexAngle = angle + v * topTriFanAngleStep
+                        const currentVertexCos = Math.cos(currentVertexAngle)
+                        const currentVertexSin = Math.sin(currentVertexAngle)
+
+                        const apexCurrentVertex = [currentVertexCos * outerConeR, height * Cone.#INNER_CONE_SCALE, currentVertexSin * outerConeR]
+                        
+                        apexBaseVertices.push(...apexCurrentVertex)
+                        apexBaseNormals.push(...apexBaseNormal)
+                        
+                        if (v < openedAngleDensity) {
+                            const nextVertexAngle = angle + (v + 1) * topTriFanAngleStep
+                            const nextVertexCos = Math.cos(nextVertexAngle)
+                            const nextVertexSin = Math.sin(nextVertexAngle)
+                            
+                            const apexNextVertex = [nextVertexCos * outerConeR, height * Cone.#INNER_CONE_SCALE, nextVertexSin * outerConeR]
+                            const apexFaceNormal = VecUtils.cross(VecUtils.subtract(outerConeTopVertex, apexCurrentVertex), VecUtils.subtract(apexNextVertex, apexCurrentVertex))
+
+                            apexVertices.push(...apexCurrentVertex)
+                            apexVertices.push(...apexNextVertex)
+                            apexVertices.push(...outerConeTopVertex)
+
+                            apexNormals.push(...apexFaceNormal)
+                            apexNormals.push(...apexFaceNormal)
+                            apexNormals.push(...apexFaceNormal)
+                        }
+                    }
+
+                    coneOpenedSidesVertices.push(...apexBaseVertices)
+                    coneOpenedSidesNormals.push(...apexBaseNormals)
+                    
+                    coneOpenedSidesVertices.push(...apexVertices)
+                    coneOpenedSidesNormals.push(...apexNormals)
+                }
             }
 
             return { vertices: [...coneVertices, ...baseVertices, ...coneOpenedSidesVertices], normals: [...coneNormals, ...baseNormals, ...coneOpenedSidesNormals], indices: [...baseIndices, ...coneOpenedSidesIndices] }
@@ -169,22 +183,18 @@ class Cone extends Shape {
     }
 
     render = () => {
-        const triFanVertices = this.coneAngleDensity + 2
-
-        this.drawArrays(this.gl.TRIANGLE_FAN, { count: triFanVertices })
-        this.drawArrays(this.gl.TRIANGLE_FAN, { offset: triFanVertices, count: triFanVertices })
+        this.drawArrays(this.gl.TRIANGLES, { count: this.coneCount })
 
         if (this.baseOpened) {
+            this.drawArrays(this.gl.TRIANGLES, { count: this.coneCount, offset: this.coneCount })
             this.drawElements(this.gl.TRIANGLES)
 
             if (this.partialAngle) {
-                const apexTriFanVertices = this.openedAngleDensity + 2
-                const apexBaseOffset = (this.coneAngleDensity + 2) * 2 + (this.coneAngleDensity + 1) * 2 + 8
-                const apexOffset = apexBaseOffset + apexTriFanVertices
-                
-                this.drawArrays(this.gl.TRIANGLE_FAN, { offset: apexBaseOffset, count: apexTriFanVertices })
-                this.drawArrays(this.gl.TRIANGLE_FAN, { offset: apexOffset, count: apexTriFanVertices })
+                this.drawArrays(this.gl.TRIANGLE_FAN, { offset: this.apexOffset, count: this.apexBaseCount })
+                this.drawArrays(this.gl.TRIANGLES, { offset: this.apexOffset + this.apexBaseCount, count: this.apexCount })
             }
+        } else {
+            this.drawArrays(this.gl.TRIANGLE_FAN, { offset: this.coneCount, count: this.baseCount })
         }
     }
 }
