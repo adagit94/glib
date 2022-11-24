@@ -65,19 +65,33 @@ class Cylinder extends Shape {
                     cylinderNormals.push(cos * cylinderNormalPolarity, 0, sin * cylinderNormalPolarity)
                 }
 
-                if (openedSides && !invertNormals) initData(r * Cylinder.#INNER_CYLINDER_SCALE, true) 
+                if (cylinderOpened && !invertNormals) initData(r * Cylinder.#INNER_CYLINDER_SCALE, true) 
             })(r, invertNormals)
 
             if (openedSides) {
-                const offset = (cylinderAngleDensity + 1) * 4
-                
-                for (let i = 0; i <= cylinderAngleDensity; i++) {
-                    const triStripOuterIndex = offset + i
-                    const triStripInnerIndex = triStripOuterIndex + cylinderAngleDensity + 1
+                let offset = (cylinderAngleDensity + 1) * 4
 
-                    sidesIndices.push(triStripOuterIndex)
-                    sidesIndices.push(triStripInnerIndex)
-                }
+                ;(function setSideIndices(offset) {
+                    if (topSideOpened) {
+                        for (let i = 0; i <= cylinderAngleDensity; i++) {
+                            const triStripOuterIndex = offset + i
+                            const triStripInnerIndex = triStripOuterIndex + cylinderAngleDensity + 1
+
+                            sidesIndices.push(triStripOuterIndex)
+                            sidesIndices.push(triStripInnerIndex)
+                        }
+                    }
+
+                    if (bottomSideOpened) {
+                        offset += 2 * (cylinderAngleDensity + 1)
+
+                        if (!topSideOpened) {
+                            offset += 2
+                        }
+                        
+                        setSideIndices(offset)
+                    }
+                })(offset)
             }
 
             sidesVertices.push(...topSidesVertices)
