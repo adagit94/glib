@@ -81,7 +81,6 @@ class Playground extends Framer {
                         final: MatUtils.mult3d(this.mats.scene, this.shapes.pyr.mats.model),
                     },
                 },
-                // culling: { preventDmFront: true },
                 render: this.shapes.pyr.render,
             },
         });

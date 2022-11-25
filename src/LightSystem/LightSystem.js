@@ -261,11 +261,18 @@ class LightSystem {
             const uniformsSets = Array.isArray(uniforms) ? uniforms : [uniforms];
 
             if (dmRender) {
-                if (culling?.preventDmFront) {
-                    this.#gl.disable(this.#gl.CULL_FACE);
-                } else {
+                if (culling?.depthMapFront) {
                     this.#gl.enable(this.#gl.CULL_FACE);
                     this.#gl.cullFace(this.#gl.FRONT);
+                } else {
+                    this.#gl.disable(this.#gl.CULL_FACE);
+                }
+            } else {
+                if (culling?.back) {
+                    this.#gl.enable(this.#gl.CULL_FACE);
+                    this.#gl.cullFace(this.#gl.BACK);
+                } else {
+                    this.#gl.disable(this.#gl.CULL_FACE);
                 }
             }
 
@@ -275,8 +282,6 @@ class LightSystem {
                 model.render();
             }
         }
-
-        this.#gl.disable(this.#gl.CULL_FACE);
     };
 }
 
