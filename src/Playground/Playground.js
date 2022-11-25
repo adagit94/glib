@@ -14,17 +14,17 @@ class Playground extends Framer {
     constructor() {
         super({
             canvasSelector: "#glFrame",
-            pespectiveConf: { fov: Math.PI / 2, near: 0.1, far: 100 },
+            pespectiveConf: { fov: Math.PI / 2, near: 0.1, far: 50 },
         });
 
-        new Cylinder("pyr", this, 3, 3, 300, { invertNormals: false });
+        new Cylinder("pyr", this, 2, 2, 100, { angle: Math.PI * 2 - Math.PI / 2, innerScale: 0.80 });
 
-        // const cameraPosition = [0, 3, 0];
-        const cameraPosition = [Math.cos(0) * 7.5, 0, Math.sin(0) * 7.5];
-        const viewMat = MatUtils.view3d(cameraPosition, [0, 0, -1]); // [-7, 1.25, 2]
-        // const viewMat = MatUtils.view3d(cameraPosition, [0, 1, 0]); // [-7, 1.25, 2]
+        // const cameraPosition = [0, 0, 0];
+        // const cameraPosition = [Math.cos(Math.PI / 2) * 8, 0, Math.sin(Math.PI / 2) * 8];
+        const cameraPosition = [Math.cos(0) * 6, 0, Math.sin(0) * 6];
+        const viewMat = MatUtils.view3d(cameraPosition, [-1, 0, 0]);
         const lNear = 0.1;
-        const lFar = 100;
+        const lFar = 50;
 
         this.mats.scene = MatUtils.mult3d(this.mats.projection, [viewMat]);
         const lightSystem = (this.lightSystem = new LightSystem(this));
@@ -45,8 +45,8 @@ class Playground extends Framer {
                     innerLimit: Math.cos(Math.PI / 16),
                     lightDistanceLin: 0.01,
                     lightDistanceQuad: 0.0125,
-                    cameraDistanceLin: 0.0001,
-                    cameraDistanceQuad: 0.000125,
+                    cameraDistanceLin: 0.001,
+                    cameraDistanceQuad: 0.00125,
                 },
                 depthMap: {
                     far: lFar,
@@ -55,9 +55,9 @@ class Playground extends Framer {
         ];
 
         lightSystem.addLight("point", "pointOne", ...structuredClone(lightParams), {
-            // position: [Math.cos(Math.PI / 4) * 7, 0, Math.sin(Math.PI / 4) * 7],
-            position: [Math.cos(0) * 7.5, 0, Math.sin(0) * 7.5],
-            // position: [0, 0.5, 0],
+            // position: [Math.cos(Math.PI / 2) * 7.5, 0, Math.sin(Math.PI / 2) * 7.5],
+            position: [Math.cos(Math.PI / 8) * 6, 0, -Math.sin(Math.PI / 8) * 6],
+            // position: [0, 0, 0],
         });
 
         this.animate = false;
@@ -68,15 +68,9 @@ class Playground extends Framer {
     renderScene = () => {
         const tDivider = 8;
         const firstSpotLight = this.lightSystem.getLight("pointOne");
-
-        // const lPos = [Math.cos(Math.PI / 8) * 16, 0, Math.sin(Math.PI / 8) * 16];;
-
         // this.lightSystem.getLight("second").active = false
 
-        // this.shapes.pyr.mats.model = MatUtils.mult3d(MatUtils.translated3d(-2, 0, 0), [MatUtils.rotated3d("z", 0), MatUtils.rotated3d("y", Math.PI / 4)]);
-        this.shapes.pyr.mats.model = MatUtils.mult3d(MatUtils.translated3d(0, 0, 0), [MatUtils.rotated3d("z", 0), MatUtils.rotated3d("y", this.animData.deltaTime / 10)]);
-        // this.shapes.pyr.mats.model = MatUtils.rotated3d("x", Math.PI / 2);
-        // this.shapes.pyr.mats.model = MatUtils.rotated3d("y", 0);
+        this.shapes.pyr.mats.model = MatUtils.mult3d(MatUtils.translated3d(0, 0, 0), [MatUtils.rotated3d("x", 0), MatUtils.rotated3d("y", Math.PI / 4)]); // this.animData.deltaTime / 10
 
         this.lightSystem.setModels({
             hex: {

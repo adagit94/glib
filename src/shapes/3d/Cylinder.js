@@ -1,8 +1,7 @@
+import VecUtils from "../../utils/VecUtils.js";
 import Shape from "../Shape.js";
 
 class Cylinder extends Shape {
-    static #INNER_CYLINDER_SCALE = 0.95
-    
     constructor(name, ctx, r, height, density, optionals) {
         super(name, ctx, (instance) => {
             const angle = optionals?.angle ?? Math.PI * 2
@@ -16,6 +15,7 @@ class Cylinder extends Shape {
             
             let cylinderVertices = [], cylinderNormals = []
             let sidesVertices = [], sidesNormals = [], sidesIndices = []
+            let openedEdgesVertices = [], openedEdgesNormals = [], openedEdgesIndices = []
             
             let topSidesVertices = [], topSidesNormals = []
             let bottomSidesVertices = [], bottomSidesNormals = []
@@ -27,14 +27,14 @@ class Cylinder extends Shape {
                 let h = height / 2
                 
                 if (!topSideOpened) {
-                    if (bottomSideOpened && invertNormals) h *= Cylinder.#INNER_CYLINDER_SCALE
+                    if (bottomSideOpened && invertNormals) h *= optionals.innerScale
                     
                     topSidesVertices.push(0, h, 0)
                     topSidesNormals.push(...topSideNormal)
                 }
 
                 if (!bottomSideOpened) {
-                    if (topSideOpened && invertNormals) h *= Cylinder.#INNER_CYLINDER_SCALE
+                    if (topSideOpened && invertNormals) h *= optionals.innerScale
 
                     bottomSidesVertices.push(0, -h, 0)
                     bottomSidesNormals.push(...bottomSideNormal)
@@ -63,20 +63,20 @@ class Cylinder extends Shape {
                     cylinderNormals.push(cos * cylinderNormalPolarity, 0, sin * cylinderNormalPolarity)
                 }
 
-                if (opened && !invertNormals) initData(r * Cylinder.#INNER_CYLINDER_SCALE, true) 
+                if (opened && !invertNormals) initData(r * optionals.innerScale, true) 
             })(r, invertNormals)
 
             if (opened) {
                 let offset = (cylinderAngleDensity + 1) * 4
 
-                ;(function setSideIndices(offset, recurse) {
-                    if (topSideOpened) {
-                        for (let i = 0; i <= cylinderAngleDensity; i++) {
+                ;(function setSideIndices(sideOpened, recurse) {
+                    if (sideOpened) {
+                        for (let i = 0; i < cylinderAngleDensity; i++) {
                             const triStripOuterIndex = offset + i
                             const triStripInnerIndex = triStripOuterIndex + cylinderAngleDensity + 1
 
-                            sidesIndices.push(triStripOuterIndex)
-                            sidesIndices.push(triStripInnerIndex)
+                            sidesIndices.push(triStripOuterIndex, triStripOuterIndex + 1, triStripInnerIndex)
+                            sidesIndices.push(triStripOuterIndex + 1, triStripInnerIndex + 1, triStripInnerIndex)
                         }
                     }
 
@@ -87,9 +87,40 @@ class Cylinder extends Shape {
                             offset += 2
                         }
                         
-                        setSideIndices(offset, false)
+                        setSideIndices(true, false)
                     }
-                })(offset, true)
+                })(topSideOpened, true)
+
+                if (partialAngle) {
+                    offset += 2 * (cylinderAngleDensity + 1)
+                    
+                    ;(function setOpenedEdgesData(a, recurse = true) {
+                        const topOuter = [Math.cos(a) * r, height / 2, Math.sin(a) * r]
+                        const topInner = [Math.cos(a) * (r * optionals.innerScale), height / 2, Math.sin(a) * (r * optionals.innerScale)]
+                        const bottomOuter = [Math.cos(a) * r, -height / 2, Math.sin(a) * r]
+                        const bottomInner = [Math.cos(a) * (r * optionals.innerScale), -height / 2, Math.sin(a) * (r * optionals.innerScale)]
+    
+                        const normal = a === 0 ? VecUtils.cross(VecUtils.subtract(bottomOuter, topOuter), VecUtils.subtract(topInner, topOuter)) : VecUtils.cross(VecUtils.subtract(topInner, topOuter), VecUtils.subtract(bottomOuter, topOuter))
+    
+                        openedEdgesVertices.push(...topOuter)
+                        openedEdgesVertices.push(...topInner)
+                        openedEdgesVertices.push(...bottomOuter)
+                        openedEdgesVertices.push(...bottomInner)
+    
+                        openedEdgesNormals.push(...normal)
+                        openedEdgesNormals.push(...normal)
+                        openedEdgesNormals.push(...normal)
+                        openedEdgesNormals.push(...normal)
+    
+                        openedEdgesIndices.push(offset, offset + 1, offset + 2)
+                        openedEdgesIndices.push(offset + 1, offset + 2, offset + 3)  
+
+                        if (recurse) {
+                            offset += 4
+                            setOpenedEdgesData(angle, false)
+                        }
+                    })(0);
+                }
             }
 
             sidesVertices.push(...topSidesVertices)
@@ -98,42 +129,43 @@ class Cylinder extends Shape {
             sidesVertices.push(...bottomSidesVertices)
             sidesNormals.push(...bottomSidesNormals)
 
-            return { vertices: [...cylinderVertices, ...sidesVertices], normals: [...cylinderNormals, ...sidesNormals], indices: sidesIndices }
+            return { vertices: [...cylinderVertices, ...sidesVertices, ...openedEdgesVertices], normals: [...cylinderNormals, ...sidesNormals, ...openedEdgesNormals], indices: [...sidesIndices, ...openedEdgesIndices] }
         })
     }
 
     render = () => {
+        const cylinderCount = (this.cylinderAngleDensity + 1) * 4
         const triStripCount = (this.cylinderAngleDensity + 1) * 2
         const triFanCount = this.cylinderAngleDensity + 2
         
-        this.drawArrays(this.gl.TRIANGLE_STRIP, { count: triStripCount})
+        this.drawArrays(this.gl.TRIANGLE_STRIP, { count: triStripCount })
         
         if (this.opened) {
-            this.drawArrays(this.gl.TRIANGLE_STRIP, { count: triStripCount, offset: triStripCount})
+            this.drawArrays(this.gl.TRIANGLE_STRIP, { count: triStripCount, offset: triStripCount })
 
-            if (this.topSideOpened) {
-                this.drawElements(this.gl.TRIANGLE_STRIP, { count: triStripCount })
-            } else {
-                this.drawArrays(this.gl.TRIANGLE_FAN, { offset: triStripCount * 2, count: triFanCount })
+            if (this.topSideOpened || this.bottomSideOpened) {
+                this.drawElements(this.gl.TRIANGLES)
             }
 
-            if (this.bottomSideOpened) {
-                this.drawElements(this.gl.TRIANGLE_STRIP, { count: triStripCount, offset: this.topSideOpened ? triStripCount : 0})
-            } else {
-                let offset = triStripCount * 2
+            if (!this.topSideOpened) {
+                this.drawArrays(this.gl.TRIANGLE_FAN, { offset: cylinderCount, count: triFanCount })
+                this.drawArrays(this.gl.TRIANGLE_FAN, { offset: cylinderCount + triFanCount, count: triFanCount })
+            }
+            
+            if (!this.bottomSideOpened) {
+                let offset = cylinderCount + triStripCount
 
                 if (!this.topSideOpened) {
                     offset += 2
                 }
                 
                 this.drawArrays(this.gl.TRIANGLE_FAN, { offset, count: triFanCount })
+                this.drawArrays(this.gl.TRIANGLE_FAN, { offset: offset + triFanCount, count: triFanCount })
             }
         } else {
             this.drawArrays(this.gl.TRIANGLE_FAN, { offset: triStripCount, count: triFanCount })
             this.drawArrays(this.gl.TRIANGLE_FAN, { offset: triStripCount + triFanCount, count: triFanCount })
         }
-
-        
     }
 }
 

@@ -2,8 +2,6 @@ import VecUtils from "../../utils/VecUtils.js";
 import Shape from "../Shape.js";
 
 class Cone extends Shape {
-    static #INNER_CONE_SCALE = 0.95
-    
     constructor(name, ctx, baseR, height, density, optionals) {
         super(name, ctx, (instance) => {
             const angle = optionals?.angle ?? Math.PI * 2
@@ -61,7 +59,7 @@ class Cone extends Shape {
                     }
                 }
 
-                if (baseOpened && !invertNormals) initData(baseR * Cone.#INNER_CONE_SCALE, height * Cone.#INNER_CONE_SCALE, true)
+                if (baseOpened && !invertNormals) initData(baseR * optionals.innerScale, height * optionals.innerScale, true)
             })(baseR, height, invertNormals)
 
             if (baseOpened) {
@@ -77,12 +75,12 @@ class Cone extends Shape {
                 }
 
                 if (partialAngle) {
-                    const outerConeR = baseR + (-baseR / height) * (height * Cone.#INNER_CONE_SCALE)
+                    const outerConeR = baseR + (-baseR / height) * (height * optionals.innerScale)
 
                     const outerConeBottomStartVertex = [Math.cos(0) * baseR, 0, Math.sin(0) * baseR]
-                    const outerConeTopStartVertex = [Math.cos(0) * outerConeR, height * Cone.#INNER_CONE_SCALE, Math.sin(0) * outerConeR]
-                    const innerConeBottomStartVertex = [Math.cos(0) * (baseR * Cone.#INNER_CONE_SCALE), 0, Math.sin(0) * (baseR * Cone.#INNER_CONE_SCALE)]
-                    const innerConeTopVertex = [0, height * Cone.#INNER_CONE_SCALE, 0]
+                    const outerConeTopStartVertex = [Math.cos(0) * outerConeR, height * optionals.innerScale, Math.sin(0) * outerConeR]
+                    const innerConeBottomStartVertex = [Math.cos(0) * (baseR * optionals.innerScale), 0, Math.sin(0) * (baseR * optionals.innerScale)]
+                    const innerConeTopVertex = [0, height * optionals.innerScale, 0]
 
                     coneOpenedSidesVertices.push(...outerConeBottomStartVertex)
                     coneOpenedSidesVertices.push(...outerConeTopStartVertex)
@@ -102,8 +100,8 @@ class Cone extends Shape {
                     coneOpenedSidesIndices.push(startFirstIndex + 2, startFirstIndex + 3, startFirstIndex + 1)
 
                     const outerConeBottomFinishVertex = [Math.cos(angle) * baseR, 0, Math.sin(angle) * baseR]
-                    const outerConeTopFinishVertex = [Math.cos(angle) * outerConeR, height * Cone.#INNER_CONE_SCALE, Math.sin(angle) * outerConeR]
-                    const innerConeBottomFinishVertex = [Math.cos(angle) * (baseR * Cone.#INNER_CONE_SCALE), 0, Math.sin(angle) * (baseR * Cone.#INNER_CONE_SCALE)]
+                    const outerConeTopFinishVertex = [Math.cos(angle) * outerConeR, height * optionals.innerScale, Math.sin(angle) * outerConeR]
+                    const innerConeBottomFinishVertex = [Math.cos(angle) * (baseR * optionals.innerScale), 0, Math.sin(angle) * (baseR * optionals.innerScale)]
 
                     coneOpenedSidesVertices.push(...outerConeBottomFinishVertex)
                     coneOpenedSidesVertices.push(...outerConeTopFinishVertex)
@@ -147,7 +145,7 @@ class Cone extends Shape {
                         const currentVertexCos = Math.cos(currentVertexAngle)
                         const currentVertexSin = Math.sin(currentVertexAngle)
 
-                        const apexCurrentVertex = [currentVertexCos * outerConeR, height * Cone.#INNER_CONE_SCALE, currentVertexSin * outerConeR]
+                        const apexCurrentVertex = [currentVertexCos * outerConeR, height * optionals.innerScale, currentVertexSin * outerConeR]
                         
                         apexBaseVertices.push(...apexCurrentVertex)
                         apexBaseNormals.push(...apexBaseNormal)
@@ -157,7 +155,7 @@ class Cone extends Shape {
                             const nextVertexCos = Math.cos(nextVertexAngle)
                             const nextVertexSin = Math.sin(nextVertexAngle)
                             
-                            const apexNextVertex = [nextVertexCos * outerConeR, height * Cone.#INNER_CONE_SCALE, nextVertexSin * outerConeR]
+                            const apexNextVertex = [nextVertexCos * outerConeR, height * optionals.innerScale, nextVertexSin * outerConeR]
                             const apexFaceNormal = VecUtils.cross(VecUtils.subtract(outerConeTopVertex, apexCurrentVertex), VecUtils.subtract(apexNextVertex, apexCurrentVertex))
 
                             apexVertices.push(...apexCurrentVertex)
