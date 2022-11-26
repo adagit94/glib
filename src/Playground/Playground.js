@@ -17,12 +17,12 @@ class Playground extends Framer {
             pespectiveConf: { fov: Math.PI / 2, near: 0.1, far: 50 },
         });
 
-        new Cylinder("pyr", this, 2, 2, 100, { angle: Math.PI * 2 - Math.PI / 2, innerScale: 0.80 });
+        new Sphere("pyr", this, 2, 100, 100, { angle: Math.PI, innerLayer: false, invertNormals: false, innerScale: 0.80 });
 
         // const cameraPosition = [0, 0, 0];
-        // const cameraPosition = [Math.cos(Math.PI / 2) * 8, 0, Math.sin(Math.PI / 2) * 8];
+        // const cameraPosition = [Math.cos(0) * 8, 0, Math.sin(0) * 8];
         const cameraPosition = [Math.cos(0) * 6, 0, Math.sin(0) * 6];
-        const viewMat = MatUtils.view3d(cameraPosition, [-1, 0, 0]);
+        const viewMat = MatUtils.view3d(cameraPosition, [1, 0, 0]);
         const lNear = 0.1;
         const lFar = 50;
 
@@ -55,8 +55,8 @@ class Playground extends Framer {
         ];
 
         lightSystem.addLight("point", "pointOne", ...structuredClone(lightParams), {
-            // position: [Math.cos(Math.PI / 2) * 7.5, 0, Math.sin(Math.PI / 2) * 7.5],
-            position: [Math.cos(Math.PI / 8) * 6, 0, -Math.sin(Math.PI / 8) * 6],
+            // position: [-Math.cos(0) * 0.25, 0, Math.sin(0) * 0.25],
+            position: [Math.cos(0) * 6, 0, Math.sin(0) * 6],
             // position: [0, 0, 0],
         });
 
@@ -70,7 +70,7 @@ class Playground extends Framer {
         const firstSpotLight = this.lightSystem.getLight("pointOne");
         // this.lightSystem.getLight("second").active = false
 
-        this.shapes.pyr.mats.model = MatUtils.mult3d(MatUtils.translated3d(0, 0, 0), [MatUtils.rotated3d("x", 0), MatUtils.rotated3d("y", Math.PI / 4)]); // this.animData.deltaTime / 10
+        this.shapes.pyr.mats.model = MatUtils.mult3d(MatUtils.translated3d(0, 0, 0), [MatUtils.rotated3d("z", 0), MatUtils.rotated3d("y", this.animData.deltaTime / 10)]); // -Math.PI / 2
 
         this.lightSystem.setModels({
             hex: {
