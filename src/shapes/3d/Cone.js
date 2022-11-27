@@ -6,13 +6,14 @@ class Cone extends Shape {
         super(name, ctx, (instance) => {
             const angle = optionals?.angle ?? Math.PI * 2
             const partialAngle = instance.partialAngle = angle !== Math.PI * 2
-            const baseOpened = instance.baseOpened = partialAngle || !!optionals?.baseOpened
-            const invertNormals = !baseOpened && !!optionals?.invertNormals
-            const coneAngleDensity = partialAngle ? Math.round(density * (angle / (Math.PI * 2))) : density
+            const opened = instance.opened = partialAngle || !!optionals?.opened
+            const innerLayer = instance.innerLayer = (!partialAngle && opened && !!optionals?.innerLayer) || (partialAngle && !!optionals?.innerLayer)
+            const invertNormals = !innerLayer && !!optionals?.invertNormals
+            const coneAngleDensity = partialAngle && innerLayer ? Math.round(density * (angle / (Math.PI * 2))) : density
             const angleStep = angle / coneAngleDensity
 
             instance.coneCount = coneAngleDensity * 3
-            instance.baseCount = baseOpened ? 2 * (coneAngleDensity + 1) : coneAngleDensity + 2
+            instance.baseCount = opened ? innerLayer ? 2 * (coneAngleDensity + 1) : 0 : coneAngleDensity + 2
 
             let coneVertices = [], coneNormals = []
             let coneOpenedSidesVertices = [], coneOpenedSidesNormals = [], coneOpenedSidesIndices = []
@@ -22,7 +23,7 @@ class Cone extends Shape {
                 const topVertex = [0, height, 0]
                 const baseNy = invertNormals ? 1 : -1
                 
-                if (!baseOpened) {
+                if (!opened) {
                     baseVertices.push(0, 0, 0)
                     baseNormals.push(0, baseNy, 0)
                 }
@@ -33,8 +34,10 @@ class Cone extends Shape {
                     const currentZ = Math.sin(currentAngle) * baseR
                     const currentVertex = [currentX, 0, currentZ]
 
-                    baseVertices.push(...currentVertex)
-                    baseNormals.push(0, baseOpened ? -1 : baseNy, 0)
+                    if (innerLayer || !opened) {
+                        baseVertices.push(...currentVertex)
+                        baseNormals.push(0, opened ? -1 : baseNy, 0)
+                    }
                     
                     if (v < coneAngleDensity) {
                         const nextAngle = (v + 1) * angleStep;
@@ -59,10 +62,10 @@ class Cone extends Shape {
                     }
                 }
 
-                if (baseOpened && !invertNormals) initData(baseR * optionals.innerScale, height * optionals.innerScale, true)
+                if (innerLayer && !invertNormals) initData(baseR * optionals.innerScale, height * optionals.innerScale, true)
             })(baseR, height, invertNormals)
 
-            if (baseOpened) {
+            if (innerLayer) {
                 const offset = instance.coneCount * 2
 
                 for (let i = 0; i < coneAngleDensity; i++) {
@@ -183,13 +186,15 @@ class Cone extends Shape {
     render = () => {
         this.drawArrays(this.gl.TRIANGLES, { count: this.coneCount })
 
-        if (this.baseOpened) {
-            this.drawArrays(this.gl.TRIANGLES, { count: this.coneCount, offset: this.coneCount })
-            this.drawElements(this.gl.TRIANGLES)
-
-            if (this.partialAngle) {
-                this.drawArrays(this.gl.TRIANGLE_FAN, { offset: this.apexOffset, count: this.apexBaseCount })
-                this.drawArrays(this.gl.TRIANGLES, { offset: this.apexOffset + this.apexBaseCount, count: this.apexCount })
+        if (this.opened) {
+            if (this.innerLayer) {
+                this.drawArrays(this.gl.TRIANGLES, { count: this.coneCount, offset: this.coneCount })
+                this.drawElements(this.gl.TRIANGLES)
+                
+                if (this.partialAngle) {
+                    this.drawArrays(this.gl.TRIANGLE_FAN, { offset: this.apexOffset, count: this.apexBaseCount })
+                    this.drawArrays(this.gl.TRIANGLES, { offset: this.apexOffset + this.apexBaseCount, count: this.apexCount })
+                }
             }
         } else {
             this.drawArrays(this.gl.TRIANGLE_FAN, { offset: this.coneCount, count: this.baseCount })
