@@ -9,10 +9,11 @@ class Cylinder extends Shape {
             const topSideOpened = instance.topSideOpened = partialAngle || optionals?.opened === "both" || optionals?.opened === "top"
             const bottomSideOpened = instance.bottomSideOpened = partialAngle || optionals?.opened === "both" || optionals?.opened === "bottom"
             const opened = instance.opened = topSideOpened || bottomSideOpened
-            const invertNormals = !opened && !!optionals?.invertNormals
+            const innerLayer = instance.innerLayer = (!partialAngle && opened && !!optionals?.innerLayer) || (partialAngle && !!optionals?.innerLayer)
+            const invertNormals = !innerLayer && !!optionals?.invertNormals
             const cylinderAngleDensity = instance.cylinderAngleDensity = density
             const cylinderAngleStep = angle / cylinderAngleDensity
-            
+
             let cylinderVertices = [], cylinderNormals = []
             let sidesVertices = [], sidesNormals = [], sidesIndices = []
             let openedEdgesVertices = [], openedEdgesNormals = [], openedEdgesIndices = []
@@ -27,14 +28,14 @@ class Cylinder extends Shape {
                 let h = height / 2
                 
                 if (!topSideOpened) {
-                    if (bottomSideOpened && invertNormals) h *= optionals.innerScale
+                    if (innerLayer && bottomSideOpened && invertNormals) h *= optionals.innerScale
                     
                     topSidesVertices.push(0, h, 0)
                     topSidesNormals.push(...topSideNormal)
                 }
 
                 if (!bottomSideOpened) {
-                    if (topSideOpened && invertNormals) h *= optionals.innerScale
+                    if (innerLayer && topSideOpened && invertNormals) h *= optionals.innerScale
 
                     bottomSidesVertices.push(0, -h, 0)
                     bottomSidesNormals.push(...bottomSideNormal)
@@ -50,11 +51,15 @@ class Cylinder extends Shape {
                     const topCoords = [x, h, z]
                     const bottomCoords = [x, -h, z]
                     
-                    topSidesVertices.push(...topCoords)
-                    topSidesNormals.push(...topSideNormal)
+                    if (innerLayer || !topSideOpened) {
+                        topSidesVertices.push(...topCoords)
+                        topSidesNormals.push(...topSideNormal)
+                    }
 
-                    bottomSidesVertices.push(...bottomCoords)
-                    bottomSidesNormals.push(...bottomSideNormal)
+                    if (innerLayer || !bottomSideOpened) {
+                        bottomSidesVertices.push(...bottomCoords)
+                        bottomSidesNormals.push(...bottomSideNormal)
+                    }
 
                     cylinderVertices.push(...topCoords)
                     cylinderNormals.push(cos * cylinderNormalPolarity, 0, sin * cylinderNormalPolarity)
@@ -63,10 +68,10 @@ class Cylinder extends Shape {
                     cylinderNormals.push(cos * cylinderNormalPolarity, 0, sin * cylinderNormalPolarity)
                 }
 
-                if (opened && !invertNormals) initData(r * optionals.innerScale, true) 
+                if (innerLayer && !invertNormals) initData(r * optionals.innerScale, true) 
             })(r, invertNormals)
 
-            if (opened) {
+            if (innerLayer) {
                 let offset = (cylinderAngleDensity + 1) * 4
 
                 ;(function setSideIndices(sideOpened, recurse) {
@@ -91,7 +96,7 @@ class Cylinder extends Shape {
                     }
                 })(topSideOpened, true)
 
-                if (partialAngle) {
+                if (innerLayer && partialAngle) {
                     offset += 2 * (cylinderAngleDensity + 1)
                     
                     ;(function setOpenedEdgesData(a, recurse = true) {
@@ -141,26 +146,32 @@ class Cylinder extends Shape {
         this.drawArrays(this.gl.TRIANGLE_STRIP, { count: triStripCount })
         
         if (this.opened) {
-            this.drawArrays(this.gl.TRIANGLE_STRIP, { count: triStripCount, offset: triStripCount })
-
-            if (this.topSideOpened || this.bottomSideOpened) {
-                this.drawElements(this.gl.TRIANGLES)
-            }
-
-            if (!this.topSideOpened) {
-                this.drawArrays(this.gl.TRIANGLE_FAN, { offset: cylinderCount, count: triFanCount })
-                this.drawArrays(this.gl.TRIANGLE_FAN, { offset: cylinderCount + triFanCount, count: triFanCount })
-            }
+            if (this.innerLayer) {
+                this.drawArrays(this.gl.TRIANGLE_STRIP, { count: triStripCount, offset: triStripCount })
             
-            if (!this.bottomSideOpened) {
-                let offset = cylinderCount + triStripCount
+                if (this.topSideOpened || this.bottomSideOpened) {
+                    this.drawElements(this.gl.TRIANGLES)
+                }
 
                 if (!this.topSideOpened) {
-                    offset += 2
+                    this.drawArrays(this.gl.TRIANGLE_FAN, { offset: cylinderCount, count: triFanCount })
+                    this.drawArrays(this.gl.TRIANGLE_FAN, { offset: cylinderCount + triFanCount, count: triFanCount })
                 }
                 
-                this.drawArrays(this.gl.TRIANGLE_FAN, { offset, count: triFanCount })
-                this.drawArrays(this.gl.TRIANGLE_FAN, { offset: offset + triFanCount, count: triFanCount })
+                if (!this.bottomSideOpened) {
+                    let offset = cylinderCount + triStripCount
+
+                    if (!this.topSideOpened) {
+                        offset += 2
+                    }
+                    
+                    this.drawArrays(this.gl.TRIANGLE_FAN, { offset, count: triFanCount })
+                    this.drawArrays(this.gl.TRIANGLE_FAN, { offset: offset + triFanCount, count: triFanCount })
+                }
+            } else {
+                if (!this.topSideOpened || !this.bottomSideOpened) {
+                    this.drawArrays(this.gl.TRIANGLE_FAN, { offset: triStripCount, count: triFanCount })
+                }
             }
         } else {
             this.drawArrays(this.gl.TRIANGLE_FAN, { offset: triStripCount, count: triFanCount })
