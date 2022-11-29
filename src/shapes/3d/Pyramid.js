@@ -15,13 +15,25 @@ class Pyramid extends Shape {
         13, 14, 15
     ]
 
-    constructor(name, ctx, squareSide, height) {
+    constructor(name, ctx, squareSide, height, optionals) {
         super(name, ctx, () => {
-            const frontNormal = VecUtils.cross(VecUtils.subtract([squareSide / 2, 0, squareSide / 2], [-squareSide / 2, 0, squareSide / 2]), VecUtils.subtract([0, height, 0], [-squareSide / 2, 0, squareSide / 2]))
-            const backNormal = VecUtils.cross(VecUtils.subtract([0, height, 0], [-squareSide / 2, 0, -squareSide / 2]), VecUtils.subtract([squareSide / 2, 0, -squareSide / 2], [-squareSide / 2, 0, -squareSide / 2]))
-            const rightNormal = VecUtils.cross(VecUtils.subtract([squareSide / 2, 0, -squareSide / 2], [squareSide / 2, 0, squareSide / 2]), VecUtils.subtract([0, height, 0], [squareSide / 2, 0, squareSide / 2]))
-            const leftNormal = VecUtils.cross(VecUtils.subtract([0, height, 0], [-squareSide / 2, 0, squareSide / 2]), VecUtils.subtract([-squareSide / 2, 0, -squareSide / 2], [-squareSide / 2, 0, squareSide / 2]))
+            const openedBase = optionals?.opened === "base"
+            const invertNormals = !!optionals?.invertNormals
 
+            const frontNormal = invertNormals ? VecUtils.cross(VecUtils.subtract([0, height, 0], [-squareSide / 2, 0, squareSide / 2]), VecUtils.subtract([squareSide / 2, 0, squareSide / 2], [-squareSide / 2, 0, squareSide / 2])) : VecUtils.cross(VecUtils.subtract([squareSide / 2, 0, squareSide / 2], [-squareSide / 2, 0, squareSide / 2]), VecUtils.subtract([0, height, 0], [-squareSide / 2, 0, squareSide / 2]))
+            const backNormal = invertNormals ? VecUtils.cross(VecUtils.subtract([squareSide / 2, 0, -squareSide / 2], [-squareSide / 2, 0, -squareSide / 2]), VecUtils.subtract([0, height, 0], [-squareSide / 2, 0, -squareSide / 2])) : VecUtils.cross(VecUtils.subtract([0, height, 0], [-squareSide / 2, 0, -squareSide / 2]), VecUtils.subtract([squareSide / 2, 0, -squareSide / 2], [-squareSide / 2, 0, -squareSide / 2]))
+            const rightNormal = invertNormals ?  VecUtils.cross(VecUtils.subtract([0, height, 0], [squareSide / 2, 0, squareSide / 2]), VecUtils.subtract([squareSide / 2, 0, -squareSide / 2], [squareSide / 2, 0, squareSide / 2])) : VecUtils.cross(VecUtils.subtract([squareSide / 2, 0, -squareSide / 2], [squareSide / 2, 0, squareSide / 2]), VecUtils.subtract([0, height, 0], [squareSide / 2, 0, squareSide / 2]))
+            const leftNormal = invertNormals ? VecUtils.cross(VecUtils.subtract([-squareSide / 2, 0, -squareSide / 2], [-squareSide / 2, 0, squareSide / 2]), VecUtils.subtract([0, height, 0], [-squareSide / 2, 0, squareSide / 2])) : VecUtils.cross(VecUtils.subtract([0, height, 0], [-squareSide / 2, 0, squareSide / 2]), VecUtils.subtract([-squareSide / 2, 0, -squareSide / 2], [-squareSide / 2, 0, squareSide / 2]))
+            const baseNormal = invertNormals ? 1 : -1
+            const baseNormals = [
+                0, baseNormal, 0,
+                0, baseNormal, 0,
+                0, baseNormal, 0,
+                0, baseNormal, 0
+            ]
+
+            const indices = openedBase ? Pyramid.#INDICES.slice(6) : Pyramid.#INDICES
+            
             return {
                 vertices: [
                     // bottom square
@@ -50,29 +62,26 @@ class Pyramid extends Shape {
                     -squareSide / 2, 0, -squareSide / 2,
                     0, height, 0,
                 ],
-                indices: Pyramid.#INDICES,
                 normals: [
-                    0, -1, 0,
-                    0, -1, 0,
-                    0, -1, 0,
-                    0, -1, 0,
-
+                    ...baseNormals,
+                    
                     ...frontNormal,
                     ...frontNormal,
                     ...frontNormal,
-
+                    
                     ...backNormal,
                     ...backNormal,
                     ...backNormal,
-
+                    
                     ...rightNormal,
                     ...rightNormal,
                     ...rightNormal,
-
+                    
                     ...leftNormal,
                     ...leftNormal,
                     ...leftNormal,
                 ],
+                indices,
             }
         })
     }
