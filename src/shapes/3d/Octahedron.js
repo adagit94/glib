@@ -2,17 +2,37 @@ import VecUtils from "../../utils/VecUtils.js";
 import Shape from "../Shape.js";
 
 class Octahedron extends Shape {
-    constructor(name, ctx, squareSide, height) {
+    constructor(name, ctx, squareSide, height, optionals) {
         super(name, ctx, () => {
-            const topFrontNormal = VecUtils.cross(VecUtils.subtract([squareSide / 2, 0, squareSide / 2], [-squareSide / 2, 0, squareSide / 2]), VecUtils.subtract([0, height, 0], [-squareSide / 2, 0, squareSide / 2]))
-            const topBackNormal = VecUtils.cross(VecUtils.subtract([0, height, 0], [-squareSide / 2, 0, -squareSide / 2]), VecUtils.subtract([squareSide / 2, 0, -squareSide / 2], [-squareSide / 2, 0, -squareSide / 2]))
-            const topRightNormal = VecUtils.cross(VecUtils.subtract([squareSide / 2, 0, -squareSide / 2], [squareSide / 2, 0, squareSide / 2]), VecUtils.subtract([0, height, 0], [squareSide / 2, 0, squareSide / 2]))
-            const topLeftNormal = VecUtils.cross(VecUtils.subtract([0, height, 0], [-squareSide / 2, 0, squareSide / 2]), VecUtils.subtract([-squareSide / 2, 0, -squareSide / 2], [-squareSide / 2, 0, squareSide / 2]))
+            const invertNormals = !!optionals?.invertNormals
+            
+            const sidesNormals = [
+                // top front
+                VecUtils.cross(VecUtils.subtract([squareSide / 2, 0, squareSide / 2], [-squareSide / 2, 0, squareSide / 2]), VecUtils.subtract([0, height, 0], [-squareSide / 2, 0, squareSide / 2])),
+                // top back
+                VecUtils.cross(VecUtils.subtract([0, height, 0], [-squareSide / 2, 0, -squareSide / 2]), VecUtils.subtract([squareSide / 2, 0, -squareSide / 2], [-squareSide / 2, 0, -squareSide / 2])),
+                // top right
+                VecUtils.cross(VecUtils.subtract([squareSide / 2, 0, -squareSide / 2], [squareSide / 2, 0, squareSide / 2]), VecUtils.subtract([0, height, 0], [squareSide / 2, 0, squareSide / 2])),
+                // top left
+                VecUtils.cross(VecUtils.subtract([0, height, 0], [-squareSide / 2, 0, squareSide / 2]), VecUtils.subtract([-squareSide / 2, 0, -squareSide / 2], [-squareSide / 2, 0, squareSide / 2])),
+                // bottom front
+                VecUtils.cross(VecUtils.subtract([0, -height, 0], [-squareSide / 2, 0, squareSide / 2]), VecUtils.subtract([squareSide / 2, 0, squareSide / 2], [-squareSide / 2, 0, squareSide / 2])),
+                // bottom back
+                VecUtils.cross(VecUtils.subtract([squareSide / 2, 0, -squareSide / 2], [-squareSide / 2, 0, -squareSide / 2]), VecUtils.subtract([0, -height, 0], [-squareSide / 2, 0, -squareSide / 2])),
+                // bottom right
+                VecUtils.cross(VecUtils.subtract([0, -height, 0], [squareSide / 2, 0, squareSide / 2]), VecUtils.subtract([squareSide / 2, 0, -squareSide / 2], [squareSide / 2, 0, squareSide / 2])),
+                // bottom left
+                VecUtils.cross(VecUtils.subtract([-squareSide / 2, 0, -squareSide / 2], [-squareSide / 2, 0, squareSide / 2]), VecUtils.subtract([0, -height, 0], [-squareSide / 2, 0, squareSide / 2])),
+            ]
+            let verticesNormals = []
 
-            const bottomFrontNormal = VecUtils.cross(VecUtils.subtract([0, -height, 0], [-squareSide / 2, 0, squareSide / 2]), VecUtils.subtract([squareSide / 2, 0, squareSide / 2], [-squareSide / 2, 0, squareSide / 2]))
-            const bottomBackNormal = VecUtils.cross(VecUtils.subtract([squareSide / 2, 0, -squareSide / 2], [-squareSide / 2, 0, -squareSide / 2]), VecUtils.subtract([0, -height, 0], [-squareSide / 2, 0, -squareSide / 2]))
-            const bottomRightNormal = VecUtils.cross(VecUtils.subtract([0, -height, 0], [squareSide / 2, 0, squareSide / 2]), VecUtils.subtract([squareSide / 2, 0, -squareSide / 2], [squareSide / 2, 0, squareSide / 2]))
-            const bottomLeftNormal = VecUtils.cross(VecUtils.subtract([-squareSide / 2, 0, -squareSide / 2], [-squareSide / 2, 0, squareSide / 2]), VecUtils.subtract([0, -height, 0], [-squareSide / 2, 0, squareSide / 2]))
+            for (let sideNormal of sidesNormals) {
+                if (invertNormals) {
+                    sideNormal = sideNormal.map(coord => coord * -1)
+                }
+
+                verticesNormals.push(...sideNormal, ...sideNormal, ...sideNormal)
+            }
             
             return {
                 vertices: [
@@ -56,39 +76,7 @@ class Octahedron extends Shape {
                     -squareSide / 2, 0, -squareSide / 2,
                     0, -height, 0,
                 ],
-                normals: [
-                    ...topFrontNormal,
-                    ...topFrontNormal,
-                    ...topFrontNormal,
-
-                    ...topBackNormal,
-                    ...topBackNormal,
-                    ...topBackNormal,
-
-                    ...topRightNormal,
-                    ...topRightNormal,
-                    ...topRightNormal,
-
-                    ...topLeftNormal,
-                    ...topLeftNormal,
-                    ...topLeftNormal,
-
-                    ...bottomFrontNormal,
-                    ...bottomFrontNormal,
-                    ...bottomFrontNormal,
-
-                    ...bottomBackNormal,
-                    ...bottomBackNormal,
-                    ...bottomBackNormal,
-
-                    ...bottomRightNormal,
-                    ...bottomRightNormal,
-                    ...bottomRightNormal,
-
-                    ...bottomLeftNormal,
-                    ...bottomLeftNormal,
-                    ...bottomLeftNormal,
-                ],
+                normals: verticesNormals,
             }})
     }
 
