@@ -109,7 +109,7 @@ class Generator {
 
         let buffersSet = {
             vao,
-            vertices: this.#createVertexBuffer(Generator.#ATTRIBUTE_INDICES.position, vertices, commonBuffersSettings, drawMethod),
+            vertices: this.#createCoordsBuffer(Generator.#ATTRIBUTE_INDICES.position, vertices, commonBuffersSettings, drawMethod),
         };
 
         if (indices?.length) {
@@ -117,11 +117,11 @@ class Generator {
         }
 
         if (normals?.length) {
-            buffersSet.normals = this.#createVertexBuffer(Generator.#ATTRIBUTE_INDICES.normal, normals, commonBuffersSettings, drawMethod);
+            buffersSet.normals = this.#createCoordsBuffer(Generator.#ATTRIBUTE_INDICES.normal, normals, commonBuffersSettings, drawMethod);
         }
 
         if (textureCoords?.length) {
-            buffersSet.textureCoords = this.#createVertexBuffer(
+            buffersSet.textureCoords = this.#createCoordsBuffer(
                 Generator.#ATTRIBUTE_INDICES.textureCoords,
                 textureCoords,
                 { size: 2, normalize: true },
@@ -134,7 +134,7 @@ class Generator {
         return buffersSet
     };
 
-    #createVertexBuffer(index, bufferData, settings, drawMethod = this.gl.STATIC_DRAW) {
+    #createCoordsBuffer(index, bufferData, settings, drawMethod = this.gl.STATIC_DRAW) {
         const buffer = this.gl.createBuffer();
 
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, buffer);
