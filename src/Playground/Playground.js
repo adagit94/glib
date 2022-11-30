@@ -9,6 +9,7 @@ import Octahedron from "../shapes/3d/Octahedron.js";
 import Cone from "../shapes/3d/Cone.js";
 import Cylinder from "../shapes/3d/Cylinder.js";
 import Sphere from "../shapes/3d/Sphere.js";
+import RectangularCuboid from "../shapes/3d/RectangularCuboid.js";
 
 class Playground extends Framer {
     constructor() {
@@ -18,11 +19,11 @@ class Playground extends Framer {
         });
 
         // new Sphere("pyr", this, 2, 100, 100, { angle: Math.PI * 2, innerLayer: false, invertNormals: false, innerScale: 0.80 });
-        new Octahedron("pyr", this, 2, 2, { invertNormals: true });
+        new RectangularCuboid("pyr", this, 4, 2, 1, { invertNormals: true, opened: "bottom" });
 
         // const cameraPosition = [0, 0, 0];
         const cameraPosition = [Math.cos(Math.PI / 2) * 6, 0, Math.sin(Math.PI / 2) * 6];
-        const viewMat = MatUtils.view3d(cameraPosition, [0, -1, -0.01]);
+        const viewMat = MatUtils.view3d(cameraPosition, [0, 0, -1]);
         const lNear = 0.1;
         const lFar = 50;
 
@@ -56,7 +57,7 @@ class Playground extends Framer {
 
         lightSystem.addLight("point", "pointOne", ...structuredClone(lightParams), {
             position: [Math.cos(Math.PI / 2) * 6, 0, Math.sin(Math.PI / 2) * 6],
-            position: [0, 0, 0],
+            // position: [0, 0, 0],
         });
 
         this.animate = false;
@@ -69,7 +70,7 @@ class Playground extends Framer {
         const firstSpotLight = this.lightSystem.getLight("pointOne");
         // this.lightSystem.getLight("second").active = false
 
-        this.shapes.pyr.mats.model = MatUtils.mult3d(MatUtils.translated3d(0, 0, 0), [MatUtils.rotated3d("x", 0), MatUtils.rotated3d("y", this.animData.deltaTime / 5)]); // Math.PI / 8   
+        this.shapes.pyr.mats.model = MatUtils.mult3d(MatUtils.translated3d(0, 0, 0), [MatUtils.rotated3d("x", 0), MatUtils.rotated3d("x", this.animData.deltaTime / 5)]); // Math.PI / 8   
 
         this.lightSystem.setModels({
             hex: {

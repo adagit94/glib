@@ -1,8 +1,7 @@
 class Shape {
-    constructor(name, ctx, init, wireframe) {
+    constructor(name, ctx, init) {
         this.ctx = ctx;
         this.gl = ctx.gl;
-        this.wireframe = wireframe;
 
         const { mats, ...geometryData } = init(this)
 
@@ -17,7 +16,6 @@ class Shape {
 
     ctx;
     gl;
-    wireframe;
     geometryData
     buffers
     mats
