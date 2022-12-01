@@ -10,6 +10,7 @@ import Cone from "../shapes/solids/Cone.js";
 import Cylinder from "../shapes/solids/Cylinder.js";
 import Sphere from "../shapes/solids/Sphere.js";
 import RectangularCuboid from "../shapes/solids/RectangularCuboid.js";
+import CubeSkeleton from "../structures/CubeSkeleton.js";
 
 class Playground extends Framer {
     constructor() {
@@ -17,9 +18,6 @@ class Playground extends Framer {
             canvasSelector: "#glFrame",
             pespectiveConf: { fov: Math.PI / 2, near: 0.1, far: 50 },
         });
-
-        // new Sphere("pyr", this, 2, 100, 100, { angle: Math.PI * 2, innerLayer: false, invertNormals: false, innerScale: 0.80 });
-        new Plane("pyr", this, 2, 2);
 
         // const cameraPosition = [0, 0, 0];
         const cameraPosition = [Math.cos(Math.PI / 2) * 2, 0.5, Math.sin(Math.PI / 2) * 2];
@@ -29,6 +27,8 @@ class Playground extends Framer {
 
         this.mats.scene = MatUtils.mult3d(this.mats.projection, [viewMat]);
         const lightSystem = (this.lightSystem = new LightSystem(this));
+
+        this.cubeSkeleton = new CubeSkeleton(this, 4, 2, { sceneMat: this.mats.scene, color: [1, 1, 0] });
 
         const lightParams = [
             {

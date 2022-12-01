@@ -1,5 +1,4 @@
-import VecUtils from "../../utils/VecUtils.js"
-import Shape from "../Shape.js"
+import Shape from "../Shape.js.js"
 
 class Cube extends Shape {
     static #SIDES = ["front", "back", "top", "bottom", "right", "left"]

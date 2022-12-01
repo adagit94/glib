@@ -1,18 +1,18 @@
-import MatUtils from "../../../utils/MatUtils.js";
+import MatUtils from "../utils/MatUtils.js";
 import Cube from "../shapes/solids/Cube.js.js";
-import RectangularCuboid from "../shapes/solids/RectangularCuboid.js";
+import RectangularCuboid from "../shapes/solids/3d/RectangularCuboid.js.js";
 
-class SkeletonCube {
-    constructor(cuboidWidth, cuboidHeight) {
-        this.cuboid = new RectangularCuboid(cuboidWidth, cuboidHeight, cuboidHeight);
-        this.cube = new Cube(cuboidHeight);
-
-        const edgeOffset = cuboidWidth / 2 + cuboidHeight / 2;
+class CubeSkeleton {
+    constructor(ctx, cuboidWidth, cuboidHeight, settings) {
+        this.#cuboid = new RectangularCuboid(cuboidWidth, cuboidHeight, cuboidHeight);
+        this.#cube = new Cube(cuboidHeight);
 
         const yCuboidMat = MatUtils.rotated3d("z", Math.PI / 2);
         const zCuboidMat = MatUtils.rotated3d("y", Math.PI / 2);
+        const edgeOffset = cuboidWidth / 2 + cuboidHeight / 2;
+        // const edgeOffset = cuboidWidth / 2 + cuboidHeight;
 
-        this.mats = {
+        this.#mats = {
             cuboids: [
                 // FRONT TOP
                 MatUtils.translated3d(0, edgeOffset, edgeOffset),
@@ -58,13 +58,38 @@ class SkeletonCube {
                 MatUtils.translated3d(-edgeOffset, -edgeOffset, -edgeOffset),
             ],
         };
+
+        if (settings?.color && settings.sceneMat) this.prepareModels(settings);
     }
 
-    cuboid;
-    cube;
-    mats;
+    #cuboid;
+    #cube;
+    #mats;
+    modelsData = {};
 
-    render = () => {};
+    prepareModels(settings) {
+        this.modelsData.cuboids = this.#mats.cuboids.map((mat) => ({
+            uniforms: {
+                color: settings.color,
+                mats: {
+                    model: mat,
+                    final: MatUtils.mult3d(settings.sceneMat, mat),
+                },
+            },
+            render: this.#cuboid.render,
+        }));
+
+        this.modelsData.cubes = this.#mats.cubes.map((mat) => ({
+            uniforms: {
+                color: settings.color,
+                mats: {
+                    model: mat,
+                    final: MatUtils.mult3d(settings.sceneMat, mat),
+                },
+            },
+            render: this.#cube.render,
+        }));
+    }
 }
 
-export default SkeletonCube;
+export default CubeSkeleton;

@@ -150,39 +150,7 @@ class GoldenGrid extends Shader {
         this.#movementSequencer.validateStep(this.animData.frameDeltaTime);
         // this.#moveLight();
 
-        for (const cubeMat of cubes) {
-            const { cuboids, cubes } = this.#cube.mats;
 
-            this.gl.bindVertexArray(buffers.cuboid.vao);
-            this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, buffers.cuboid.indices);
-
-            for (const cuboidPartMat of cuboids) {
-                const modelMat = ShaderUtils.mult3dMats(cubeMat, cuboidPartMat);
-
-                this.#light.uniforms.finalMat = ShaderUtils.mult3dMats(this.mats.scene, modelMat);
-                this.#light.uniforms.modelMat = modelMat;
-                this.#light.uniforms.normalMat = ShaderUtils.init3dNormalMat(modelMat);
-
-                this.#light.setLight();
-
-                this.gl.drawElements(this.gl.TRIANGLES, this.#cube.cuboid.indices.length, this.gl.UNSIGNED_SHORT, 0);
-            }
-
-            this.gl.bindVertexArray(buffers.cube.vao);
-            this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, buffers.cube.indices);
-
-            for (const cubePartMat of cubes) {
-                const modelMat = ShaderUtils.mult3dMats(cubeMat, cubePartMat);
-
-                this.#light.uniforms.finalMat = ShaderUtils.mult3dMats(this.mats.scene, modelMat);
-                this.#light.uniforms.modelMat = modelMat;
-                this.#light.uniforms.normalMat = ShaderUtils.init3dNormalMat(modelMat);
-
-                this.#light.setLight();
-
-                this.gl.drawElements(this.gl.TRIANGLES, this.#cube.cube.indices.length, this.gl.UNSIGNED_SHORT, 0);
-            }
-        }
     }
 
     #moveCamera() {

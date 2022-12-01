@@ -1,4 +1,4 @@
-import Shape from "../Shape.js";
+import Shape from "./Shape.js";
 
 class Plane extends Shape {
     static #INDICES = [
