@@ -3,7 +3,7 @@ import Cube from "../shapes/solids/Cube.js";
 import Plane from "../shapes/Plane.js";
 import Framer from "../Generator/Framer/Framer.js";
 import LightSystem from "../LightSystem/LightSystem.js";
-import Hexagon from "../shapes/solids/Hexagon/Hexagon.js";
+import TruncatedOctahedron from "../shapes/solids/TruncatedOctahedron.js";
 import Pyramid from "../shapes/solids/Pyramid.js";
 import Octahedron from "../shapes/solids/Octahedron.js";
 import Cone from "../shapes/solids/Cone.js";
