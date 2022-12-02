@@ -1,18 +1,23 @@
 import MatUtils from "../utils/MatUtils.js";
-import Cube from "../shapes/solids/Cube.js.js";
-import RectangularCuboid from "../shapes/solids/3d/RectangularCuboid.js.js";
+import Cube from "../shapes/solids/Cube.js";
+import RectangularCuboid from "../shapes/solids/RectangularCuboid.js";
 
 class CubeSkeleton {
+    static #NEXT_INSTANCE_ID = 0
+    
     constructor(ctx, cuboidWidth, cuboidHeight, settings) {
-        this.#cuboid = new RectangularCuboid(cuboidWidth, cuboidHeight, cuboidHeight);
-        this.#cube = new Cube(cuboidHeight);
+        const id = this.instanceId = CubeSkeleton.#NEXT_INSTANCE_ID
+        
+        this.#cuboid = new RectangularCuboid(`cubeSkeletonCuboid${id}`, ctx, cuboidWidth, cuboidHeight, cuboidHeight);
+        this.#cube = new Cube(`cubeSkeletonCube${id}`, ctx, cuboidHeight);
+
+        CubeSkeleton.#NEXT_INSTANCE_ID++
 
         const yCuboidMat = MatUtils.rotated3d("z", Math.PI / 2);
         const zCuboidMat = MatUtils.rotated3d("y", Math.PI / 2);
         const edgeOffset = cuboidWidth / 2 + cuboidHeight / 2;
-        // const edgeOffset = cuboidWidth / 2 + cuboidHeight;
 
-        this.#mats = {
+        this.mats = {
             cuboids: [
                 // FRONT TOP
                 MatUtils.translated3d(0, edgeOffset, edgeOffset),
@@ -23,21 +28,21 @@ class CubeSkeleton {
                 // BACK BOTTOM
                 MatUtils.translated3d(0, -edgeOffset, -edgeOffset),
                 // FRONT RIGHT
-                MatUtils.multMats3d(MatUtils.translated3d(edgeOffset, 0, edgeOffset), yCuboidMat),
+                MatUtils.mult3d(MatUtils.translated3d(edgeOffset, 0, edgeOffset), yCuboidMat),
                 // FRONT LEFT
-                MatUtils.multMats3d(MatUtils.translated3d(-edgeOffset, 0, edgeOffset), yCuboidMat),
+                MatUtils.mult3d(MatUtils.translated3d(-edgeOffset, 0, edgeOffset), yCuboidMat),
                 // BACK RIGHT
-                MatUtils.multMats3d(MatUtils.translated3d(edgeOffset, 0, -edgeOffset), yCuboidMat),
+                MatUtils.mult3d(MatUtils.translated3d(edgeOffset, 0, -edgeOffset), yCuboidMat),
                 // BACK LEFT
-                MatUtils.multMats3d(MatUtils.translated3d(-edgeOffset, 0, -edgeOffset), yCuboidMat),
+                MatUtils.mult3d(MatUtils.translated3d(-edgeOffset, 0, -edgeOffset), yCuboidMat),
                 // TOP RIGHT
-                MatUtils.multMats3d(MatUtils.translated3d(edgeOffset, edgeOffset, 0), zCuboidMat),
+                MatUtils.mult3d(MatUtils.translated3d(edgeOffset, edgeOffset, 0), zCuboidMat),
                 // TOP LEFT
-                MatUtils.multMats3d(MatUtils.translated3d(-edgeOffset, edgeOffset, 0), zCuboidMat),
+                MatUtils.mult3d(MatUtils.translated3d(-edgeOffset, edgeOffset, 0), zCuboidMat),
                 // BOTTOM RIGHT
-                MatUtils.multMats3d(MatUtils.translated3d(edgeOffset, -edgeOffset, 0), zCuboidMat),
+                MatUtils.mult3d(MatUtils.translated3d(edgeOffset, -edgeOffset, 0), zCuboidMat),
                 // BOTTOM LEFT
-                MatUtils.multMats3d(MatUtils.translated3d(-edgeOffset, -edgeOffset, 0), zCuboidMat),
+                MatUtils.mult3d(MatUtils.translated3d(-edgeOffset, -edgeOffset, 0), zCuboidMat),
             ],
             cubes: [
                 // FRONT TOP RIGHT
@@ -64,31 +69,32 @@ class CubeSkeleton {
 
     #cuboid;
     #cube;
-    #mats;
+    mats;
+    instanceId
     modelsData = {};
 
     prepareModels(settings) {
-        this.modelsData.cuboids = this.#mats.cuboids.map((mat) => ({
-            uniforms: {
+        this.modelsData.cuboids = {
+            uniforms: this.mats.cuboids.map((mat) => ({
                 color: settings.color,
                 mats: {
                     model: mat,
                     final: MatUtils.mult3d(settings.sceneMat, mat),
                 },
-            },
+            })),
             render: this.#cuboid.render,
-        }));
+        }
 
-        this.modelsData.cubes = this.#mats.cubes.map((mat) => ({
-            uniforms: {
+        this.modelsData.cubes = {
+            uniforms: this.mats.cubes.map((mat) => ({
                 color: settings.color,
                 mats: {
                     model: mat,
                     final: MatUtils.mult3d(settings.sceneMat, mat),
                 },
-            },
+            })),
             render: this.#cube.render,
-        }));
+        }
     }
 }
 

@@ -1,6 +1,6 @@
 import MatUtils from "../utils/MatUtils.js";
-import Cube from "../shapes/solids/Cube.js.js";
-import Plane from "../shapes/solids/Plane.js";
+import Cube from "../shapes/solids/Cube.js";
+import Plane from "../shapes/Plane.js";
 import Framer from "../Generator/Framer/Framer.js";
 import LightSystem from "../LightSystem/LightSystem.js";
 import Hexagon from "../shapes/solids/Hexagon/Hexagon.js";
@@ -20,15 +20,13 @@ class Playground extends Framer {
         });
 
         // const cameraPosition = [0, 0, 0];
-        const cameraPosition = [Math.cos(Math.PI / 2) * 2, 0.5, Math.sin(Math.PI / 2) * 2];
-        const viewMat = MatUtils.view3d(cameraPosition, [0, -1, -1]);
+        const cameraPosition = [Math.cos(Math.PI / 2) * 8, 0, Math.sin(Math.PI / 2) * 8];
+        const viewMat = MatUtils.view3d(cameraPosition, [0, 0, -1]);
         const lNear = 0.1;
         const lFar = 50;
 
         this.mats.scene = MatUtils.mult3d(this.mats.projection, [viewMat]);
         const lightSystem = (this.lightSystem = new LightSystem(this));
-
-        this.cubeSkeleton = new CubeSkeleton(this, 4, 2, { sceneMat: this.mats.scene, color: [1, 1, 0] });
 
         const lightParams = [
             {
@@ -39,7 +37,7 @@ class Playground extends Framer {
                 light: {
                     ambientColor: [0, 0, 0],
                     lightColor: [0.75, 0.75, 0.75],
-                    // shininess: 1024,
+                    shininess: 1024,
                     far: lFar,
                     cameraPosition,
                     outerLimit: Math.cos(Math.PI / 14),
@@ -56,8 +54,8 @@ class Playground extends Framer {
         ];
 
         lightSystem.addLight("point", "pointOne", ...structuredClone(lightParams), {
-            // position: [Math.cos(Math.PI / 2) * 6, 0, Math.sin(Math.PI / 2) * 6],
-            position: [0, 2, 0],
+            position: [Math.cos(Math.PI / 2) * 3, 0, Math.sin(Math.PI / 2) * 3],
+            // position: [0, 2, 0],
         });
 
         this.animate = false;
@@ -70,20 +68,9 @@ class Playground extends Framer {
         const firstSpotLight = this.lightSystem.getLight("pointOne");
         // this.lightSystem.getLight("second").active = false
 
-        this.shapes.pyr.mats.model = MatUtils.mult3d(MatUtils.translated3d(0, 0, 0), [MatUtils.rotated3d("x", 0), MatUtils.rotated3d("x", 0)]); // this.animData.deltaTime / 5
+        // this.shapes.pyr.mats.model = MatUtils.mult3d(MatUtils.translated3d(0, 0, 0), [MatUtils.rotated3d("x", 0), MatUtils.rotated3d("x", 0)]); // this.animData.deltaTime / 5
 
-        this.lightSystem.setModels({
-            hex: {
-                uniforms: {
-                    color: [1, 1, 1],
-                    mats: {
-                        model: this.shapes.pyr.mats.model,
-                        final: MatUtils.mult3d(this.mats.scene, this.shapes.pyr.mats.model),
-                    },
-                },
-                render: this.shapes.pyr.render,
-            },
-        });
+        this.lightSystem.setModels(this.#cubeSkeleton.modelsData);
         this.lightSystem.renderLights();
     };
 }

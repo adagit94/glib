@@ -1,4 +1,4 @@
-import Shape from "../Shape.js.js"
+import Shape from "../Shape.js"
 
 class Cube extends Shape {
     static #SIDES = ["front", "back", "top", "bottom", "right", "left"]

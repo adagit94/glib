@@ -1,5 +1,5 @@
 import VecUtils from "../../utils/VecUtils.js";
-import Shape from "../Shape.js.js";
+import Shape from "../Shape.js";
 
 class Cone extends Shape {
     constructor(name, ctx, baseR, height, density, optionals) {

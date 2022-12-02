@@ -1,4 +1,4 @@
-import Shape from "../Shape.js.js"
+import Shape from "../Shape.js"
 
 class RectangularCuboid extends Shape {
     static #NORMALS = {

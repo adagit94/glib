@@ -1,5 +1,5 @@
 import VecUtils from "../../utils/VecUtils.js";
-import Shape from "../Shape.js.js";
+import Shape from "../Shape.js";
 
 class Octahedron extends Shape {
     constructor(name, ctx, squareSide, height, optionals) {

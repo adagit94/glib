@@ -1,18 +1,18 @@
-import Sequencer from "../Gadgets/Sequencer.js.js.js";
-import PhongLight from "../Lights/PhongLight/PhongLight.js.js.js";
-import Shader from "../Shader/Shader.js.js.js";
-import ShaderUtils from "../Shader/ShaderUtils.js.js.js";
-import SkeletonCube from "../Shapes/3d/SkeletonCube.js.js.js";
+import Framer from "../../Generator/Framer/Framer.js";
+import Sequencer from "../Gadgets/Sequencer..js";
+import ShaderUtils from "../Shader/ShaderUtils..js";
+import SkeletonCube from "../Shapes/3d/SkeletonCube..js";
 
-class GoldenGrid extends Shader {
+class GoldenGrid extends Framer {
     constructor() {
         super("#glFrame", "3d", { fov: Math.PI / 4, near: 0.1, far: 100 });
+
+        this.#cubeSkeleton = new CubeSkeleton(this, 2, 0.5);
 
         this.#initGrid();
     }
 
-    #cube;
-    #light;
+    #cubeSkeleton;
     #movementSequencer;
 
     async #initGrid() {
@@ -141,7 +141,7 @@ class GoldenGrid extends Shader {
     renderScene = () => {
         this.#renderGrid();
     };
-    
+
     #renderGrid() {
         const { cubes } = this.mats;
         const { buffers } = this.programs.goldenGrid;
@@ -150,7 +150,13 @@ class GoldenGrid extends Shader {
         this.#movementSequencer.validateStep(this.animData.frameDeltaTime);
         // this.#moveLight();
 
-
+        this.#cubeSkeleton.mats.cuboids = this.#cubeSkeleton.mats.cuboids.map((mat) =>
+            MatUtils.mult3d(MatUtils.rotated3d("x", this.animData.frameDeltaTime / 5), mat)
+        );
+        this.#cubeSkeleton.mats.cubes = this.#cubeSkeleton.mats.cubes.map((mat) =>
+            MatUtils.mult3d(MatUtils.rotated3d("x", this.animData.frameDeltaTime / 5), mat)
+        );
+        this.#cubeSkeleton.prepareModels({ color: [1, 1, 0], sceneMat: this.mats.scene });
     }
 
     #moveCamera() {
