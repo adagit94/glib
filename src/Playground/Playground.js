@@ -11,6 +11,8 @@ import Cylinder from "../shapes/solids/Cylinder.js";
 import Sphere from "../shapes/solids/Sphere.js";
 import RectangularCuboid from "../shapes/solids/RectangularCuboid.js";
 import CubeSkeleton from "../structures/CubeSkeleton.js";
+import Tetrahedron from "../shapes/solids/Tetrahedron.js";
+import TrirectangularTetrahedron from "../shapes/solids/TrirectangularTetrahedron.js";
 
 class Playground extends Framer {
     constructor() {
@@ -20,15 +22,16 @@ class Playground extends Framer {
         });
 
         // const cameraPosition = [0, 0, 0];
-        // const cameraPosition = [Math.cos(Math.PI / 2) * 4, 0, Math.sin(Math.PI / 2) * 4];
         const cameraPosition = [Math.cos(Math.PI / 2) * 6, 0, Math.sin(Math.PI / 2) * 6];
         const viewMat = MatUtils.view3d(cameraPosition, [0, 0, -1]);
-        // const viewMat = MatUtils.view3d(cameraPosition, [0, 0, -1]);
         const lNear = 0.1;
         const lFar = 50;
 
-        new TruncatedOctahedron("truncOctaHedron", this, 2, 0.5)
-
+        // new TruncatedOctahedron("truncOctaHedron", this, 2.1 * 4, 0.7 * 4, { invertNormals: true, opened: "h:y+z-" });
+        // new Tetrahedron("tetraHedron", this, 2, {opened: "x+y+z+"})
+        new TrirectangularTetrahedron("tetraHedron", this, 3)
+        
+        
         this.mats.scene = MatUtils.mult3d(this.mats.projection, [viewMat]);
         const lightSystem = (this.lightSystem = new LightSystem(this));
 
@@ -59,8 +62,7 @@ class Playground extends Framer {
 
         lightSystem.addLight("point", "pointOne", ...structuredClone(lightParams), {
             position: [Math.cos(Math.PI / 2) * 6, 0, Math.sin(Math.PI / 2) * 6],
-            // position: [Math.cos(Math.PI / 2) * 4, 0, Math.sin(Math.PI / 2) * 4],
-            // position: [0, 2, 0],
+            // position: [0, 0, 0],
         });
 
         this.animate = false;
@@ -73,10 +75,14 @@ class Playground extends Framer {
         const firstSpotLight = this.lightSystem.getLight("pointOne");
         // this.lightSystem.getLight("second").active = false
 
-        const modelMat = this.shapes.truncOctaHedron.mats.model = MatUtils.mult3d(MatUtils.translated3d(0, 0, 0), [MatUtils.rotated3d("x", this.animData.deltaTime / 5), MatUtils.rotated3d("x", 0)]); // this.animData.deltaTime / 5
+        const modelMat = (this.shapes.tetraHedron.mats.model = MatUtils.mult3d(MatUtils.translated3d(0, 0, 0), [
+            MatUtils.rotated3d("y", this.animData.deltaTime / 5),
+            MatUtils.rotated3d("z", Math.PI / 4),
+            // MatUtils.rotated3d("x", 0),
+        ])); // this.animData.deltaTime / 5
 
         this.lightSystem.setModels({
-            truncOctaHedron: {
+            tetraHedron: {
                 uniforms: {
                     color: [1, 1, 1],
                     mats: {
@@ -84,8 +90,8 @@ class Playground extends Framer {
                         final: MatUtils.mult3d(this.mats.scene, modelMat),
                     },
                 },
-                render: this.shapes.truncOctaHedron.render
-            }
+                render: this.shapes.tetraHedron.render,
+            },
         });
         this.lightSystem.renderLights();
     };
