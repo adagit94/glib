@@ -9,10 +9,14 @@ class VecUtils {
     static add = (vecA, vecB) => new Float32Array([vecA[0] + vecB[0], vecA[1] + vecB[1], vecA[2] + vecB[2]]);
 
     static normalize = (vec) => {
-        const length = Math.sqrt(Math.pow(vec[0], 2) + Math.pow(vec[1], 2) + Math.pow(vec[2], 2));
+        const length = VecUtils.length(vec);
 
         return new Float32Array([vec[0] / length, vec[1] / length, vec[2] / length]);
     };
+
+    static length = (vec) => Math.sqrt(Math.pow(vec[0], 2) + Math.pow(vec[1], 2) + Math.pow(vec[2], 2));
+
+    static distance = (vecA, vecB) => VecUtils.length(VecUtils.subtract(vecA, vecB));
 }
 
 export default VecUtils

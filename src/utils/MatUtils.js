@@ -4,13 +4,23 @@ class MatUtils {
   static identity2d = () => new Float32Array([1, 0, 0, 0, 1, 0, 0, 0, 1]);
 
   static identity3d = () =>
-    new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1]);
+    new Float32Array([
+      1, 0, 0, 0,
+      0, 1, 0, 0,
+      0, 0, 1, 0,
+      0, 0, 0, 1
+    ]);
 
   static translated2d = (x, y) =>
     new Float32Array([1, 0, 0, 0, 1, 0, x, y, 1]);
 
   static translated3d = (x, y, z) => 
-  new Float32Array([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, x, y, z, 1]);
+    new Float32Array([
+      1, 0, 0, 0,
+      0, 1, 0, 0,
+      0, 0, 1, 0,
+      x, y, z, 1
+    ]);
 
   static scaled2d = (w, h) =>
     new Float32Array(
@@ -247,6 +257,29 @@ class MatUtils {
    }
 
     return new Float32Array(matToMult);
+  };
+
+  static multVertWithMat3d = (vert, mat) => {
+    vert = [...vert]
+    mat = [...mat]
+      
+    for (let column = 0; column < 3; column++) {
+      for (let matI = column, coordI = 0; matI < mat.length - 4; matI += 4, coordI++) {
+        mat[matI] *= vert[coordI]
+      }
+    }
+    
+    for (let column = 0; column < 3; column++) {
+      let newVertVal = 0
+      
+      for (let matI = column; matI < mat.length; matI += 4) {
+        newVertVal += mat[matI]
+      }
+
+      vert[column] = newVertVal
+    }
+
+    return vert;
   };
 
   static translate3d = (mat, positionOffsets) => {
