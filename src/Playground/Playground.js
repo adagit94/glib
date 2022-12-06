@@ -22,14 +22,13 @@ class Playground extends Framer {
             pespectiveConf: { fov: Math.PI / 2, near: 0.1, far: 100 },
         });
 
-        const cameraPosition = [0, 2, 0];
-        // const cameraPosition = [Math.cos(Math.PI / 2) * 6, 0, Math.sin(Math.PI / 2) * 6];
-        const viewMat = MatUtils.view3d(cameraPosition, [0, -1, -0.01]);
+        // const cameraPosition = [0, 2, 0];
+        const cameraPosition = [-Math.cos(Math.PI / 2) * 6, 2, -Math.sin(Math.PI / 2) * 6];
+        const viewMat = MatUtils.view3d(cameraPosition, [0, -1, 1]);
         const lNear = 0.1;
         const lFar = 100;
 
         new Dodecahedron("dodecaHedron", this, 0.5, {invertNormals: true})
-        
         
         this.mats.scene = MatUtils.mult3d(this.mats.projection, [viewMat]);
         const lightSystem = (this.lightSystem = new LightSystem(this));
@@ -60,7 +59,7 @@ class Playground extends Framer {
         ];
 
         lightSystem.addLight("point", "pointOne", ...structuredClone(lightParams), {
-            // position: [Math.cos(Math.PI / 2) * 6, 0, Math.sin(Math.PI / 2) * 6],
+            // position: [-Math.cos(Math.PI / 4) * 6, 0, -Math.sin(Math.PI / 4) * 6],
             position: [0, 2, 0],
         });
 

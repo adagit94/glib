@@ -259,24 +259,29 @@ class MatUtils {
     return new Float32Array(matToMult);
   };
 
-  static multVertWithMat3d = (vert, mat) => {
-    vert = [...vert]
-    mat = [...mat]
-      
-    for (let column = 0; column < 3; column++) {
-      for (let matI = column, coordI = 0; matI < mat.length - 4; matI += 4, coordI++) {
-        mat[matI] *= vert[coordI]
-      }
-    }
+  static multVertWithMats3d = (vert, mats) => {
+    if (!Array.isArray(mats)) mats = [mats];
     
-    for (let column = 0; column < 3; column++) {
-      let newVertVal = 0
-      
-      for (let matI = column; matI < mat.length; matI += 4) {
-        newVertVal += mat[matI]
-      }
+    vert = [...vert]
 
-      vert[column] = newVertVal
+    for (let mat of mats) {
+      mat = [...mat]
+        
+      for (let column = 0; column < 3; column++) {
+        for (let matI = column, coordI = 0; matI < mat.length - 4; matI += 4, coordI++) {
+          mat[matI] *= vert[coordI]
+        }
+      }
+      
+      for (let column = 0; column < 3; column++) {
+        let newVertVal = 0
+        
+        for (let matI = column; matI < mat.length; matI += 4) {
+          newVertVal += mat[matI]
+        }
+
+        vert[column] = newVertVal
+      }
     }
 
     return vert;
