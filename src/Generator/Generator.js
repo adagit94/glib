@@ -220,6 +220,7 @@ class Generator {
 
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, framebuffer);
         setTexture();
+        this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
 
         if (merge) this.framebuffers[name] = framebuffer;
 

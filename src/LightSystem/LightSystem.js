@@ -62,6 +62,7 @@ class LightSystem {
     #programs;
     #lights = {};
     #models = {};
+    shadows = true
 
     #getCommonLightLocations(program) {
         return {
@@ -77,6 +78,7 @@ class LightSystem {
             lightDistanceQuad: this.#gl.getUniformLocation(program, "u_lightDistanceQuad"),
             cameraDistanceLin: this.#gl.getUniformLocation(program, "u_cameraDistanceLin"),
             cameraDistanceQuad: this.#gl.getUniformLocation(program, "u_cameraDistanceQuad"),
+            shadows: this.#gl.getUniformLocation(program, "u_shadows"),
         };
     }
 
@@ -141,7 +143,7 @@ class LightSystem {
                     this.#gl.enable(this.#gl.BLEND);
                 }
 
-                this.#genDepthMap(light);
+                if (this.shadows) this.#genDepthMap(light);
                 this.#genLight(light);
 
                 activeLights++;
@@ -225,6 +227,7 @@ class LightSystem {
         this.#gl.uniform3f(spotLight.locations.lightDirection, ...light.uniforms.lightDirection);
         this.#gl.uniform1f(spotLight.locations.innerLimit, light.uniforms.innerLimit);
         this.#gl.uniform1f(spotLight.locations.outerLimit, light.uniforms.outerLimit);
+        this.#gl.uniform1i(spotLight.locations.shadows, this.shadows ? 1 : 0);
     };
 
     #setPoint = (light) => {
@@ -234,6 +237,7 @@ class LightSystem {
 
         this.#setCommonUniforms(pointLight.locations, light);
         this.#gl.uniform1f(pointLight.locations.far, light.uniforms.far);
+        this.#gl.uniform1i(pointLight.locations.shadows, this.shadows ? 1 : 0);
     };
 
     #setCommonUniforms(locations, light) {

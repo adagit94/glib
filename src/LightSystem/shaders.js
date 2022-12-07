@@ -45,6 +45,7 @@ export default {
         uniform float u_cameraDistanceLin;
         uniform float u_cameraDistanceQuad;
         uniform sampler2DShadow u_depthMap;
+        uniform int u_shadows;
         
         in vec3 v_normal;
         in vec3 v_surfacePos;
@@ -108,7 +109,7 @@ export default {
                     diffuseLight *= cameraDistanceFactor;
         
                     if(diffuseLight > 0.) {
-                        float visibility = getVisibility();
+                        float visibility = u_shadows == 1 ? getVisibility() : 1.;
                         diffuseLight *= visibility;
         
                         if(diffuseLight > 0.) {
@@ -128,7 +129,7 @@ export default {
             color = vec4(u_color, 1);
             color.rgb *= u_ambientColor + diffuseColor;
             color.rgb += specular;
-        }              
+        }                      
         `,
         depthMap: {
             vShader: `#version 300 es
@@ -188,6 +189,7 @@ export default {
         uniform float u_cameraDistanceQuad;
         uniform float u_far;
         uniform samplerCubeShadow u_depthMap;
+        uniform int u_shadows;
         
         in vec3 v_normal;
         in vec3 v_surfacePos;
@@ -228,7 +230,7 @@ export default {
                 diffuseLight *= cameraDistanceFactor;
         
                 if(diffuseLight > 0.) {
-                    float visibility = getVisibility();
+                    float visibility = u_shadows == 1 ? getVisibility() : 1.;
                     diffuseLight *= visibility;
         
                     if(diffuseLight > 0.) {
@@ -247,7 +249,7 @@ export default {
             color = vec4(u_color, 1);
             color.rgb *= u_ambientColor + diffuseColor;
             color.rgb += specular;
-        }
+        }        
         `,
         depthMap: {
             vShader: `#version 300 es

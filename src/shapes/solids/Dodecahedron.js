@@ -1,5 +1,6 @@
 import MatUtils from "../../utils/MatUtils.js"
 import VecUtils from "../../utils/VecUtils.js"
+import AngleUtils from "../../utils/AngleUtils.js"
 import Shape from "../Shape.js"
 
 class Dodecahedron extends Shape {
@@ -27,7 +28,9 @@ class Dodecahedron extends Shape {
             const pentaZOffset = (pentaCircumradius - pentaInradius) / 2
             const dihedralAngle = Math.acos(-Math.sqrt(5) / 5)
 
-            vertices.push(...pentagonVertices.flatMap(vert => MatUtils.multVertWithMats3d(vert, MatUtils.translated3d(0, -dodecaInradius, pentaZOffset))))
+            const bottomFaceVertices = pentagonVertices.map(vert => MatUtils.multVertWithMats3d(vert, MatUtils.translated3d(0, -dodecaInradius, pentaZOffset)))
+            
+            vertices.push(...bottomFaceVertices.flat())
             normals.push(
                 0, -1, 0,
                 0, -1, 0,
@@ -42,15 +45,12 @@ class Dodecahedron extends Shape {
             )
 
             {
-                // let faceVertices = pentagonVertices.map(vert => MatUtils.multVertWithMats3d(vert, [MatUtils.translated3d(0, -dodecaInradius, pentaZOffset), MatUtils.rotated3d("x", -Math.PI + dihedralAngle)]))
-                let faceVertices = pentagonVertices.map(vert => MatUtils.multVertWithMats3d(vert, [MatUtils.translated3d(0, -dodecaInradius, pentaZOffset), MatUtils.rotated3d("x", -Math.PI / 2)]))
+                let faceVertices = pentagonVertices.map(vert => MatUtils.multVertWithMats3d(vert, [MatUtils.rotated3d("x", -dihedralAngle), MatUtils.translated3d(0, -dodecaInradius, pentaZOffset)]))
+                const transpositionVec = VecUtils.subtract(bottomFaceVertices[2], faceVertices[2])
 
-                const yTranslation = VecUtils.distance([faceVertices[2][0], -dodecaInradius, faceVertices[2][2]], faceVertices[2])
-                const zTranslation = VecUtils.distance([faceVertices[2][0], faceVertices[2][1], vertices[8]], faceVertices[2])
+                faceVertices = faceVertices.map(vert => VecUtils.add(vert, transpositionVec))
 
-                // faceVertices = pentagonVertices.map(vert => MatUtils.multVertWithMats3d(vert, MatUtils.translated3d(0, yTranslation, zTranslation)))
-
-                const normal = VecUtils.cross(VecUtils.subtract(faceVertices[1], faceVertices[2]), VecUtils.subtract(faceVertices[3], faceVertices[2]))
+                const normal = VecUtils.cross(VecUtils.subtract(faceVertices[3], faceVertices[2]), VecUtils.subtract(faceVertices[1], faceVertices[2]))
                 
                 vertices.push(...faceVertices.flat())
                 normals.push(
@@ -64,6 +64,45 @@ class Dodecahedron extends Shape {
                     5, 6, 9,
                     6, 9, 7,
                     7, 8, 9
+                )
+            }
+
+            const topFaceVertices = pentagonVertices.map(vert => MatUtils.multVertWithMats3d(vert, [MatUtils.rotated3d("y", Math.PI), MatUtils.translated3d(0, dodecaInradius, -pentaZOffset)]))
+            
+            vertices.push(...topFaceVertices.flat())
+            normals.push(
+                0, 1, 0,
+                0, 1, 0,
+                0, 1, 0,
+                0, 1, 0,
+                0, 1, 0,
+            )
+            indices.push(
+                10, 11, 14,
+                11, 14, 12,
+                12, 13, 14
+            )
+
+            {
+                let faceVertices = pentagonVertices.map(vert => MatUtils.multVertWithMats3d(vert, [MatUtils.rotated3d("x", dihedralAngle), MatUtils.rotated3d("y", AngleUtils.degToRad(36)), MatUtils.translated3d(0, dodecaInradius, -pentaZOffset)]))
+                const transpositionVec = VecUtils.subtract(topFaceVertices[4], faceVertices[2])
+
+                faceVertices = faceVertices.map(vert => VecUtils.add(vert, transpositionVec))
+
+                const normal = VecUtils.cross(VecUtils.subtract(faceVertices[1], faceVertices[2]), VecUtils.subtract(faceVertices[3], faceVertices[2]))
+                
+                vertices.push(...faceVertices.flat())
+                normals.push(
+                    ...normal,
+                    ...normal,
+                    ...normal,
+                    ...normal,
+                    ...normal,
+                )
+                indices.push(
+                    15, 16, 19,
+                    16, 19, 17,
+                    17, 18, 19
                 )
             }
 

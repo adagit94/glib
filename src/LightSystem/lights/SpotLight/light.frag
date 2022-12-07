@@ -17,6 +17,7 @@ uniform float u_lightDistanceQuad;
 uniform float u_cameraDistanceLin;
 uniform float u_cameraDistanceQuad;
 uniform sampler2DShadow u_depthMap;
+uniform int u_shadows;
 
 in vec3 v_normal;
 in vec3 v_surfacePos;
@@ -80,7 +81,7 @@ void main() {
             diffuseLight *= cameraDistanceFactor;
 
             if(diffuseLight > 0.) {
-                float visibility = getVisibility();
+                float visibility = u_shadows == 1 ? getVisibility() : 1.;
                 diffuseLight *= visibility;
 
                 if(diffuseLight > 0.) {
