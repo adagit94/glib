@@ -45,11 +45,9 @@ class Dodecahedron extends Shape {
             )
 
             {
-                let faceVertices = pentagonVertices.map(vert => MatUtils.multVertWithMats3d(vert, [MatUtils.rotated3d("x", -dihedralAngle), MatUtils.translated3d(0, -dodecaInradius, pentaZOffset)]))
+                let faceVertices = pentagonVertices.map(vert => MatUtils.multVertWithMats3d(vert, [MatUtils.rotated3d("x", -dihedralAngle)]))
                 const transpositionVec = VecUtils.subtract(bottomFaceVertices[2], faceVertices[2])
-
-                faceVertices = faceVertices.map(vert => VecUtils.add(vert, transpositionVec))
-
+                faceVertices = faceVertices.map(vert => VecUtils.add(vert, transpositionVec), [0, 0.01, 0.01])
                 const normal = VecUtils.cross(VecUtils.subtract(faceVertices[3], faceVertices[2]), VecUtils.subtract(faceVertices[1], faceVertices[2]))
                 
                 vertices.push(...faceVertices.flat())
@@ -67,7 +65,7 @@ class Dodecahedron extends Shape {
                 )
             }
 
-            const topFaceVertices = pentagonVertices.map(vert => MatUtils.multVertWithMats3d(vert, [MatUtils.rotated3d("y", Math.PI), MatUtils.translated3d(0, dodecaInradius, -pentaZOffset)]))
+            const topFaceVertices = pentagonVertices.map(vert => MatUtils.multVertWithMats3d(vert, [MatUtils.rotated3d("y", Math.PI), MatUtils.translated3d(0, dodecaInradius, pentaZOffset)]))
             
             vertices.push(...topFaceVertices.flat())
             normals.push(
@@ -84,11 +82,9 @@ class Dodecahedron extends Shape {
             )
 
             {
-                let faceVertices = pentagonVertices.map(vert => MatUtils.multVertWithMats3d(vert, [MatUtils.rotated3d("x", dihedralAngle), MatUtils.rotated3d("y", AngleUtils.degToRad(36)), MatUtils.translated3d(0, dodecaInradius, -pentaZOffset)]))
+                let faceVertices = pentagonVertices.map(vert => MatUtils.multVertWithMats3d(vert, [MatUtils.rotated3d("x", dihedralAngle), MatUtils.rotated3d("y", AngleUtils.degToRad(36))]))
                 const transpositionVec = VecUtils.subtract(topFaceVertices[4], faceVertices[2])
-
                 faceVertices = faceVertices.map(vert => VecUtils.add(vert, transpositionVec))
-
                 const normal = VecUtils.cross(VecUtils.subtract(faceVertices[1], faceVertices[2]), VecUtils.subtract(faceVertices[3], faceVertices[2]))
                 
                 vertices.push(...faceVertices.flat())
@@ -105,6 +101,7 @@ class Dodecahedron extends Shape {
                     17, 18, 19
                 )
             }
+
 
             if (invertNormals) normals = normals.map(coord => coord * -1)
 

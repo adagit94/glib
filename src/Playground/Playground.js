@@ -23,9 +23,9 @@ class Playground extends Framer {
         });
 
         // const cameraPosition = [0, 4, 0];
-        // const cameraPosition = [Math.cos(Math.PI / 1.75) * 4, 2, Math.sin(Math.PI / 1.75) * 4];
-        const cameraPosition = [Math.cos(0) * 4, 0, Math.sin(0) * 4];
-        const viewMat = MatUtils.view3d(cameraPosition, [-1, 0, 0]);
+        const cameraPosition = [-Math.cos(Math.PI / 4) * 4, 2, Math.sin(Math.PI / 4) * 4];
+        // const cameraPosition = [-Math.cos(0) * 4, 0, Math.sin(0) * 4];
+        const viewMat = MatUtils.view3d(cameraPosition, [1, 0, -1]);
         const lNear = 0.1;
         const lFar = 100;
 
