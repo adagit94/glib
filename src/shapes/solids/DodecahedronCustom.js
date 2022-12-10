@@ -4,7 +4,7 @@ import AngleUtils from "../../utils/AngleUtils.js"
 import Shape from "../Shape.js"
 import ShapeUtils from "../ShapeUtils.js"
 
-class Dodecahedron extends Shape {
+class DodecahedronCustom extends Shape {
     constructor(name, ctx, pentaCircumradius, optionals) {
         super(name, ctx, () => {
             const opened = Array.isArray(optionals?.opened) ? optionals.opened : typeof optionals?.opened === "string" ? [optionals.opened] : undefined
@@ -155,4 +155,4 @@ class Dodecahedron extends Shape {
     }
 }
 
-export default Dodecahedron
+export default DodecahedronCustom

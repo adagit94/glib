@@ -22,10 +22,10 @@ class Playground extends Framer {
             pespectiveConf: { fov: Math.PI / 2, near: 0.1, far: 100 },
         });
 
-        // const cameraPosition = [0, 4, 0];
-        const cameraPosition = [-Math.cos(Math.PI / 4) * 4, 2, Math.sin(Math.PI / 4) * 4];
-        // const cameraPosition = [-Math.cos(0) * 4, 0, Math.sin(0) * 4];
-        const viewMat = MatUtils.view3d(cameraPosition, [1, 0, -1]);
+        // const cameraPosition = [0, 0, 0];
+        const cameraPosition = [Math.cos(Math.PI / 2) * 4, 0, Math.sin(Math.PI / 2) * 4];
+        // const cameraPosition = [Math.cos(0) * 4, 0, Math.sin(0) * 4];
+        const viewMat = MatUtils.view3d(cameraPosition, [0, 0, -1]);
         const lNear = 0.1;
         const lFar = 100;
 
@@ -62,8 +62,8 @@ class Playground extends Framer {
         lightSystem.shadows = false
         
         lightSystem.addLight("point", "pointOne", ...structuredClone(lightParams), {
-            position: [Math.cos(Math.PI / 2) * 4, 2, Math.sin(Math.PI / 2) * 4],
-            // position: [0, 0.5, 0],
+            position: [Math.cos(Math.PI / 2) * 4, 0, Math.sin(Math.PI / 2) * 4],
+            // position: [0, 0, 0],
         });
 
         this.animate = false;
@@ -77,7 +77,7 @@ class Playground extends Framer {
         // this.lightSystem.getLight("second").active = false
 
         const modelMat = (this.shapes.dodecaHedron.mats.model = MatUtils.mult3d(MatUtils.translated3d(0, 0, 0), [
-            MatUtils.rotated3d("x", 0), // this.animData.deltaTime / 5
+            MatUtils.rotated3d("y", this.animData.deltaTime / 5), // 
         ]));
 
         this.lightSystem.setModels({
