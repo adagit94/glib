@@ -1,7 +1,9 @@
+import AngleUtils from "../../utils/AngleUtils.js"
 import MatUtils from "../../utils/MatUtils.js"
 import VecUtils from "../../utils/VecUtils.js"
 import Shape from "../Shape.js"
 import ShapeUtils from "../ShapeUtils.js"
+import PentagonalPyramid from "./PentagonalPyramid.js"
 
 class Icosahedron extends Shape {
     constructor(name, ctx, pentaCircumradius, optionals) {
@@ -9,45 +11,24 @@ class Icosahedron extends Shape {
             const opened = Array.isArray(optionals?.opened) ? optionals.opened : typeof optionals?.opened === "string" ? [optionals.opened] : undefined
             const invertNormals = !!optionals?.invertNormals
             
+            const pentaVertices = PentagonalPyramid.initPentagonVertices(pentaCircumradius)
             let vertices = [], normals = []
-            let pentaVertices = []
-
-            const pentaAngleStep = Math.PI * 2 / 5
-            
-            for (let v = 0; v <= 5; v++) {
-                const angle = -Math.PI / 2 - pentaAngleStep * v
-                const x = Math.cos(angle) * pentaCircumradius
-                const z = Math.sin(angle) * pentaCircumradius
-
-                pentaVertices.push([x, 0, z])
-            }
             
             const edgeLength = VecUtils.distance(pentaVertices[0], pentaVertices[1])
             const icosaCircumradius = edgeLength * Math.sin(Math.PI * 2 / 5)
             const pentaPyrH = edgeLength * Math.sqrt((5 - Math.sqrt(5)) / 10)
             const pentaPyrBaseY = icosaCircumradius - pentaPyrH
 
-            const setPentaPyrData = (transformedPentaVertices, pentaPyrApexVertex) => {
-                for (let v = 0; v < 5; v++) {
-                    const v0 = transformedPentaVertices[v]
-                    const v1 = transformedPentaVertices[v + 1]
-                    const normal = VecUtils.cross(VecUtils.subtract(v1, v0), VecUtils.subtract(pentaPyrApexVertex, v0))
-                    ShapeUtils.setGeometryData(3, [vertices, [pentaPyrApexVertex, v0, v1]], [normals, normal])
-                }
-            }
-
             const topPentaVertices = pentaVertices.map(vert => MatUtils.multVertWithMats3d(vert, MatUtils.translated3d(0, pentaPyrBaseY, 0)))
 
             if (!opened?.includes("y") && !opened?.includes("y+")) {
-                const pentaPyrApexVertex = [0, icosaCircumradius, 0]
-                setPentaPyrData(topPentaVertices, pentaPyrApexVertex)
+                PentagonalPyramid.setTriangularFaces(vertices, normals, topPentaVertices, [0, icosaCircumradius, 0])
             }
 
             const bottomPentaVertices = pentaVertices.map(vert => MatUtils.multVertWithMats3d(vert, [MatUtils.rotated3d("x", Math.PI), MatUtils.translated3d(0, -pentaPyrBaseY, 0)]))
 
             if (!opened?.includes("y") && !opened?.includes("y-")) {
-                const pentaPyrApexVertex = [0, -icosaCircumradius, 0]
-                setPentaPyrData(bottomPentaVertices, pentaPyrApexVertex)
+                PentagonalPyramid.setTriangularFaces(vertices, normals, bottomPentaVertices, [0, -icosaCircumradius, 0])
             }
             
             {

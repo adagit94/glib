@@ -30,7 +30,7 @@ class Playground extends Framer {
         const lNear = 0.1;
         const lFar = 100;
 
-        new PentagonalPyramid("icosaHedron", this, 0.5);
+        new Icosahedron("icosaHedron", this, 0.5);
 
         this.mats.scene = MatUtils.mult3d(this.mats.projection, [viewMat]);
         const lightSystem = (this.lightSystem = new LightSystem(this));
