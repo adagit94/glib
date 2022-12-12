@@ -1,9 +1,11 @@
 class ShapeUtils {
     static setGeometryData(verticesCount, vertices, normals, indices) {
         const [verticesSum, verticesToAdd] = vertices
-        const [normalsSum, normalToAdd] = normals
+        let [normalsSum, normalToAdd, invertNormal] = normals
 
-        verticesSum.push(...verticesToAdd)
+        if (invertNormal) normalToAdd = normalToAdd.map(coord => coord * -1)
+
+        verticesSum.push(...verticesToAdd.flat())
 
         for (let v = 0; v < verticesCount; v++) {
             normalsSum.push(...normalToAdd)

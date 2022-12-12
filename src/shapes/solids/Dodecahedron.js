@@ -25,21 +25,18 @@ class Dodecahedron extends Shape {
 
             const edgeLength = VecUtils.distance(pentagonVertices[0], pentagonVertices[1])
             const dodecaInradius = edgeLength * 0.5 * Math.sqrt(5 / 2 + 11 / 10 * Math.sqrt(5))
-            const pentaInradius = edgeLength / (2 * Math.tan(Math.PI / 5))
-            const pentaZOffset = (pentaCircumradius - pentaInradius) / 2
             const dihedralAngle = Math.acos(-Math.sqrt(5) / 5)
-            // const pentaHeight = pentaCircumradius + pentaInradius
 
             let faceIndices = [0, 1, 4, 1, 4, 2, 2, 3, 4]
 
             // Y+
-            const topFaceVertices = pentagonVertices.map(vert => MatUtils.multVertWithMats3d(vert, [MatUtils.rotated3d("y", Math.PI), MatUtils.translated3d(0, dodecaInradius, pentaZOffset)]))
+            const topFaceVertices = pentagonVertices.map(vert => MatUtils.multVertWithMats3d(vert, [MatUtils.rotated3d("y", Math.PI), MatUtils.translated3d(0, dodecaInradius, 0)]))
             if (!opened?.includes("y+")) {
                 ShapeUtils.setGeometryData(5, [vertices, topFaceVertices.flat()], [normals, [0, 1, 0]], [indices, faceIndices, true])
             }
             
             // Y-
-            const bottomFaceVertices = pentagonVertices.map(vert => MatUtils.multVertWithMats3d(vert, MatUtils.translated3d(0, -dodecaInradius, pentaZOffset)))
+            const bottomFaceVertices = pentagonVertices.map(vert => MatUtils.multVertWithMats3d(vert, MatUtils.translated3d(0, -dodecaInradius, 0)))
             if (!opened?.includes("y-")) {
                 ShapeUtils.setGeometryData(5, [vertices, bottomFaceVertices.flat()], [normals, [0, -1, 0,]], [indices, faceIndices])
             }

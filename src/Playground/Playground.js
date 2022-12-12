@@ -4,7 +4,7 @@ import Plane from "../shapes/Plane.js";
 import Framer from "../Generator/Framer/Framer.js";
 import LightSystem from "../LightSystem/LightSystem.js";
 import TruncatedOctahedron from "../shapes/solids/TruncatedOctahedron.js";
-import Pyramid from "../shapes/solids/Pyramid.js";
+import Pyramid from "../shapes/solids/SquarePyramid.js";
 import Octahedron from "../shapes/solids/Octahedron.js";
 import Cone from "../shapes/solids/Cone.js";
 import Cylinder from "../shapes/solids/Cylinder.js";
@@ -13,7 +13,9 @@ import RectangularCuboid from "../shapes/solids/RectangularCuboid.js";
 import CubeSkeleton from "../structures/CubeSkeleton.js";
 import Tetrahedron from "../shapes/solids/Tetrahedron.js";
 import TrirectangularTetrahedron from "../shapes/solids/TrirectangularTetrahedron.js";
-import Dodecahedron from "../shapes/solids/Dodecahedron.js";
+import Icosahedron from "../shapes/solids/Icosahedron.js";
+import AngleUtils from "../utils/AngleUtils.js";
+import PentagonalPyramid from "../shapes/solids/PentagonalPyramid.js";
 
 class Playground extends Framer {
     constructor() {
@@ -22,15 +24,14 @@ class Playground extends Framer {
             pespectiveConf: { fov: Math.PI / 2, near: 0.1, far: 100 },
         });
 
-        // const cameraPosition = [0, 0, 0];
-        const cameraPosition = [Math.cos(Math.PI / 2) * 4, 0, Math.sin(Math.PI / 2) * 4];
-        // const cameraPosition = [Math.cos(0) * 4, 0, Math.sin(0) * 4];
+        // const cameraPosition = [0, 0.5, 0];
+        const cameraPosition = [Math.cos(Math.PI / 2) * 2, 0, Math.sin(Math.PI / 2) * 2];
         const viewMat = MatUtils.view3d(cameraPosition, [0, 0, -1]);
         const lNear = 0.1;
         const lFar = 100;
 
-        new Dodecahedron("dodecaHedron", this, 0.5, {invertNormals: false})
-        
+        new PentagonalPyramid("icosaHedron", this, 0.5);
+
         this.mats.scene = MatUtils.mult3d(this.mats.projection, [viewMat]);
         const lightSystem = (this.lightSystem = new LightSystem(this));
 
@@ -41,7 +42,7 @@ class Playground extends Framer {
             },
             {
                 light: {
-                    ambientColor: [0.25, 0.25, 0.25],
+                    ambientColor: [0, 0, 0],
                     lightColor: [0.75, 0.75, 0.75],
                     shininess: 1024,
                     far: lFar,
@@ -59,11 +60,11 @@ class Playground extends Framer {
             },
         ];
 
-        lightSystem.shadows = false
-        
+        lightSystem.shadows = false;
+
         lightSystem.addLight("point", "pointOne", ...structuredClone(lightParams), {
-            position: [Math.cos(Math.PI / 2) * 4, 0, Math.sin(Math.PI / 2) * 4],
-            // position: [0, 0, 0],
+            position: [Math.cos(Math.PI / 2) * 2, 0, Math.sin(Math.PI / 2) * 2],
+            // position: [0, 0.5, 0],
         });
 
         this.animate = false;
@@ -76,12 +77,14 @@ class Playground extends Framer {
         const firstSpotLight = this.lightSystem.getLight("pointOne");
         // this.lightSystem.getLight("second").active = false
 
-        const modelMat = (this.shapes.dodecaHedron.mats.model = MatUtils.mult3d(MatUtils.translated3d(0, 0, 0), [
-            MatUtils.rotated3d("y", this.animData.deltaTime / 5), // 
+        const modelMat = (this.shapes.icosaHedron.mats.model = MatUtils.mult3d(MatUtils.translated3d(0, 0, 0), [
+            // MatUtils.rotated3d("y", -AngleUtils.degToRad(72)),
+            // MatUtils.rotated3d("y", 0),
+            MatUtils.rotated3d("x", this.animData.deltaTime / 5),
         ]));
 
         this.lightSystem.setModels({
-            dodecaHedron: {
+            icosaHedron: {
                 uniforms: {
                     color: [1, 1, 1],
                     mats: {
@@ -89,7 +92,7 @@ class Playground extends Framer {
                         final: MatUtils.mult3d(this.mats.scene, modelMat),
                     },
                 },
-                render: this.shapes.dodecaHedron.render,
+                render: this.shapes.icosaHedron.render,
             },
         });
         this.lightSystem.renderLights();

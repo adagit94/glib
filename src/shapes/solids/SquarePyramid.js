@@ -15,8 +15,9 @@ class Pyramid extends Shape {
         13, 14, 15
     ]
 
-    constructor(name, ctx, squareSide, height, optionals) {
+    constructor(name, ctx, squareSide, optionals) {
         super(name, ctx, () => {
+            const height = typeof optionals?.height === "number" ? optionals.height : Math.sqrt(squareSide * squareSide / 2)
             const openedBase = optionals?.opened === "base"
             const invertNormals = !!optionals?.invertNormals
 

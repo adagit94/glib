@@ -29,7 +29,7 @@ class TruncatedOctahedron extends Shape {
             
             const truncPyrHalf = truncPyrSquareLength / 2
             const truncPyrArea = Math.pow(truncPyrSquareLength, 2)
-            const truncPyrH =  Math.sqrt(truncPyrArea / 2)
+            const truncPyrH = Math.sqrt(truncPyrArea / 2)
 
             let currentIndices = [0, 1, 2, 0, 1, 3]
 
