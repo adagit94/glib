@@ -1,13 +1,15 @@
 class Light {
     constructor(ctx, depthMapConf, initialUniforms) {
+        const { depthMap: depthMapUniforms, ...lightUniforms} = initialUniforms;
+
         this.gl = ctx.gl;
-        this.uniforms = initialUniforms.light;
+        this.uniforms = lightUniforms;
 
         const texBindTarget = depthMapConf.cubeMap ? this.gl.TEXTURE_CUBE_MAP : this.gl.TEXTURE_2D;
         const texTarget = depthMapConf.cubeMap ? this.gl.TEXTURE_CUBE_MAP_POSITIVE_X : this.gl.TEXTURE_2D;
 
         this.depthMap = {
-            uniforms: initialUniforms.depthMap,
+            uniforms: depthMapUniforms,
             texture: ctx.createTexture(
                 {
                     settings: {

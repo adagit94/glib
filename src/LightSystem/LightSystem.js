@@ -8,7 +8,8 @@ class LightSystem {
         this.#ctx = ctx;
         this.#gl = ctx.gl;
 
-        ctx.gl.blendFuncSeparate(ctx.gl.ONE, ctx.gl.ONE, ctx.gl.ONE, ctx.gl.ZERO);
+        ctx.gl.enable(ctx.gl.BLEND);
+        ctx.gl.blendFuncSeparate(ctx.gl.SRC_ALPHA, ctx.gl.ONE_MINUS_SRC_ALPHA, ctx.gl.ONE, ctx.gl.ZERO);
         ctx.gl.blendEquation(ctx.gl.FUNC_ADD);
 
         this.#programs = ctx.createPrograms(
@@ -62,7 +63,7 @@ class LightSystem {
     #programs;
     #lights = {};
     #models = {};
-    shadows = true
+    shadows = true;
 
     #getCommonLightLocations(program) {
         return {
@@ -88,7 +89,8 @@ class LightSystem {
         };
     }
 
-    addLight(type, name, depthMapConf, initialUniforms, settings) {
+    addLight(type, name, initialUniforms, conf) {
+        const { depthMap: depthMapConf, ...lightConf } = conf;
         let light;
 
         switch (type) {
@@ -101,10 +103,9 @@ class LightSystem {
                 break;
         }
 
-        if (settings) light.prepare(settings);
+        light.prepare(lightConf);
 
         this.#lights[name] = light;
-
         delete this.#lights._values;
         this.#lights._values = Object.values(this.#lights);
 
@@ -135,22 +136,13 @@ class LightSystem {
 
     renderLights() {
         const lights = this.#lights._values;
-        let activeLights = 0;
 
         for (const light of lights) {
             if (light.active) {
-                if (activeLights === 1) {
-                    this.#gl.enable(this.#gl.BLEND);
-                }
-
                 if (this.shadows) this.#genDepthMap(light);
                 this.#genLight(light);
-
-                activeLights++;
             }
         }
-
-        this.#gl.disable(this.#gl.BLEND);
     }
 
     #genDepthMap = (light) => {
@@ -241,7 +233,7 @@ class LightSystem {
     };
 
     #setCommonUniforms(locations, light) {
-        this.#gl.uniform3f(locations.color, ...light.uniforms.color);
+        this.#gl.uniform4f(locations.color, ...light.uniforms.color);
         this.#gl.uniformMatrix4fv(locations.finalMat, false, light.uniforms.finalMat);
         this.#gl.uniformMatrix4fv(locations.modelMat, false, light.uniforms.modelMat);
         this.#gl.uniformMatrix4fv(locations.normalMat, false, light.uniforms.normalMat);

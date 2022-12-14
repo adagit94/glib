@@ -6,7 +6,7 @@ class PentagonalPyramid extends Shape {
     static initPentagonVertices(circumradius) {
         let vertices = []
         const pentaAngleStep = Math.PI * 2 / 5
-            
+
         for (let v = 0; v <= 5; v++) {
             const angle = -Math.PI / 2 - pentaAngleStep * v
             const x = Math.cos(angle) * circumradius

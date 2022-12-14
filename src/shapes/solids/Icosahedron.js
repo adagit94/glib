@@ -20,7 +20,7 @@ class Icosahedron extends Shape {
             const pentaPyrBaseY = icosaCircumradius - pentaPyrH
 
             const topPentaVertices = pentaVertices.map(vert => MatUtils.multVertWithMats3d(vert, MatUtils.translated3d(0, pentaPyrBaseY, 0)))
-
+            
             if (!opened?.includes("y") && !opened?.includes("y+")) {
                 PentagonalPyramid.setTriangularFaces(vertices, normals, topPentaVertices, [0, icosaCircumradius, 0])
             }

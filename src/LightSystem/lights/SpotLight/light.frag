@@ -3,7 +3,7 @@
 precision highp float;
 precision highp sampler2DShadow;
 
-uniform vec3 u_color;
+uniform vec4 u_color;
 uniform vec3 u_ambientColor;
 uniform vec3 u_lightPosition;
 uniform vec3 u_lightDirection;
@@ -98,7 +98,7 @@ void main() {
         }
     }
 
-    color = vec4(u_color, 1);
+    color = u_color;
     color.rgb *= u_ambientColor + diffuseColor;
     color.rgb += specular;
 }
