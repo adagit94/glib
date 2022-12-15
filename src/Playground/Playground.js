@@ -36,7 +36,7 @@ class Playground extends Framer {
         new Plane("plane2", this, 0.25, 0.25);
 
         this.mats.scene = MatUtils.mult3d(this.mats.projection, [viewMat]);
-        const lightSystem = (this.lightSystem = new LightSystem(this));
+        const lightSystem = (this.lightSystem = new LightSystem(this, { shadows: false }));
 
         // lightSystem.addLight(
         //     "point",
@@ -74,7 +74,7 @@ class Playground extends Framer {
             "pointTwo",
             {
                 ambientColor: [0, 0, 0],
-                lightColor: [0, 0, 1],
+                lightColor: [1, 1, 1],
                 shininess: 1024,
                 far: lFar,
                 cameraPosition,
@@ -91,14 +91,13 @@ class Playground extends Framer {
             {
                 // position: [0, 0.5, 0],
                 position: [Math.cos(Math.PI / 2) * 1, 0, Math.sin(Math.PI / 4) * 1],
-                depthMap: {
-                    size: 3200,
-                    lightProjectionMat: MatUtils.perspective(Math.PI / 2, 1, lNear, lFar),
-                },
+                // depthMap: {
+                //     size: 3200,
+                //     lightProjectionMat: MatUtils.perspective(Math.PI / 2, 1, lNear, lFar),
+                // },
             }
         );
 
-        lightSystem.shadows = false;
         this.animate = false;
         this.requestAnimationFrame();
         // console.log(this);
@@ -114,7 +113,7 @@ class Playground extends Framer {
         this.lightSystem.setModels({
             plane1: {
                 uniforms: {
-                    color: [1, 1, 1, 0.5],
+                    color: [1, 0, 0, 0.5],
                     mats: {
                         model: plane1Mat,
                         final: MatUtils.mult3d(this.mats.scene, plane1Mat),
@@ -124,7 +123,7 @@ class Playground extends Framer {
             },
             plane2: {
                 uniforms: {
-                    color: [0.5, 0.5, 0.5, 1],
+                    color: [0, 0, 1, 0.25],
                     mats: {
                         model: plane2Mat,
                         final: MatUtils.mult3d(this.mats.scene, plane2Mat),

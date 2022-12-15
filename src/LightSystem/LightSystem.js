@@ -4,9 +4,10 @@ import SpotLight from "./lights/SpotLight/SpotLight.js";
 import LightSystemUtils from "./LightSystemUtils.js";
 
 class LightSystem {
-    constructor(ctx) {
+    constructor(ctx, conf) {
         this.#ctx = ctx;
         this.#gl = ctx.gl;
+        this.shadows = !!conf?.shadows
 
         ctx.gl.enable(ctx.gl.BLEND);
         ctx.gl.blendFuncSeparate(ctx.gl.SRC_ALPHA, ctx.gl.ONE_MINUS_SRC_ALPHA, ctx.gl.ONE, ctx.gl.ZERO);
@@ -63,7 +64,7 @@ class LightSystem {
     #programs;
     #lights = {};
     #models = {};
-    shadows = true;
+    shadows;
 
     #getCommonLightLocations(program) {
         return {
@@ -95,11 +96,11 @@ class LightSystem {
 
         switch (type) {
             case "spot":
-                light = new SpotLight(this.#ctx, depthMapConf, initialUniforms);
+                light = new SpotLight(this.#ctx, initialUniforms, depthMapConf);
                 break;
 
             case "point":
-                light = new PointLight(this.#ctx, depthMapConf, initialUniforms);
+                light = new PointLight(this.#ctx, initialUniforms, depthMapConf);
                 break;
         }
 

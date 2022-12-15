@@ -162,7 +162,7 @@ class Generator {
 
     createTexture(textureConf, textureImage, merge = true) {
         const { path, settings } = textureConf;
-        const unit = Object.keys(this.textures).length;
+        const unit = Object.keys(this.textures).length; // unit doesnt increment in case of merge false
         const texture = this.gl.createTexture();
         const newTexData = { texture, unit, settings };
 
