@@ -91,10 +91,10 @@ class Playground extends Framer {
             {
                 // position: [0, 0.5, 0],
                 position: [Math.cos(Math.PI / 2) * 1, 0, Math.sin(Math.PI / 4) * 1],
-                // depthMap: {
-                //     size: 3200,
-                //     lightProjectionMat: MatUtils.perspective(Math.PI / 2, 1, lNear, lFar),
-                // },
+                depthMap: {
+                    size: 3200,
+                    lightProjectionMat: MatUtils.perspective(Math.PI / 2, 1, lNear, lFar),
+                },
             }
         );
 

@@ -34,9 +34,6 @@ class Generator {
                 );
                 break;
         }
-
-        gl.enable(gl.DEPTH_TEST);
-        gl.depthFunc(gl.LEQUAL);
     }
 
     gl;

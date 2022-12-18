@@ -1,4 +1,5 @@
 import MatUtils from "../utils/MatUtils.js";
+import VecUtils from "../utils/VecUtils.js";
 
 class LightSystemUtils {
     static prepareSpotDepthMapUniforms(light, uniformsSet, lightMat) {
@@ -28,6 +29,25 @@ class LightSystemUtils {
         light.uniforms.finalMat = uniformsSet.mats.final;
         light.uniforms.modelMat = uniformsSet.mats.model;
         light.uniforms.normalMat = MatUtils.normal3d(uniformsSet.mats.model);
+    }
+
+    static sortModels(sourceData, order) {
+        let { models, origin } = sourceData;
+
+        models.sort((firstModel, secondModel) => {
+            const firstModelPos = firstModel.mats.final.slice(12, firstModel.mats.length - 1);
+            const firstModelDistanceFromLight = VecUtils.distance(firstModelPos, origin);
+            const secondModelPos = secondModel.mats.final.slice(12, secondModel.mats.length - 1);
+            const secondModelDistanceFromLight = VecUtils.distance(secondModelPos, origin);
+
+            switch (order) {
+                case "fromLight":
+                    return firstModelDistanceFromLight - secondModelDistanceFromLight;
+
+                case "fromCamera":
+                    return secondModelDistanceFromLight - firstModelDistanceFromLight;
+            }
+        });
     }
 }
 

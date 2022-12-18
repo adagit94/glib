@@ -7,7 +7,7 @@ class LightSystem {
     constructor(ctx, conf) {
         this.#ctx = ctx;
         this.#gl = ctx.gl;
-        this.shadows = !!conf?.shadows
+        this.shadows = !!conf?.shadows;
 
         ctx.gl.enable(ctx.gl.BLEND);
         ctx.gl.blendFuncSeparate(ctx.gl.SRC_ALPHA, ctx.gl.ONE_MINUS_SRC_ALPHA, ctx.gl.ONE, ctx.gl.ZERO);
@@ -132,7 +132,15 @@ class LightSystem {
             delete this.#models._values;
         }
 
-        this.#models._values = Object.values(this.#models);
+        this.#models._values = Object.values(this.#models).flatMap((model) => {
+            const { uniforms, ...otherModelFields } = model;
+
+            if (Array.isArray(uniforms)) {
+                return uniforms.map((uniSet) => ({ ...uniSet, ...otherModelFields }));
+            } else {
+                return { ...uniforms, ...otherModelFields };
+            }
+        });
     }
 
     renderLights() {
@@ -254,8 +262,7 @@ class LightSystem {
         const dmRender = !!lightMat;
 
         for (const model of this.#models._values) {
-            const { culling, uniforms } = model;
-            const uniformsSets = Array.isArray(uniforms) ? uniforms : [uniforms];
+            const { culling, render, ...uniforms } = model;
 
             if (dmRender) {
                 if (culling?.depthMapFront) {
@@ -273,11 +280,9 @@ class LightSystem {
                 }
             }
 
-            for (const uniformsSet of uniformsSets) {
-                prepareUniforms(light, uniformsSet, lightMat);
-                setProgram(light);
-                model.render();
-            }
+            prepareUniforms(light, uniforms, lightMat);
+            setProgram(light);
+            render();
         }
     };
 }
