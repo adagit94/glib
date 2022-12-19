@@ -30,5 +30,5 @@ float getClosestAlpha() {
 void main() {
     float closestAlpha = getClosestAlpha();
     
-    color = vec4(0, 0, 0, u_color.a + closestAlpha);
+    color = vec4(0, 0, 0, min(max(color.a, 0.) + closestAlpha, 1.));
 }

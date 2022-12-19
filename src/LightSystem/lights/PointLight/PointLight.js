@@ -2,47 +2,48 @@ import MatUtils from "../../../utils/MatUtils.js";
 import Light from "../Light.js";
 
 class PointLight extends Light {
-    constructor(ctx, initialUniforms, depthMapConf) {
-        super(ctx, initialUniforms, depthMapConf && { ...depthMapConf, cubeMap: true });
+    constructor(ctx, initialUniforms, conf) {
+        super(ctx, initialUniforms, { ...conf, cubeMap: true });
     }
 
     prepare = (settings) => {
-        const { depthMap, uniforms } = this;
+        const { depthMap, alphaMap, uniforms } = this;
         const { position } = settings;
+        const texMapping = alphaMap || depthMap
 
         uniforms.lightPosition = position;
-        
-        if (depthMap) {
-            depthMap.light.viewMats = [];
+
+        if (texMapping) {
+            texMapping.viewMats = [];
 
             // x+
-            depthMap.light.viewMats.push(
-                MatUtils.mult3d(depthMap.light.projectionMat, MatUtils.view3d(position, [position[0] + 1, position[1], position[2]], [0, -1, 0]))
+            texMapping.viewMats.push(
+                MatUtils.mult3d(this.projectionMat, MatUtils.view3d(position, [position[0] + 1, position[1], position[2]], [0, -1, 0]))
             );
 
             // x-
-            depthMap.light.viewMats.push(
-                MatUtils.mult3d(depthMap.light.projectionMat, MatUtils.view3d(position, [position[0] - 1, position[1], position[2]], [0, -1, 0]))
+            texMapping.viewMats.push(
+                MatUtils.mult3d(this.projectionMat, MatUtils.view3d(position, [position[0] - 1, position[1], position[2]], [0, -1, 0]))
             );
 
             // y+
-            depthMap.light.viewMats.push(
-                MatUtils.mult3d(depthMap.light.projectionMat, MatUtils.view3d(position, [position[0], position[1] + 1, position[2]], [0, 0, 1]))
+            texMapping.viewMats.push(
+                MatUtils.mult3d(this.projectionMat, MatUtils.view3d(position, [position[0], position[1] + 1, position[2]], [0, 0, 1]))
             );
 
             // y-
-            depthMap.light.viewMats.push(
-                MatUtils.mult3d(depthMap.light.projectionMat, MatUtils.view3d(position, [position[0], position[1] - 1, position[2]], [0, 0, -1]))
+            texMapping.viewMats.push(
+                MatUtils.mult3d(this.projectionMat, MatUtils.view3d(position, [position[0], position[1] - 1, position[2]], [0, 0, -1]))
             );
 
             // z+
-            depthMap.light.viewMats.push(
-                MatUtils.mult3d(depthMap.light.projectionMat, MatUtils.view3d(position, [position[0], position[1], position[2] + 1], [0, -1, 0]))
+            texMapping.viewMats.push(
+                MatUtils.mult3d(this.projectionMat, MatUtils.view3d(position, [position[0], position[1], position[2] + 1], [0, -1, 0]))
             );
 
             // z-
-            depthMap.light.viewMats.push(
-                MatUtils.mult3d(depthMap.light.projectionMat, MatUtils.view3d(position, [position[0], position[1], position[2] - 1], [0, -1, 0]))
+            texMapping.viewMats.push(
+                MatUtils.mult3d(this.projectionMat, MatUtils.view3d(position, [position[0], position[1], position[2] - 1], [0, -1, 0]))
             );
         }
     };

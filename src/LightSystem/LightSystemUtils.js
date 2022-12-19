@@ -2,16 +2,18 @@ import MatUtils from "../utils/MatUtils.js";
 import VecUtils from "../utils/VecUtils.js";
 
 class LightSystemUtils {
+    static prepareAlphaMapUniforms(light, uniformsSet, lightMat) {
+        light.alphaMap.uniforms.modelMat = uniformsSet.mats.model;
+        light.alphaMap.uniforms.finalLightMat = MatUtils.mult3d(lightMat, uniformsSet.mats.model);
+    }
+
+    
     static prepareSpotDepthMapUniforms(light, uniformsSet, lightMat) {
-        LightSystemUtils.#prepareCommonDepthMapUniforms(light, uniformsSet, lightMat);
+        light.depthMap.uniforms.finalLightMat = MatUtils.mult3d(lightMat, uniformsSet.mats.model);
     }
 
     static preparePointDepthMapUniforms(light, uniformsSet, lightMat) {
-        LightSystemUtils.#prepareCommonDepthMapUniforms(light, uniformsSet, lightMat);
         light.depthMap.uniforms.modelMat = uniformsSet.mats.model;
-    }
-
-    static #prepareCommonDepthMapUniforms(light, uniformsSet, lightMat) {
         light.depthMap.uniforms.finalLightMat = MatUtils.mult3d(lightMat, uniformsSet.mats.model);
     }
 

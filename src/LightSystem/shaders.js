@@ -282,5 +282,55 @@ export default {
                 gl_FragDepth = lightToSurfaceDistance / u_far;
             }`,
         },
+        alphaMap: {
+            vShader: `#version 300 es
+
+            uniform mat4 u_finalLightMat;
+            uniform mat4 u_modelMat;
+            in vec3 a_position;
+            out vec3 v_surfacePos;
+            
+            void main() {
+                vec4 position = vec4(a_position, 1);
+            
+                v_surfacePos = vec3(u_modelMat * position);
+                gl_Position = u_finalLightMat * position;
+            }`,
+            fShader: `#version 300 es
+
+            precision highp float;
+            precision highp samplerCubeShadow;
+            
+            uniform vec4 u_color;
+            uniform vec3 u_lightPosition;
+            uniform samplerCube u_alphaMap;
+            in vec3 v_surfacePos;
+            out vec4 color;
+            
+            float getClosestAlpha() {
+                float stepFactor = 0.000001;
+            
+                for (float distanceFromLight = distance(u_lightPosition, v_surfacePos); distanceFromLight >= 0.01;) {
+                    vec3 texLookupCoords = v_surfacePos * stepFactor;
+                    float closestAlpha = texture(u_alphaMap, texLookupCoords).a;
+            
+                    if (closestAlpha > 0.) {
+                        return closestAlpha;
+                    }
+            
+                    
+                    distanceFromLight = distance(u_lightPosition, texLookupCoords);
+                }
+            
+                return 0.;
+            }
+            
+            void main() {
+                float closestAlpha = getClosestAlpha();
+                
+                color = vec4(0, 0, 0, u_color.a + closestAlpha);
+            }
+            `,
+        },
     },
 };

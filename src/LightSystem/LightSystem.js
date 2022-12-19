@@ -7,11 +7,18 @@ class LightSystem {
     constructor(ctx, conf) {
         this.#ctx = ctx;
         this.#gl = ctx.gl;
-        this.shadows = !!conf?.shadows;
+        this.#transparency = !!conf?.transparency;
+        this.#shadows = !this.#transparency && !!conf?.shadows;
 
-        ctx.gl.enable(ctx.gl.BLEND);
-        ctx.gl.blendFuncSeparate(ctx.gl.SRC_ALPHA, ctx.gl.ONE_MINUS_SRC_ALPHA, ctx.gl.ONE, ctx.gl.ZERO);
-        ctx.gl.blendEquation(ctx.gl.FUNC_ADD);
+        if (this.#transparency) {
+            ctx.gl.enable(ctx.gl.BLEND);
+            // ctx.gl.blendFuncSeparate(ctx.gl.SRC_ALPHA, ctx.gl.ONE_MINUS_SRC_ALPHA, ctx.gl.ONE, ctx.gl.ZERO);
+            ctx.gl.blendFuncSeparate(ctx.gl.SRC_ALPHA, ctx.gl.ONE, ctx.gl.ONE, ctx.gl.ZERO);
+            ctx.gl.blendEquation(ctx.gl.FUNC_ADD);
+        } else {
+            ctx.gl.enable(ctx.gl.DEPTH_TEST);
+            ctx.gl.depthFunc(ctx.gl.LEQUAL);
+        }
 
         this.#programs = ctx.createPrograms(
             [
@@ -26,6 +33,11 @@ class LightSystem {
                     fShader: SHADERS.spot.depthMap.fShader,
                 },
                 {
+                    name: "spotAlphaMap",
+                    vShader: SHADERS.spot.alphaMap.vShader,
+                    fShader: SHADERS.spot.alphaMap.fShader,
+                },
+                {
                     name: "pointLight",
                     vShader: SHADERS.point.vShader,
                     fShader: SHADERS.point.fShader,
@@ -35,11 +47,16 @@ class LightSystem {
                     vShader: SHADERS.point.depthMap.vShader,
                     fShader: SHADERS.point.depthMap.fShader,
                 },
+                {
+                    name: "pointAlphaMap",
+                    vShader: SHADERS.point.alphaMap.vShader,
+                    fShader: SHADERS.point.alphaMap.fShader,
+                },
             ],
             false
         );
 
-        const { spotLight, spotDepthMap, pointLight, pointDepthMap } = this.#programs;
+        const { spotLight, spotDepthMap, spotAlphaMap, pointLight, pointDepthMap, pointAlphaMap } = this.#programs;
 
         Object.assign(spotLight.locations, this.#getCommonLightLocations(spotLight.program), {
             finalLightMat: this.#gl.getUniformLocation(spotLight.program, "u_finalLightMat"),
@@ -47,16 +64,19 @@ class LightSystem {
             innerLimit: this.#gl.getUniformLocation(spotLight.program, "u_innerLimit"),
             outerLimit: this.#gl.getUniformLocation(spotLight.program, "u_outerLimit"),
         });
-        Object.assign(spotDepthMap.locations, this.#getCommonDepthMapLocations(spotDepthMap.program));
+        Object.assign(spotDepthMap.locations, { finalLightMat: this.#gl.getUniformLocation(spotDepthMap.program, "u_finalLightMat") });
+        Object.assign(spotAlphaMap.locations, this.#getCommonAlphaMapLocations(spotAlphaMap.program));
 
         Object.assign(pointLight.locations, this.#getCommonLightLocations(pointLight.program), {
             far: this.#gl.getUniformLocation(pointLight.program, "u_far"),
         });
-        Object.assign(pointDepthMap.locations, this.#getCommonDepthMapLocations(pointDepthMap.program), {
+        Object.assign(pointDepthMap.locations, {
+            finalLightMat: this.#gl.getUniformLocation(pointDepthMap.program, "u_finalLightMat"),
             modelMat: this.#gl.getUniformLocation(pointDepthMap.program, "u_modelMat"),
             lightPosition: this.#gl.getUniformLocation(pointDepthMap.program, "u_lightPosition"),
             far: this.#gl.getUniformLocation(pointDepthMap.program, "u_far"),
         });
+        Object.assign(pointAlphaMap.locations, this.#getCommonAlphaMapLocations(pointAlphaMap.program));
     }
 
     #ctx;
@@ -64,7 +84,8 @@ class LightSystem {
     #programs;
     #lights = {};
     #models = {};
-    shadows;
+    #shadows;
+    #transparency;
 
     #getCommonLightLocations(program) {
         return {
@@ -72,6 +93,7 @@ class LightSystem {
             normalMat: this.#gl.getUniformLocation(program, "u_normalMat"),
             lightColor: this.#gl.getUniformLocation(program, "u_lightColor"),
             depthMap: this.#gl.getUniformLocation(program, "u_depthMap"),
+            alphaMap: this.#gl.getUniformLocation(program, "u_alphaMap"),
             ambientColor: this.#gl.getUniformLocation(program, "u_ambientColor"),
             lightPosition: this.#gl.getUniformLocation(program, "u_lightPosition"),
             cameraPosition: this.#gl.getUniformLocation(program, "u_cameraPosition"),
@@ -81,30 +103,33 @@ class LightSystem {
             cameraDistanceLin: this.#gl.getUniformLocation(program, "u_cameraDistanceLin"),
             cameraDistanceQuad: this.#gl.getUniformLocation(program, "u_cameraDistanceQuad"),
             shadows: this.#gl.getUniformLocation(program, "u_shadows"),
+            transparency: this.#gl.getUniformLocation(program, "u_transparency"),
         };
     }
 
-    #getCommonDepthMapLocations(program) {
+    #getCommonAlphaMapLocations(program) {
         return {
             finalLightMat: this.#gl.getUniformLocation(program, "u_finalLightMat"),
+            modelMat: this.#gl.getUniformLocation(program, "u_modelMat"),
+            lightPosition: this.#gl.getUniformLocation(program, "u_lightPosition"),
+            alphaMap: this.#gl.getUniformLocation(program, "u_alphaMap"),
         };
     }
 
     addLight(type, name, initialUniforms, conf) {
-        const { depthMap: depthMapConf, ...lightConf } = conf;
         let light;
 
         switch (type) {
             case "spot":
-                light = new SpotLight(this.#ctx, initialUniforms, depthMapConf);
+                light = new SpotLight(this.#ctx, initialUniforms, conf);
                 break;
 
             case "point":
-                light = new PointLight(this.#ctx, initialUniforms, depthMapConf);
+                light = new PointLight(this.#ctx, initialUniforms, conf);
                 break;
         }
 
-        light.prepare(lightConf);
+        light.prepare(conf);
 
         this.#lights[name] = light;
         delete this.#lights._values;
@@ -148,7 +173,12 @@ class LightSystem {
 
         for (const light of lights) {
             if (light.active) {
-                if (this.shadows) this.#genDepthMap(light);
+                if (this.#transparency) {
+                    this.#genAlphaMap(light);
+                } else if (this.#shadows) {
+                    this.#genDepthMap(light);
+                }
+
                 this.#genLight(light);
             }
         }
@@ -160,7 +190,7 @@ class LightSystem {
 
         if (light instanceof SpotLight) {
             this.#gl.clear(this.#gl.DEPTH_BUFFER_BIT);
-            this.#renderModels(light, LightSystemUtils.prepareSpotDepthMapUniforms, this.#setSpotDepthMap, light.depthMap.light.viewMat);
+            this.#renderModels(light, LightSystemUtils.prepareSpotDepthMapUniforms, this.#setSpotDepthMap, light.depthMap.viewMat, true);
         } else if (light instanceof PointLight) {
             for (let side = 0; side < 6; side++) {
                 this.#gl.framebufferTexture2D(
@@ -171,7 +201,7 @@ class LightSystem {
                     0
                 );
                 this.#gl.clear(this.#gl.DEPTH_BUFFER_BIT);
-                this.#renderModels(light, LightSystemUtils.preparePointDepthMapUniforms, this.#setPointDepthMap, light.depthMap.light.viewMats[side]);
+                this.#renderModels(light, LightSystemUtils.preparePointDepthMapUniforms, this.#setPointDepthMap, light.depthMap.viewMats[side], true);
             }
         }
 
@@ -180,12 +210,61 @@ class LightSystem {
         this.#gl.activeTexture(this.#gl[`TEXTURE${light.depthMap.texture.unit}`]);
     };
 
+    #genAlphaMap = (light) => {
+        LightSystemUtils.sortModels({ models: this.#models._values, origin: light.uniforms.lightPosition });
+
+        this.#gl.viewport(0, 0, light.alphaMap.texture.settings.width, light.alphaMap.texture.settings.height);
+        this.#gl.bindFramebuffer(this.#gl.FRAMEBUFFER, light.alphaMap.framebuffer);
+
+        if (light instanceof SpotLight) {
+            this.#gl.clear(this.#gl.COLOR_BUFFER_BIT);
+            this.#renderModels(light, LightSystemUtils.prepareAlphaMapUniforms, this.#setSpotAlphaMap, light.alphaMap.viewMat);
+        } else if (light instanceof PointLight) {
+            for (let side = 0; side < 6; side++) {
+                this.#gl.framebufferTexture2D(
+                    this.#gl.FRAMEBUFFER,
+                    this.#gl.ALPHA,
+                    this.#gl.TEXTURE_CUBE_MAP_POSITIVE_X + side,
+                    light.alphaMap.texture.texture,
+                    0
+                );
+                this.#gl.clear(this.#gl.COLOR_BUFFER_BIT);
+                this.#renderModels(light, LightSystemUtils.prepareAlphaMapUniforms, this.#setPointAlphaMap, light.alphaMap.viewMats[side]);
+            }
+        }
+
+        this.#gl.bindFramebuffer(this.#gl.FRAMEBUFFER, null);
+        this.#gl.viewport(0, 0, this.#gl.canvas.width, this.#gl.canvas.height);
+        this.#gl.activeTexture(this.#gl[`TEXTURE${light.alphaMap.texture.unit}`]);
+    };
+
+    #setSpotAlphaMap = (light) => {
+        const { spotAlphaMap } = this.#programs;
+
+        this.#gl.useProgram(spotAlphaMap.program);
+        this.#setAlphaMapUniforms(spotAlphaMap.locations, light);
+    };
+
+    #setPointAlphaMap = (light) => {
+        const { pointAlphaMap } = this.#programs;
+
+        this.#gl.useProgram(pointAlphaMap.program);
+        this.#setAlphaMapUniforms(pointAlphaMap.locations, light);
+    };
+
+    #setAlphaMapUniforms = (locations, light) => {
+        this.#gl.uniformMatrix4fv(locations.finalLightMat, false, light.alphaMap.uniforms.finalLightMat);
+        this.#gl.uniformMatrix4fv(locations.modelMat, false, light.alphaMap.uniforms.modelMat);
+        this.#gl.uniform3f(locations.lightPosition, ...light.uniforms.lightPosition);
+        this.#gl.uniform1i(locations.alphaMap, light.uniforms.alphaMap);
+    };
+
     #setSpotDepthMap = (light) => {
         const { spotDepthMap } = this.#programs;
 
         this.#gl.useProgram(spotDepthMap.program);
 
-        this.#setCommonDepthMapUniforms(spotDepthMap.locations, light);
+        this.#gl.uniformMatrix4fv(spotDepthMap.locations.finalLightMat, false, light.depthMap.uniforms.finalLightMat);
     };
 
     #setPointDepthMap = (light) => {
@@ -193,14 +272,10 @@ class LightSystem {
 
         this.#gl.useProgram(pointDepthMap.program);
 
-        this.#setCommonDepthMapUniforms(pointDepthMap.locations, light);
+        this.#gl.uniformMatrix4fv(pointDepthMap.locations.finalLightMat, false, light.depthMap.uniforms.finalLightMat);
         this.#gl.uniformMatrix4fv(pointDepthMap.locations.modelMat, false, light.depthMap.uniforms.modelMat);
         this.#gl.uniform3f(pointDepthMap.locations.lightPosition, ...light.uniforms.lightPosition);
         this.#gl.uniform1f(pointDepthMap.locations.far, light.depthMap.uniforms.far);
-    };
-
-    #setCommonDepthMapUniforms = (locations, light) => {
-        this.#gl.uniformMatrix4fv(locations.finalLightMat, false, light.depthMap.uniforms.finalLightMat);
     };
 
     #genLight = (light) => {
@@ -228,7 +303,6 @@ class LightSystem {
         this.#gl.uniform3f(spotLight.locations.lightDirection, ...light.uniforms.lightDirection);
         this.#gl.uniform1f(spotLight.locations.innerLimit, light.uniforms.innerLimit);
         this.#gl.uniform1f(spotLight.locations.outerLimit, light.uniforms.outerLimit);
-        this.#gl.uniform1i(spotLight.locations.shadows, this.shadows ? 1 : 0);
     };
 
     #setPoint = (light) => {
@@ -238,7 +312,6 @@ class LightSystem {
 
         this.#setCommonUniforms(pointLight.locations, light);
         this.#gl.uniform1f(pointLight.locations.far, light.uniforms.far);
-        this.#gl.uniform1i(pointLight.locations.shadows, this.shadows ? 1 : 0);
     };
 
     #setCommonUniforms(locations, light) {
@@ -248,6 +321,7 @@ class LightSystem {
         this.#gl.uniformMatrix4fv(locations.normalMat, false, light.uniforms.normalMat);
         this.#gl.uniform3f(locations.lightColor, ...light.uniforms.lightColor);
         this.#gl.uniform1i(locations.depthMap, light.uniforms.depthMap);
+        this.#gl.uniform1i(locations.alphaMap, light.uniforms.alphaMap);
         this.#gl.uniform3f(locations.ambientColor, ...light.uniforms.ambientColor);
         this.#gl.uniform3f(locations.lightPosition, ...light.uniforms.lightPosition);
         this.#gl.uniform3f(locations.cameraPosition, ...light.uniforms.cameraPosition);
@@ -256,11 +330,11 @@ class LightSystem {
         this.#gl.uniform1f(locations.lightDistanceQuad, light.uniforms.lightDistanceQuad);
         this.#gl.uniform1f(locations.cameraDistanceLin, light.uniforms.cameraDistanceLin);
         this.#gl.uniform1f(locations.cameraDistanceQuad, light.uniforms.cameraDistanceQuad);
+        this.#gl.uniform1i(locations.shadows, this.#shadows ? 1 : 0);
+        this.#gl.uniform1i(locations.transparency, this.#transparency ? 1 : 0);
     }
 
-    #renderModels = (light, prepareUniforms, setProgram, lightMat) => {
-        const dmRender = !!lightMat;
-
+    #renderModels = (light, prepareUniforms, setProgram, lightMat, dmRender) => {
         for (const model of this.#models._values) {
             const { culling, render, ...uniforms } = model;
 
@@ -272,7 +346,7 @@ class LightSystem {
                     this.#gl.disable(this.#gl.CULL_FACE);
                 }
             } else {
-                if (culling?.back) {
+                if (!this.#transparency && culling?.back) {
                     this.#gl.enable(this.#gl.CULL_FACE);
                     this.#gl.cullFace(this.#gl.BACK);
                 } else {

@@ -2,9 +2,7 @@
 
 uniform mat4 u_finalLightMat;
 uniform mat4 u_modelMat;
-
 in vec3 a_position;
-
 out vec3 v_surfacePos;
 
 void main() {

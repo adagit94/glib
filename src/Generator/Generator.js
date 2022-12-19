@@ -170,7 +170,7 @@ class Generator {
             this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, textureImage);
             this.gl.generateMipmap(this.gl.TEXTURE_2D);
         } else {
-            const iterations = settings.cubeMap ? 6 : 1;
+            const iterations = settings.bindTarget === this.gl.TEXTURE_CUBE_MAP ? 6 : 1; // settings.bindTarget === this.gl.TEXTURE_CUBE_MAP_ARRAY
 
             this.gl.bindTexture(settings.bindTarget, texture);
 
