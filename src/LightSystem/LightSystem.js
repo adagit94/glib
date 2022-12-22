@@ -7,8 +7,8 @@ class LightSystem {
     constructor(ctx, conf) {
         this.#ctx = ctx;
         this.#gl = ctx.gl;
-        this.#transparency = !!conf?.transparency
-        this.#shadows = !this.#transparency && !!conf?.shadows
+        this.#transparency = !!conf?.transparency;
+        this.#shadows = !this.#transparency && !!conf?.shadows;
         this.#programs = ctx.createPrograms([
             {
                 name: "spotLight",
@@ -70,15 +70,22 @@ class LightSystem {
             ctx.gl.blendFuncSeparate(ctx.gl.SRC_ALPHA, ctx.gl.ONE, ctx.gl.ONE, ctx.gl.ZERO);
             ctx.gl.blendEquation(ctx.gl.FUNC_ADD);
 
-            this.#programs.spotAlphaMap.alphaMap = this.#initAlphaMap(conf.alphaMap, ctx.gl.TEXTURE_2D, ctx.gl.TEXTURE_2D);
-            this.#programs.pointAlphaMap.alphaMap = this.#initAlphaMap(conf.alphaMap, ctx.gl.TEXTURE_CUBE_MAP, ctx.gl.TEXTURE_CUBE_MAP_POSITIVE_X);
+            this.#programs.spotAlphaMap.createAlphaMap = () => this.#initAlphaMap(conf.alphaMap, ctx.gl.TEXTURE_2D, ctx.gl.TEXTURE_2D);
+            this.#programs.spotAlphaMap.alphaMaps = [];
+            this.#programs.pointAlphaMap.createAlphaMap = () =>
+                this.#initAlphaMap(conf.alphaMap, ctx.gl.TEXTURE_CUBE_MAP, ctx.gl.TEXTURE_CUBE_MAP_POSITIVE_X);
+            this.#programs.pointAlphaMap.alphaMaps = [];
         } else {
             ctx.gl.enable(ctx.gl.DEPTH_TEST);
             ctx.gl.depthFunc(ctx.gl.LEQUAL);
 
             if (this.#shadows) {
                 this.#programs.spotDepthMap.depthMap = this.#initDepthMap(conf.depthMap, ctx.gl.TEXTURE_2D, ctx.gl.TEXTURE_2D);
-                this.#programs.pointDepthMap.depthMap = this.#initDepthMap(conf.depthMap, ctx.gl.TEXTURE_CUBE_MAP, ctx.gl.TEXTURE_CUBE_MAP_POSITIVE_X);
+                this.#programs.pointDepthMap.depthMap = this.#initDepthMap(
+                    conf.depthMap,
+                    ctx.gl.TEXTURE_CUBE_MAP,
+                    ctx.gl.TEXTURE_CUBE_MAP_POSITIVE_X
+                );
             }
         }
     }
@@ -86,8 +93,8 @@ class LightSystem {
     #ctx;
     #gl;
     #programs;
-    #transparency
-    #shadows
+    #transparency;
+    #shadows;
     #lights = {};
     #models = {};
 
@@ -148,48 +155,42 @@ class LightSystem {
         });
 
         return {
-            uniforms: { ...depthMapConf.uniforms, unit: texture.unit },
             texture,
             framebuffer,
         };
     }
 
     #initAlphaMap(alphaMapConf, bindTarget, texTarget) {
-        return {
-            uniforms: alphaMapUniforms,
-            create: () => {
-                const texture = this.#ctx.createTexture({
-                    settings: {
-                        width: alphaMapConf.size,
-                        height: alphaMapConf.size,
-                        internalFormat: this.#gl.ALPHA,
-                        format: this.#gl.ALPHA,
-                        type: this.#gl.UNSIGNED_BYTE,
-                        bindTarget,
-                        texTarget,
-                    },
-                    setParams: () => {
-                        this.#gl.texParameteri(bindTarget, this.#gl.TEXTURE_WRAP_S, this.#gl.CLAMP_TO_EDGE);
-                        this.#gl.texParameteri(bindTarget, this.#gl.TEXTURE_WRAP_T, this.#gl.CLAMP_TO_EDGE);
-                        this.#gl.texParameteri(bindTarget, this.#gl.TEXTURE_MAG_FILTER, this.#gl.NEAREST);
-                        this.#gl.texParameteri(bindTarget, this.#gl.TEXTURE_MIN_FILTER, this.#gl.NEAREST);
-                        // this.#gl.texParameteri(texBindTarget, this.#gl.TEXTURE_MAG_FILTER, this.#gl.LINEAR);
-                        // this.#gl.texParameteri(texBindTarget, this.#gl.TEXTURE_MIN_FILTER, this.#gl.LINEAR);
-                        // this.#gl.texParameteri(texBindTarget, this.#gl.TEXTURE_COMPARE_MODE, this.#gl.COMPARE_REF_TO_TEXTURE);
-                    },
-                });
-
-                const framebuffer = this.#ctx.createFramebuffer({
-                    setTexture: () => {
-                        this.#gl.framebufferTexture2D(this.#gl.FRAMEBUFFER, this.#gl.ALPHA, texTarget, texture, 0);
-                    },
-                });
-
-                return {
-                    texture,
-                    framebuffer,
-                };
+        const texture = this.#ctx.createTexture({
+            settings: {
+                width: alphaMapConf.size,
+                height: alphaMapConf.size,
+                internalFormat: this.#gl.ALPHA,
+                format: this.#gl.ALPHA,
+                type: this.#gl.UNSIGNED_BYTE,
+                bindTarget,
+                texTarget,
             },
+            setParams: () => {
+                this.#gl.texParameteri(bindTarget, this.#gl.TEXTURE_WRAP_S, this.#gl.CLAMP_TO_EDGE);
+                this.#gl.texParameteri(bindTarget, this.#gl.TEXTURE_WRAP_T, this.#gl.CLAMP_TO_EDGE);
+                this.#gl.texParameteri(bindTarget, this.#gl.TEXTURE_MAG_FILTER, this.#gl.NEAREST);
+                this.#gl.texParameteri(bindTarget, this.#gl.TEXTURE_MIN_FILTER, this.#gl.NEAREST);
+                // this.#gl.texParameteri(texBindTarget, this.#gl.TEXTURE_MAG_FILTER, this.#gl.LINEAR);
+                // this.#gl.texParameteri(texBindTarget, this.#gl.TEXTURE_MIN_FILTER, this.#gl.LINEAR);
+                // this.#gl.texParameteri(texBindTarget, this.#gl.TEXTURE_COMPARE_MODE, this.#gl.COMPARE_REF_TO_TEXTURE);
+            },
+        });
+
+        const framebuffer = this.#ctx.createFramebuffer({
+            setTexture: () => {
+                this.#gl.framebufferTexture2D(this.#gl.FRAMEBUFFER, this.#gl.ALPHA, texTarget, texture, 0);
+            },
+        });
+
+        return {
+            texture,
+            framebuffer,
         };
     }
 
@@ -243,17 +244,14 @@ class LightSystem {
         });
     }
 
-    #initAlphaMaps(modelData) {
-        modelData.alphaMaps = this.#lights._values.map((l) => l.alphaMap);
-    }
-
     renderLights() {
         const lights = this.#lights._values;
 
         for (const light of lights) {
             if (light.active) {
                 if (this.#transparency) {
-                    this.#genAlphaMap(light);
+                    LightSystemUtils.sortModels({ models: this.#models._values, origin: light.uniforms.lightPosition });
+                    this.#genAlphaMaps(light);
                 } else if (this.#shadows) {
                     this.#genDepthMap(light);
                 }
@@ -264,34 +262,73 @@ class LightSystem {
     }
 
     #genDepthMap = (light) => {
-        this.#gl.viewport(0, 0, light.depthMap.texture.settings.width, light.depthMap.texture.settings.height);
-        this.#gl.bindFramebuffer(this.#gl.FRAMEBUFFER, light.depthMap.framebuffer);
-
         if (light instanceof SpotLight) {
+            this.#gl.viewport(
+                0,
+                0,
+                this.#programs.spotDepthMap.depthMap.texture.settings.width,
+                this.#programs.spotDepthMap.depthMap.texture.settings.height
+            );
+            this.#gl.bindFramebuffer(this.#gl.FRAMEBUFFER, this.#programs.spotDepthMap.depthMap.framebuffer);
             this.#gl.clear(this.#gl.DEPTH_BUFFER_BIT);
-            this.#renderModels(light, LightSystemUtils.prepareSpotDepthMapUniforms, this.#setSpotDepthMap, light.depthMap.viewMat, true);
+            this.#renderModels(light, "spot", LightSystemUtils.prepareSpotDepthMapUniforms, this.#setSpotDepthMap, {
+                lightMat: light.viewMat,
+                phase: "depthMap",
+            });
+
+            // this.#gl.activeTexture(this.#gl[`TEXTURE${this.#programs.spotDepthMap.depthMap.texture.unit}`]);
         } else if (light instanceof PointLight) {
+            this.#gl.viewport(
+                0,
+                0,
+                this.#programs.pointDepthMap.depthMap.texture.settings.width,
+                this.#programs.pointDepthMap.depthMap.texture.settings.height
+            );
+            this.#gl.bindFramebuffer(this.#gl.FRAMEBUFFER, this.#programs.pointDepthMap.depthMap.framebuffer);
+
             for (let side = 0; side < 6; side++) {
                 this.#gl.framebufferTexture2D(
                     this.#gl.FRAMEBUFFER,
                     this.#gl.DEPTH_ATTACHMENT,
                     this.#gl.TEXTURE_CUBE_MAP_POSITIVE_X + side,
-                    light.depthMap.texture.texture,
+                    this.#programs.pointDepthMap.depthMap.texture.texture,
                     0
                 );
                 this.#gl.clear(this.#gl.DEPTH_BUFFER_BIT);
-                this.#renderModels(light, LightSystemUtils.preparePointDepthMapUniforms, this.#setPointDepthMap, light.depthMap.viewMats[side], true);
+                this.#renderModels(light, "point", LightSystemUtils.preparePointDepthMapUniforms, this.#setPointDepthMap, {
+                    lightMat: light.viewMats[side],
+                    phase: "depthMap",
+                });
+            }
+
+            // this.#gl.activeTexture(this.#gl[`TEXTURE${this.#programs.pointDepthMap.depthMap.texture.unit}`]);
+        }
+
+        this.#gl.bindFramebuffer(this.#gl.FRAMEBUFFER, null);
+        this.#gl.viewport(0, 0, this.#gl.canvas.width, this.#gl.canvas.height);
+    };
+
+    #genAlphaMaps = (light) => {
+        if (light instanceof SpotLight) {
+            this.#renderModels(light, "spot", LightSystemUtils.prepareAlphaMapUniforms, this.#setSpotAlphaMap, {
+                lightMat: light.viewMat,
+                phase: "alphaMap",
+            });
+        } else if (light instanceof PointLight) {
+            for (let side = 0; side < 6; side++) {
+                this.#renderModels(light, "point", LightSystemUtils.prepareAlphaMapUniforms, this.#setPointAlphaMap, {
+                    lightMat: light.viewMats[side],
+                    phase: "alphaMap",
+                    cubeMapSide: side
+                });
             }
         }
 
         this.#gl.bindFramebuffer(this.#gl.FRAMEBUFFER, null);
         this.#gl.viewport(0, 0, this.#gl.canvas.width, this.#gl.canvas.height);
-        this.#gl.activeTexture(this.#gl[`TEXTURE${light.depthMap.texture.unit}`]);
     };
 
     #genAlphaMap = (light) => {
-        LightSystemUtils.sortModels({ models: this.#models._values, origin: light.uniforms.lightPosition });
-
         this.#gl.viewport(0, 0, light.alphaMap.texture.settings.width, light.alphaMap.texture.settings.height);
         this.#gl.bindFramebuffer(this.#gl.FRAMEBUFFER, light.alphaMap.framebuffer);
 
@@ -360,16 +397,19 @@ class LightSystem {
     #genLight = (light) => {
         let setLight;
         let prepareUniforms;
+        let lightType;
 
         if (light instanceof SpotLight) {
             setLight = this.#setSpot;
             prepareUniforms = LightSystemUtils.prepareSpotUniforms;
+            lightType = "spot";
         } else if (light instanceof PointLight) {
             setLight = this.#setPoint;
             prepareUniforms = LightSystemUtils.preparePointUniforms;
+            lightType = "point";
         }
 
-        this.#renderModels(light, prepareUniforms, setLight);
+        this.#renderModels(light, lightType, prepareUniforms, setLight);
     };
 
     #setSpot = (light) => {
@@ -413,24 +453,41 @@ class LightSystem {
         this.#gl.uniform1i(locations.transparency, this.#alphaMap ? 1 : 0);
     }
 
-    #renderModels = (light, prepareUniforms, setProgram, lightMat, dmRender) => {
-        for (const model of this.#models._values) {
-            const { culling, render, ...uniforms } = model;
+    #renderModels = (light, lightType, prepareUniforms, setProgram, renderConf = {}) => {
+        const { lightMat, phase, cubeMapSide } = renderConf;
 
-            if (dmRender) {
-                if (culling?.depthMapFront) {
-                    this.#gl.enable(this.#gl.CULL_FACE);
-                    this.#gl.cullFace(this.#gl.FRONT);
-                } else {
-                    this.#gl.disable(this.#gl.CULL_FACE);
+        for (let i = 0; i < this.#models._values.length; i++) {
+            const { culling, render, ...uniforms } = this.#models._values[i];
+
+            switch (phase) {
+                case "depthMap":
+                    if (culling?.depthMapFront) {
+                        this.#gl.enable(this.#gl.CULL_FACE);
+                        this.#gl.cullFace(this.#gl.FRONT);
+                    } else {
+                        this.#gl.disable(this.#gl.CULL_FACE);
+                    }
+                    break;
+
+                case "alphaMap": {
+                    const alphaMapProg = this.#programs[`${lightType}AlphaMap`];
+                    let modelsAlphaMaps = alphaMapProg.alphaMaps;
+                    let modelAlphaMap = modelsAlphaMaps[i];
+
+                    if (modelAlphaMap === undefined) {
+                        modelAlphaMap = modelsAlphaMaps[i] = alphaMapProg.createAlphaMap();
+                    }
+
+                    break;
                 }
-            } else {
-                if (!this.#alphaMap && culling?.back) {
-                    this.#gl.enable(this.#gl.CULL_FACE);
-                    this.#gl.cullFace(this.#gl.BACK);
-                } else {
-                    this.#gl.disable(this.#gl.CULL_FACE);
-                }
+
+                default:
+                    if (!this.#transparency && culling?.back) {
+                        this.#gl.enable(this.#gl.CULL_FACE);
+                        this.#gl.cullFace(this.#gl.BACK);
+                    } else {
+                        this.#gl.disable(this.#gl.CULL_FACE);
+                    }
             }
 
             prepareUniforms(light, uniforms, lightMat);
