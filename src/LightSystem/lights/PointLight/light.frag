@@ -41,7 +41,7 @@ float getVisibility() {
     return visibility;
 }
 
-float getFragAlpha() {
+float getAlpha() {
     vec3 lightToSurface = v_surfacePos - u_lightPosition;
     float alpha = texture(u_alphaMap, lightToSurface).a;
 
@@ -81,9 +81,6 @@ void main() {
         }
     }
 
-    float lightThroughputFactor = u_transparency == 1 ? 1. - getFragAlpha() : 1.;
-
-    color = vec4(u_color.rgb, 1.);
-    color.rgb *= u_ambientColor + diffuseColor * lightThroughputFactor;
-    color.rgb += specular * lightThroughputFactor;
+    color = vec4(u_color.rgb, u_transparency == 1 ? 1. - getAlpha() : 1.);
+    color.rgb *= u_ambientColor + diffuseColor + specular;
 }

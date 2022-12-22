@@ -60,7 +60,7 @@ class Generator {
         if (framebuffers) this.createFramebuffers(framebuffers);
     }
 
-    createPrograms(programsConfs, merge = true) {
+    createPrograms(programsConfs) {
         let newPrograms = {};
 
         for (const programConf of programsConfs) {
@@ -76,7 +76,7 @@ class Generator {
             programData.locations = this.#initCommonLocations(program);
         }
 
-        if (merge) Object.assign(this.programs, newPrograms);
+        Object.assign(this.programs, newPrograms);
 
         return newPrograms;
     }
@@ -95,7 +95,7 @@ class Generator {
         };
     }
 
-    createBufferSet = (conf, merge = true) => {
+    createBufferSet = (conf) => {
         const commonBuffersSettings = { size: this.mode === "3d" ? 3 : 2 };
         const { vertices, indices, normals, textureCoords } = conf.data;
         const drawMethod = conf.drawMethod ?? this.gl.STATIC_DRAW;
@@ -126,7 +126,7 @@ class Generator {
             );
         }
 
-        if (merge) this.buffers[conf.name] = buffersSet
+        this.buffers[conf.name] = buffersSet
 
         return buffersSet
     };
@@ -157,9 +157,9 @@ class Generator {
         }
     }
 
-    createTexture(textureConf, textureImage, merge = true) {
+    createTexture(textureConf, textureImage) {
         const { path, settings } = textureConf;
-        const unit = Object.keys(this.textures).length; // unit doesnt increment in case of merge false
+        const unit = Object.keys(this.textures).length;
         const texture = this.gl.createTexture();
         const newTexData = { texture, unit, settings };
 
@@ -191,7 +191,7 @@ class Generator {
 
         textureConf.setParams?.();
 
-        if (merge) this.textures[textureConf.name] = newTexData;
+        this.textures[textureConf.name] = newTexData;
 
         return newTexData;
     }
@@ -211,7 +211,7 @@ class Generator {
         }
     }
 
-    createFramebuffer(framebufferConf, merge = true) {
+    createFramebuffer(framebufferConf) {
         const { name, setTexture } = framebufferConf;
         const framebuffer = this.gl.createFramebuffer();
 
@@ -219,7 +219,7 @@ class Generator {
         setTexture();
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
 
-        if (merge) this.framebuffers[name] = framebuffer;
+        this.framebuffers[name] = framebuffer;
 
         return framebuffer;
     }

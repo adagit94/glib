@@ -7,54 +7,40 @@ class LightSystem {
     constructor(ctx, conf) {
         this.#ctx = ctx;
         this.#gl = ctx.gl;
-        this.#transparency = !!conf?.transparency;
-        this.#shadows = !this.#transparency && !!conf?.shadows;
-
-        if (this.#transparency) {
-            ctx.gl.enable(ctx.gl.BLEND);
-            // ctx.gl.blendFuncSeparate(ctx.gl.SRC_ALPHA, ctx.gl.ONE_MINUS_SRC_ALPHA, ctx.gl.ONE, ctx.gl.ZERO);
-            ctx.gl.blendFuncSeparate(ctx.gl.SRC_ALPHA, ctx.gl.ONE, ctx.gl.ONE, ctx.gl.ZERO);
-            ctx.gl.blendEquation(ctx.gl.FUNC_ADD);
-        } else {
-            ctx.gl.enable(ctx.gl.DEPTH_TEST);
-            ctx.gl.depthFunc(ctx.gl.LEQUAL);
-        }
-
-        this.#programs = ctx.createPrograms(
-            [
-                {
-                    name: "spotLight",
-                    vShader: SHADERS.spot.vShader,
-                    fShader: SHADERS.spot.fShader,
-                },
-                {
-                    name: "spotDepthMap",
-                    vShader: SHADERS.spot.depthMap.vShader,
-                    fShader: SHADERS.spot.depthMap.fShader,
-                },
-                {
-                    name: "spotAlphaMap",
-                    vShader: SHADERS.spot.alphaMap.vShader,
-                    fShader: SHADERS.spot.alphaMap.fShader,
-                },
-                {
-                    name: "pointLight",
-                    vShader: SHADERS.point.vShader,
-                    fShader: SHADERS.point.fShader,
-                },
-                {
-                    name: "pointDepthMap",
-                    vShader: SHADERS.point.depthMap.vShader,
-                    fShader: SHADERS.point.depthMap.fShader,
-                },
-                {
-                    name: "pointAlphaMap",
-                    vShader: SHADERS.point.alphaMap.vShader,
-                    fShader: SHADERS.point.alphaMap.fShader,
-                },
-            ],
-            false
-        );
+        this.#transparency = !!conf?.transparency
+        this.#shadows = !this.#transparency && !!conf?.shadows
+        this.#programs = ctx.createPrograms([
+            {
+                name: "spotLight",
+                vShader: SHADERS.spot.vShader,
+                fShader: SHADERS.spot.fShader,
+            },
+            {
+                name: "spotDepthMap",
+                vShader: SHADERS.spot.depthMap.vShader,
+                fShader: SHADERS.spot.depthMap.fShader,
+            },
+            {
+                name: "spotAlphaMap",
+                vShader: SHADERS.spot.alphaMap.vShader,
+                fShader: SHADERS.spot.alphaMap.fShader,
+            },
+            {
+                name: "pointLight",
+                vShader: SHADERS.point.vShader,
+                fShader: SHADERS.point.fShader,
+            },
+            {
+                name: "pointDepthMap",
+                vShader: SHADERS.point.depthMap.vShader,
+                fShader: SHADERS.point.depthMap.fShader,
+            },
+            {
+                name: "pointAlphaMap",
+                vShader: SHADERS.point.alphaMap.vShader,
+                fShader: SHADERS.point.alphaMap.fShader,
+            },
+        ]);
 
         const { spotLight, spotDepthMap, spotAlphaMap, pointLight, pointDepthMap, pointAlphaMap } = this.#programs;
 
@@ -77,15 +63,33 @@ class LightSystem {
             far: this.#gl.getUniformLocation(pointDepthMap.program, "u_far"),
         });
         Object.assign(pointAlphaMap.locations, this.#getCommonAlphaMapLocations(pointAlphaMap.program));
+
+        if (this.#transparency) {
+            ctx.gl.enable(ctx.gl.BLEND);
+            // ctx.gl.blendFuncSeparate(ctx.gl.SRC_ALPHA, ctx.gl.ONE_MINUS_SRC_ALPHA, ctx.gl.ONE, ctx.gl.ZERO);
+            ctx.gl.blendFuncSeparate(ctx.gl.SRC_ALPHA, ctx.gl.ONE, ctx.gl.ONE, ctx.gl.ZERO);
+            ctx.gl.blendEquation(ctx.gl.FUNC_ADD);
+
+            this.#programs.spotAlphaMap.alphaMap = this.#initAlphaMap(conf.alphaMap, ctx.gl.TEXTURE_2D, ctx.gl.TEXTURE_2D);
+            this.#programs.pointAlphaMap.alphaMap = this.#initAlphaMap(conf.alphaMap, ctx.gl.TEXTURE_CUBE_MAP, ctx.gl.TEXTURE_CUBE_MAP_POSITIVE_X);
+        } else {
+            ctx.gl.enable(ctx.gl.DEPTH_TEST);
+            ctx.gl.depthFunc(ctx.gl.LEQUAL);
+
+            if (this.#shadows) {
+                this.#programs.spotDepthMap.depthMap = this.#initDepthMap(conf.depthMap, ctx.gl.TEXTURE_2D, ctx.gl.TEXTURE_2D);
+                this.#programs.pointDepthMap.depthMap = this.#initDepthMap(conf.depthMap, ctx.gl.TEXTURE_CUBE_MAP, ctx.gl.TEXTURE_CUBE_MAP_POSITIVE_X);
+            }
+        }
     }
 
     #ctx;
     #gl;
     #programs;
+    #transparency
+    #shadows
     #lights = {};
     #models = {};
-    #shadows;
-    #transparency;
 
     #getCommonLightLocations(program) {
         return {
@@ -116,20 +120,91 @@ class LightSystem {
         };
     }
 
-    addLight(type, name, initialUniforms, conf) {
+    #initDepthMap(depthMapConf, bindTarget, texTarget) {
+        const texture = this.#ctx.createTexture({
+            settings: {
+                width: depthMapConf.size,
+                height: depthMapConf.size,
+                internalFormat: this.#gl.DEPTH_COMPONENT32F,
+                format: this.#gl.DEPTH_COMPONENT,
+                type: this.#gl.FLOAT,
+                bindTarget,
+                texTarget,
+            },
+            setParams: () => {
+                this.#gl.texParameteri(bindTarget, this.#gl.TEXTURE_MAG_FILTER, this.#gl.LINEAR);
+                this.#gl.texParameteri(bindTarget, this.#gl.TEXTURE_MIN_FILTER, this.#gl.LINEAR);
+                this.#gl.texParameteri(bindTarget, this.#gl.TEXTURE_WRAP_S, this.#gl.CLAMP_TO_EDGE);
+                this.#gl.texParameteri(bindTarget, this.#gl.TEXTURE_WRAP_T, this.#gl.CLAMP_TO_EDGE);
+                this.#gl.texParameteri(bindTarget, this.#gl.TEXTURE_COMPARE_MODE, this.#gl.COMPARE_REF_TO_TEXTURE);
+            },
+        });
+
+        const framebuffer = this.#ctx.createFramebuffer({
+            setTexture: () => {
+                this.#gl.framebufferTexture2D(this.#gl.FRAMEBUFFER, this.#gl.DEPTH_ATTACHMENT, texTarget, this.depthMap.texture.texture, 0);
+                this.#gl.clear(this.#gl.DEPTH_BUFFER_BIT);
+            },
+        });
+
+        return {
+            uniforms: { ...depthMapConf.uniforms, unit: texture.unit },
+            texture,
+            framebuffer,
+        };
+    }
+
+    #initAlphaMap(alphaMapConf, bindTarget, texTarget) {
+        return {
+            uniforms: alphaMapUniforms,
+            create: () => {
+                const texture = this.#ctx.createTexture({
+                    settings: {
+                        width: alphaMapConf.size,
+                        height: alphaMapConf.size,
+                        internalFormat: this.#gl.ALPHA,
+                        format: this.#gl.ALPHA,
+                        type: this.#gl.UNSIGNED_BYTE,
+                        bindTarget,
+                        texTarget,
+                    },
+                    setParams: () => {
+                        this.#gl.texParameteri(bindTarget, this.#gl.TEXTURE_WRAP_S, this.#gl.CLAMP_TO_EDGE);
+                        this.#gl.texParameteri(bindTarget, this.#gl.TEXTURE_WRAP_T, this.#gl.CLAMP_TO_EDGE);
+                        this.#gl.texParameteri(bindTarget, this.#gl.TEXTURE_MAG_FILTER, this.#gl.NEAREST);
+                        this.#gl.texParameteri(bindTarget, this.#gl.TEXTURE_MIN_FILTER, this.#gl.NEAREST);
+                        // this.#gl.texParameteri(texBindTarget, this.#gl.TEXTURE_MAG_FILTER, this.#gl.LINEAR);
+                        // this.#gl.texParameteri(texBindTarget, this.#gl.TEXTURE_MIN_FILTER, this.#gl.LINEAR);
+                        // this.#gl.texParameteri(texBindTarget, this.#gl.TEXTURE_COMPARE_MODE, this.#gl.COMPARE_REF_TO_TEXTURE);
+                    },
+                });
+
+                const framebuffer = this.#ctx.createFramebuffer({
+                    setTexture: () => {
+                        this.#gl.framebufferTexture2D(this.#gl.FRAMEBUFFER, this.#gl.ALPHA, texTarget, texture, 0);
+                    },
+                });
+
+                return {
+                    texture,
+                    framebuffer,
+                };
+            },
+        };
+    }
+
+    addLight(type, name, conf, initialUniforms) {
         let light;
 
         switch (type) {
             case "spot":
-                light = new SpotLight(this.#ctx, initialUniforms, conf);
+                light = new SpotLight(conf, initialUniforms);
                 break;
 
             case "point":
-                light = new PointLight(this.#ctx, initialUniforms, conf);
+                light = new PointLight(conf, initialUniforms);
                 break;
         }
-
-        light.prepare(conf);
 
         this.#lights[name] = light;
         delete this.#lights._values;
@@ -166,6 +241,10 @@ class LightSystem {
                 return { ...uniforms, ...otherModelFields };
             }
         });
+    }
+
+    #initAlphaMaps(modelData) {
+        modelData.alphaMaps = this.#lights._values.map((l) => l.alphaMap);
     }
 
     renderLights() {
@@ -330,8 +409,8 @@ class LightSystem {
         this.#gl.uniform1f(locations.lightDistanceQuad, light.uniforms.lightDistanceQuad);
         this.#gl.uniform1f(locations.cameraDistanceLin, light.uniforms.cameraDistanceLin);
         this.#gl.uniform1f(locations.cameraDistanceQuad, light.uniforms.cameraDistanceQuad);
-        this.#gl.uniform1i(locations.shadows, this.#shadows ? 1 : 0);
-        this.#gl.uniform1i(locations.transparency, this.#transparency ? 1 : 0);
+        this.#gl.uniform1i(locations.shadows, this.#depthMap ? 1 : 0);
+        this.#gl.uniform1i(locations.transparency, this.#alphaMap ? 1 : 0);
     }
 
     #renderModels = (light, prepareUniforms, setProgram, lightMat, dmRender) => {
@@ -346,7 +425,7 @@ class LightSystem {
                     this.#gl.disable(this.#gl.CULL_FACE);
                 }
             } else {
-                if (!this.#transparency && culling?.back) {
+                if (!this.#alphaMap && culling?.back) {
                     this.#gl.enable(this.#gl.CULL_FACE);
                     this.#gl.cullFace(this.#gl.BACK);
                 } else {

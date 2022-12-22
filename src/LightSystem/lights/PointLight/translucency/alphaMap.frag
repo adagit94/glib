@@ -1,7 +1,7 @@
 #version 300 es
 
 precision highp float;
-precision highp samplerCubeShadow;
+precision highp samplerCube;
 
 uniform vec4 u_color;
 uniform vec3 u_lightPosition;
@@ -16,11 +16,10 @@ float getClosestAlpha() {
         vec3 texLookupCoords = v_surfacePos * stepFactor;
         float closestAlpha = texture(u_alphaMap, texLookupCoords).a;
 
-        if (closestAlpha > 0.) {
+        if (closestAlpha != 0.) {
             return closestAlpha;
         }
 
-        
         distanceFromLight = distance(u_lightPosition, texLookupCoords);
     }
 
@@ -29,6 +28,8 @@ float getClosestAlpha() {
 
 void main() {
     float closestAlpha = getClosestAlpha();
+    float currentAlpha = color.a * texture(u_alphaMap, texLookupCoords).a;
+    // float currentAlpha = color.a * closestAlpha;
     
-    color = vec4(0, 0, 0, min(max(color.a, 0.) + closestAlpha, 1.));
+    color = vec4(0, 0, 0, currentAlpha);
 }

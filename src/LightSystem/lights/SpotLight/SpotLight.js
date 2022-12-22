@@ -2,22 +2,25 @@ import MatUtils from "../../../utils/MatUtils.js";
 import Light from "../Light.js";
 
 class SpotLight extends Light {
-    constructor(ctx, initialUniforms, conf) {
-        super(ctx, initialUniforms, { ...conf, cubeMap: false });
+    constructor(conf, initialUniforms) {
+        super(conf, initialUniforms);
+
+        this.prepare(conf)
     }
 
-    prepare = (settings) => {
-        const { depthMap, alphaMap, uniforms } = this;
-        const { position, direction } = settings;
-        const texMapping = alphaMap || depthMap
+    prepare = (conf) => {
+        const { uniforms } = this;
+        const { position, direction } = conf;
 
         if (position) uniforms.lightPosition = position;
         if (direction) uniforms.lightDirection = direction;
 
-        if (texMapping) {
-            texMapping.viewMat = MatUtils.mult3d(this.projectionMat, MatUtils.view3d(uniforms.lightPosition, uniforms.lightDirection));
+        if (this.projectionMat) {
+            this.viewMat = MatUtils.mult3d(this.projectionMat, MatUtils.view3d(uniforms.lightPosition, uniforms.lightDirection));
         }
     };
+
+    viewMat
 }
 
 export default SpotLight;
