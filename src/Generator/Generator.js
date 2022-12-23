@@ -217,7 +217,7 @@ class Generator {
 
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, framebuffer);
         setTexture();
-        this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
+        this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null); // try to leave last fb binded
 
         this.framebuffers[name] = framebuffer;
 
