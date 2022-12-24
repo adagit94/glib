@@ -15,7 +15,7 @@ uniform float u_cameraDistanceLin;
 uniform float u_cameraDistanceQuad;
 uniform float u_far;
 uniform samplerCubeShadow u_depthMap;
-uniform samplerCube u_alphaMap;
+uniform samplerCube u_lightIntensityMap;
 uniform int u_shadows;
 uniform int u_transparency;
 
@@ -41,11 +41,11 @@ float getVisibility() {
     return visibility;
 }
 
-float getAlpha() {
+float getFragLightIntensity() {
     vec3 lightToSurface = v_surfacePos - u_lightPosition;
-    float alpha = texture(u_alphaMap, lightToSurface).a;
+    float intensity = texture(u_lightIntensityMap, lightToSurface).r;
 
-    return alpha;
+    return intensity;
 }
 
 void main() {
@@ -81,6 +81,8 @@ void main() {
         }
     }
 
-    color = vec4(u_color.rgb, u_transparency == 1 ? 1. - getAlpha() : 1.);
-    color.rgb *= u_ambientColor + diffuseColor + specular;
+    float fragLightIntensity = u_transparency == 1 ? getFragLightIntensity() : 1.;
+
+    color = vec4(u_color.rgb, u_transparency == 1 ? u_color.a : 1.);
+    color.rgb *= u_ambientColor + diffuseColor * fragLightIntensity + specular * fragLightIntensity;
 }

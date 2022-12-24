@@ -36,42 +36,20 @@ class Playground extends Framer {
         new Plane("plane2", this, 0.25, 0.25);
 
         this.mats.scene = MatUtils.mult3d(this.mats.projection, [viewMat]);
-        const lightSystem = (this.lightSystem = new LightSystem(this, { shadows: false }));
-
-        // lightSystem.addLight(
-        //     "point",
-        //     "pointOne",
-        //     {
-        //         size: 3200,
-        //         lightProjectionMat: MatUtils.perspective(Math.PI / 2, 1, lNear, lFar),
-        //     },
-        //     {
-        //         light: {
-        //             ambientColor: [0, 0, 0],
-        //             lightColor: [1, 0, 0],
-        //             shininess: 1024,
-        //             far: lFar,
-        //             cameraPosition,
-        //             outerLimit: Math.cos(Math.PI / 14),
-        //             innerLimit: Math.cos(Math.PI / 16),
-        //             lightDistanceLin: 0.0001,
-        //             lightDistanceQuad: 0.000125,
-        //             cameraDistanceLin: 0.00001,
-        //             cameraDistanceQuad: 0.0000125,
-        //         },
-        //         depthMap: {
-        //             far: lFar,
-        //         },
-        //     },
-        //     {
-        //         position: [-Math.cos(Math.PI / 4) * 1, 0, Math.sin(Math.PI / 2) * 1],
-        //         // position: [0, 0.5, 0],
-        //     }
-        // );
+        const lightSystem = (this.lightSystem = new LightSystem(this, {
+            shadows: false,
+            depthMap: {
+                size: 3200,
+            },
+        }));
 
         lightSystem.addLight(
             "point",
-            "pointTwo",
+            "pointOne",
+            {
+                projectionMat: MatUtils.perspective(Math.PI / 2, 1, lNear, lFar),
+                position: [Math.cos(Math.PI / 2) * 1, 0, Math.sin(Math.PI / 4) * 1],
+            },
             {
                 ambientColor: [0, 0, 0],
                 lightColor: [1, 1, 1],
@@ -87,14 +65,6 @@ class Playground extends Framer {
                 depthMap: {
                     far: lFar,
                 },
-            },
-            {
-                // position: [0, 0.5, 0],
-                position: [Math.cos(Math.PI / 2) * 1, 0, Math.sin(Math.PI / 4) * 1],
-                depthMap: {
-                    size: 3200,
-                    lightProjectionMat: MatUtils.perspective(Math.PI / 2, 1, lNear, lFar),
-                },
             }
         );
 
@@ -105,7 +75,7 @@ class Playground extends Framer {
 
     renderScene = () => {
         const firstSpotLight = this.lightSystem.getLight("pointOne");
-        // this.lightSystem.getLight("pointTwo").active = false
+        // this.lightSystem.getLight("pointOne").active = false
 
         const plane1Mat = MatUtils.mult3d(MatUtils.translated3d(0, 0, -2), MatUtils.rotated3d("x", -Math.PI / 2));
         const plane2Mat = MatUtils.mult3d(MatUtils.translated3d(0, 0, 0), MatUtils.rotated3d("x", -Math.PI / 2));
