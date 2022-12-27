@@ -91,8 +91,8 @@ class Generator {
 
     createBufferSets(bufferSets) {
         for (const bufferSet of bufferSets) {
-            this.createBufferSet(bufferSet)
-        };
+            this.createBufferSet(bufferSet);
+        }
     }
 
     createBufferSet = (conf) => {
@@ -126,9 +126,9 @@ class Generator {
             );
         }
 
-        this.buffers[conf.name] = buffersSet
+        this.buffers[conf.name] = buffersSet;
 
-        return buffersSet
+        return buffersSet;
     };
 
     #createCoordsBuffer(index, bufferData, settings, drawMethod = this.gl.STATIC_DRAW) {
@@ -170,27 +170,45 @@ class Generator {
             this.gl.texImage2D(this.gl.TEXTURE_2D, 0, this.gl.RGBA, this.gl.RGBA, this.gl.UNSIGNED_BYTE, textureImage);
             this.gl.generateMipmap(this.gl.TEXTURE_2D);
         } else {
-            const iterations = settings.bindTarget === this.gl.TEXTURE_CUBE_MAP ? 6 : 1; // settings.bindTarget === this.gl.TEXTURE_CUBE_MAP_ARRAY
-
             this.gl.bindTexture(settings.bindTarget, texture);
-
-            for (let i = 0; i < iterations; i++) {
-                this.gl.texImage2D(
-                    settings.texTarget + i,
+            
+            if (
+                settings.bindTarget === this.gl.TEXTURE_3D ||
+                settings.bindTarget === this.gl.TEXTURE_2D_ARRAY ||
+                settings.bindTarget === this.gl.TEXTURE_CUBE_MAP_ARRAY
+            ) {
+                this.gl.texImage3D(
+                    settings.texTarget,
                     0,
                     settings.internalFormat,
                     settings.width,
                     settings.height,
+                    settings.depth,
                     0,
                     settings.format,
                     settings.type,
                     null
                 );
+            } else {
+                const iterations = settings.bindTarget === this.gl.TEXTURE_CUBE_MAP ? 6 : 1; // settings.bindTarget === this.gl.TEXTURE_CUBE_MAP_ARRAY
+
+                for (let i = 0; i < iterations; i++) {
+                    this.gl.texImage2D(
+                        settings.texTarget + i,
+                        0,
+                        settings.internalFormat,
+                        settings.width,
+                        settings.height,
+                        0,
+                        settings.format,
+                        settings.type,
+                        null
+                    );
+                }
             }
         }
 
         textureConf.setParams?.();
-
         this.textures[textureConf.name] = newTexData;
 
         return newTexData;
@@ -217,7 +235,7 @@ class Generator {
 
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, framebuffer);
         setTexture();
-        this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null); // try to leave last fb binded
+        this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
 
         this.framebuffers[name] = framebuffer;
 

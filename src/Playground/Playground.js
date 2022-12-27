@@ -37,7 +37,11 @@ class Playground extends Framer {
 
         this.mats.scene = MatUtils.mult3d(this.mats.projection, [viewMat]);
         const lightSystem = (this.lightSystem = new LightSystem(this, {
-            shadows: false,
+            shadows: true,
+            transparency: true,
+            lightIntensityMap: {
+                size: 3200,
+            },
             depthMap: {
                 size: 3200,
             },

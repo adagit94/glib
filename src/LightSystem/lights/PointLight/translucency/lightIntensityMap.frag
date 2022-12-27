@@ -13,7 +13,7 @@ out vec4 color;
 
 float getClosestDiminution() {
     vec3 lightToSurface = v_surfacePos - u_lightPosition;
-    float closestSample;
+    float closestSample = 0.;
 
     for(int mapI = u_closestLightIntensityMapIndex; mapI >= 0; mapI--) {
         switch(mapI) {

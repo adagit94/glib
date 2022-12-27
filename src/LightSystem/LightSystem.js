@@ -20,11 +20,11 @@ class LightSystem {
                 vShader: SHADERS.spot.depthMap.vShader,
                 fShader: SHADERS.spot.depthMap.fShader,
             },
-            // {
-            //     name: "spotLightIntensityMap",
-            //     vShader: SHADERS.spot.lightIntensityMap.vShader,
-            //     fShader: SHADERS.spot.lightIntensityMap.fShader,
-            // },
+            {
+                name: "spotLightIntensityMap",
+                vShader: SHADERS.spot.lightIntensityMap.vShader,
+                fShader: SHADERS.spot.lightIntensityMap.fShader,
+            },
             {
                 name: "pointLight",
                 vShader: SHADERS.point.vShader,
@@ -51,7 +51,7 @@ class LightSystem {
             outerLimit: this.#gl.getUniformLocation(spotLight.program, "u_outerLimit"),
         });
         Object.assign(spotDepthMap.locations, { finalLightMat: this.#gl.getUniformLocation(spotDepthMap.program, "u_finalLightMat") });
-        // Object.assign(spotLightIntensityMap.locations, this.#getCommonLightIntensityMapLocations(spotLightIntensityMap.program));
+        Object.assign(spotLightIntensityMap.locations, this.#getCommonLightIntensityMapLocations(spotLightIntensityMap.program));
 
         Object.assign(pointLight.locations, this.#getCommonLightLocations(pointLight.program), {
             far: this.#gl.getUniformLocation(pointLight.program, "u_far"),
@@ -74,7 +74,7 @@ class LightSystem {
                 this.#initLightIntensityMap(conf.lightIntensityMap, ctx.gl.TEXTURE_2D, ctx.gl.TEXTURE_2D);
             this.#programs.spotLightIntensityMap.lightIntensityMaps = [];
             this.#programs.pointLightIntensityMap.createLightIntensityMap = () =>
-                this.#initLightIntensityMap(conf.lightIntensityMap, ctx.gl.TEXTURE_CUBE_MAP, ctx.gl.TEXTURE_CUBE_MAP_POSITIVE_X);
+                this.#initLightIntensityMap(conf.lightIntensityMap, ctx.gl.TEXTURE_3D, ctx.gl.TEXTURE_3D);
             this.#programs.pointLightIntensityMap.lightIntensityMaps = [];
         } else {
             ctx.gl.enable(ctx.gl.DEPTH_TEST);
@@ -202,7 +202,7 @@ class LightSystem {
         this.#setCommonLightUniforms(spotLight.locations, {
             ...light.uniforms,
             ...renderUniforms,
-            depthMap: spotDepthMap.texture?.unit,
+            depthMap: spotDepthMap.depthMap?.texture.unit,
         });
         this.#gl.uniformMatrix4fv(spotLight.locations.finalLightMat, false, light.uniforms.finalLightMat);
         this.#gl.uniform3f(spotLight.locations.lightDirection, ...light.uniforms.lightDirection);
@@ -217,7 +217,7 @@ class LightSystem {
         this.#setCommonLightUniforms(pointLight.locations, {
             ...light.uniforms,
             ...renderUniforms,
-            depthMap: pointDepthMap.texture?.unit,
+            depthMap: pointDepthMap.depthMap?.texture.unit,
         });
         this.#gl.uniform1f(pointLight.locations.far, light.uniforms.far);
     };
@@ -228,8 +228,8 @@ class LightSystem {
         this.#gl.uniformMatrix4fv(locations.modelMat, false, uniforms.modelMat);
         this.#gl.uniformMatrix4fv(locations.normalMat, false, uniforms.normalMat);
         this.#gl.uniform3f(locations.lightColor, ...uniforms.lightColor);
-        this.#gl.uniform1i(locations.depthMap, uniforms.depthMap ?? 0);
-        this.#gl.uniform1i(locations.lightIntensityMap, uniforms.lightIntensityMap ?? 1);
+        this.#gl.uniform1i(locations.depthMap, uniforms.depthMap ?? 15);
+        this.#gl.uniform1i(locations.lightIntensityMap, uniforms.lightIntensityMap ?? 16);
         this.#gl.uniform3f(locations.ambientColor, ...uniforms.ambientColor);
         this.#gl.uniform3f(locations.lightPosition, ...uniforms.lightPosition);
         this.#gl.uniform3f(locations.cameraPosition, ...uniforms.cameraPosition);
@@ -264,7 +264,7 @@ class LightSystem {
 
         const framebuffer = this.#ctx.createFramebuffer({
             setTexture: () => {
-                this.#gl.framebufferTexture2D(this.#gl.FRAMEBUFFER, this.#gl.DEPTH_ATTACHMENT, texTarget, this.depthMap.texture.texture, 0);
+                this.#gl.framebufferTexture2D(this.#gl.FRAMEBUFFER, this.#gl.DEPTH_ATTACHMENT, texTarget, texture.texture, 0);
                 this.#gl.clear(this.#gl.DEPTH_BUFFER_BIT);
             },
         });
@@ -363,7 +363,8 @@ class LightSystem {
 
         const framebuffer = this.#ctx.createFramebuffer({
             setTexture: () => {
-                this.#gl.framebufferTexture2D(this.#gl.FRAMEBUFFER, this.#gl.RGBA, texTarget, texture, 0);
+                this.#gl.framebufferTexture2D(this.#gl.FRAMEBUFFER, this.#gl.COLOR_ATTACHMENT0 + texture.unit, texTarget, texture.texture, 0);
+                // this.#gl.clear(this.#gl.COLOR_BUFFER_BIT);
             },
         });
 
@@ -396,11 +397,13 @@ class LightSystem {
     #setLightIntensityMap = (light, lightIntensityMap, cubeMapSide) => {
         this.#gl.viewport(0, 0, lightIntensityMap.texture.settings.width, lightIntensityMap.texture.settings.height);
         this.#gl.bindFramebuffer(this.#gl.FRAMEBUFFER, lightIntensityMap.framebuffer);
+        this.#gl.activeTexture(this.#gl[`TEXTURE${lightIntensityMap.texture.unit}`]);
+        this.#gl.bindTexture(lightIntensityMap.texture.settings.bindTarget, lightIntensityMap.texture.texture);
 
         if (light instanceof PointLight) {
             this.#gl.framebufferTexture2D(
                 this.#gl.FRAMEBUFFER,
-                this.#gl.RGBA,
+                this.#gl.COLOR_ATTACHMENT0 + lightIntensityMap.texture.unit,
                 this.#gl.TEXTURE_CUBE_MAP_POSITIVE_X + cubeMapSide,
                 lightIntensityMap.texture.texture,
                 0
@@ -480,8 +483,8 @@ class LightSystem {
                     }
                     this.#setLightIntensityMap(light, modelLightIntensityMap, cubeMapSide);
 
-                    const alphaTexUnits = modelsLightIntensityMaps.slice(0, i).map((lightIntensityMap) => lightIntensityMap.texture.unit);
-                    renderUniforms = { lightIntensityMaps: alphaTexUnits, closestLightIntensityMapIndex: alphaTexUnits.length - 1 };
+                    const texUnits = modelsLightIntensityMaps.slice(0, i).map((lightIntensityMap) => lightIntensityMap.texture.unit);
+                    renderUniforms = { lightIntensityMaps: texUnits, closestLightIntensityMapIndex: texUnits.length - 1 };
                     break;
                 }
 
