@@ -99,6 +99,5 @@ void main() {
     }
 
     color = u_color;
-    color.rgb *= u_ambientColor + diffuseColor;
-    color.rgb += specular;
+    color.rgb *= u_ambientColor + diffuseColor + specular;
 }

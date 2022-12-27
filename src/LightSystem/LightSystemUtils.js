@@ -2,12 +2,6 @@ import MatUtils from "../utils/MatUtils.js";
 import VecUtils from "../utils/VecUtils.js";
 
 class LightSystemUtils {
-    static prepareLightIntensityMapUniforms(light, uniformsSet, lightMat) {
-        light.uniforms.color = uniformsSet.color;
-        light.uniforms.lightIntensityMap.modelMat = uniformsSet.mats.model;
-        light.uniforms.lightIntensityMap.finalLightMat = MatUtils.mult3d(lightMat, uniformsSet.mats.model);
-    }
-
     static prepareSpotDepthMapUniforms(light, uniformsSet, lightMat) {
         light.uniforms.depthMap.finalLightMat = MatUtils.mult3d(lightMat, uniformsSet.mats.model);
     }

@@ -26,7 +26,7 @@ class Playground extends Framer {
 
         // const cameraPosition = [0, 0.5, 0];
         // const cameraPosition = [-Math.cos(Math.PI / 4) * 1, 0, Math.sin(Math.PI / 4) * 1];
-        const cameraPosition = [Math.cos(Math.PI / 1.75) * 1, 0, Math.sin(Math.PI / 2) * 1];
+        const cameraPosition = [Math.cos(Math.PI / 1.75) * 1, 0, Math.sin(Math.PI / 1.75) * 1];
         // const cameraPosition = [-Math.cos(0) * 3, 0, Math.sin(0) * 3];
         const viewMat = MatUtils.view3d(cameraPosition, [1, 0, -1]);
         const lNear = 0.1;
@@ -39,9 +39,6 @@ class Playground extends Framer {
         const lightSystem = (this.lightSystem = new LightSystem(this, {
             shadows: true,
             transparency: true,
-            lightIntensityMap: {
-                size: 3200,
-            },
             depthMap: {
                 size: 3200,
             },
@@ -56,7 +53,7 @@ class Playground extends Framer {
             },
             {
                 ambientColor: [0, 0, 0],
-                lightColor: [1, 1, 1],
+                lightColor: [0.75, 0.75, 0.75],
                 shininess: 1024,
                 far: lFar,
                 cameraPosition,
