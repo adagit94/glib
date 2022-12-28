@@ -2,181 +2,87 @@ import VecUtils from "../../utils/VecUtils.js";
 import Shape from "../Shape.js";
 
 class Cylinder extends Shape {
-    constructor(name, ctx, r, height, density, optionals) {
-        super(name, ctx, (instance) => {
+    constructor(ctx, r, height, density, optionals) {
+        super(ctx, optionals?.uniforms, (instance) => {
             const angle = optionals?.angle ?? Math.PI * 2
-            const partialAngle = instance.partialAngle = angle !== Math.PI * 2
-            const topSideOpened = instance.topSideOpened = partialAngle || optionals?.opened === "both" || optionals?.opened === "top"
-            const bottomSideOpened = instance.bottomSideOpened = partialAngle || optionals?.opened === "both" || optionals?.opened === "bottom"
-            const opened = instance.opened = topSideOpened || bottomSideOpened
-            const innerLayer = instance.innerLayer = (!partialAngle && opened && !!optionals?.innerLayer) || (partialAngle && !!optionals?.innerLayer)
-            const invertNormals = !innerLayer && !!optionals?.invertNormals
-            const cylinderAngleDensity = instance.cylinderAngleDensity = density
-            const cylinderAngleStep = angle / cylinderAngleDensity
+            const partialAngle = angle !== Math.PI * 2
+            const topSideOpened = partialAngle || optionals?.opened === "both" || optionals?.opened === "top"
+            const bottomSideOpened = partialAngle || optionals?.opened === "both" || optionals?.opened === "bottom"
+            const invertNormals = instance.invertNormals = !!optionals?.invertNormals
 
-            let cylinderVertices = [], cylinderNormals = []
-            let sidesVertices = [], sidesNormals = [], sidesIndices = []
-            let openedEdgesVertices = [], openedEdgesNormals = [], openedEdgesIndices = []
+            const cylinderAngleStep = angle / density
+            const cylinderNormalPolarity = invertNormals ? -1 : 1
+            const topSideNormal = [0, invertNormals ? -1 : 1, 0]
+            const bottomSideNormal = [0, invertNormals ? 1 : -1, 0]
+            const h = height / 2
+
+            let vertices = [], normals = [], indices = []
+            let topSideCenterIndex;
+            let lastTopSideIndex
+            let bottomSideCenterIndex;
+            let lastBottomSideIndex;
+            let lastRectPlateIndex
+            let vertexIndex = 0;
             
-            let topSidesVertices = [], topSidesNormals = []
-            let bottomSidesVertices = [], bottomSidesNormals = []
+            if (!topSideOpened) {
+                vertices.push(0, h, 0)
+                normals.push(...topSideNormal)
+                topSideCenterIndex = vertexIndex++
+            }
 
-            ;(function initData(r, invertNormals) {
-                const cylinderNormalPolarity = invertNormals ? -1 : 1
-                const topSideNormal = [0, topSideOpened || !invertNormals ? 1 : -1, 0]
-                const bottomSideNormal = [0, bottomSideOpened || !invertNormals ? -1 : 1, 0]
-                let h = height / 2
+            if (!bottomSideOpened) {
+                vertices.push(0, -h, 0)
+                normals.push(...bottomSideNormal)
+                bottomSideCenterIndex = vertexIndex++
+            }
+        
+            for (let v = 0; v <= density; v++) {
+                const currentVertAngle = v * cylinderAngleStep;
+                const currentCos = Math.cos(currentVertAngle)
+                const currentSin = Math.sin(currentVertAngle)
+                const currentVertX = currentCos * r
+                const currentVertZ = currentSin * r
+
+                const currentTopVertCoords = [currentVertX, h, currentVertZ]
+                const currentBottomVertCoords = [currentVertX, -h, currentVertZ]
                 
                 if (!topSideOpened) {
-                    if (innerLayer && bottomSideOpened && invertNormals) h *= optionals.innerScale
+                    let currentIndex = vertexIndex++
                     
-                    topSidesVertices.push(0, h, 0)
-                    topSidesNormals.push(...topSideNormal)
+                    vertices.push(...currentTopVertCoords)
+                    normals.push(...topSideNormal)
+                    if (v > 0) indices.push(topSideCenterIndex, lastTopSideIndex, currentIndex)
+
+                    lastTopSideIndex = currentIndex
                 }
 
                 if (!bottomSideOpened) {
-                    if (innerLayer && topSideOpened && invertNormals) h *= optionals.innerScale
-
-                    bottomSidesVertices.push(0, -h, 0)
-                    bottomSidesNormals.push(...bottomSideNormal)
-                }
-            
-                for (let v = 0; v <= cylinderAngleDensity; v++) {
-                    const angle = v * cylinderAngleStep;
-                    const cos = Math.cos(angle)
-                    const sin = Math.sin(angle)
-                    const x = cos * r
-                    const z = sin * r
-
-                    const topCoords = [x, h, z]
-                    const bottomCoords = [x, -h, z]
+                    let currentIndex = vertexIndex++
                     
-                    if (innerLayer || !topSideOpened) {
-                        topSidesVertices.push(...topCoords)
-                        topSidesNormals.push(...topSideNormal)
-                    }
+                    vertices.push(...currentBottomVertCoords)
+                    normals.push(...bottomSideNormal)
+                    if (v > 0) indices.push(bottomSideCenterIndex, lastBottomSideIndex, currentIndex)
 
-                    if (innerLayer || !bottomSideOpened) {
-                        bottomSidesVertices.push(...bottomCoords)
-                        bottomSidesNormals.push(...bottomSideNormal)
-                    }
-
-                    cylinderVertices.push(...topCoords)
-                    cylinderNormals.push(cos * cylinderNormalPolarity, 0, sin * cylinderNormalPolarity)
-
-                    cylinderVertices.push(...bottomCoords)
-                    cylinderNormals.push(cos * cylinderNormalPolarity, 0, sin * cylinderNormalPolarity)
+                    lastBottomSideIndex = currentIndex
                 }
 
-                if (innerLayer && !invertNormals) initData(r * optionals.innerScale, true) 
-            })(r, invertNormals)
-
-            if (innerLayer) {
-                let offset = (cylinderAngleDensity + 1) * 4
-
-                ;(function setSideIndices(sideOpened, recurse) {
-                    if (sideOpened) {
-                        for (let i = 0; i < cylinderAngleDensity; i++) {
-                            const triStripOuterIndex = offset + i
-                            const triStripInnerIndex = triStripOuterIndex + cylinderAngleDensity + 1
-
-                            sidesIndices.push(triStripOuterIndex, triStripOuterIndex + 1, triStripInnerIndex)
-                            sidesIndices.push(triStripOuterIndex + 1, triStripInnerIndex + 1, triStripInnerIndex)
-                        }
-                    }
-
-                    if (recurse && bottomSideOpened) {
-                        offset += 2 * (cylinderAngleDensity + 1)
-
-                        if (!topSideOpened) {
-                            offset += 2
-                        }
-                        
-                        setSideIndices(true, false)
-                    }
-                })(topSideOpened, true)
-
-                if (innerLayer && partialAngle) {
-                    offset += 2 * (cylinderAngleDensity + 1)
-                    
-                    ;(function setOpenedEdgesData(a, recurse = true) {
-                        const topOuter = [Math.cos(a) * r, height / 2, Math.sin(a) * r]
-                        const topInner = [Math.cos(a) * (r * optionals.innerScale), height / 2, Math.sin(a) * (r * optionals.innerScale)]
-                        const bottomOuter = [Math.cos(a) * r, -height / 2, Math.sin(a) * r]
-                        const bottomInner = [Math.cos(a) * (r * optionals.innerScale), -height / 2, Math.sin(a) * (r * optionals.innerScale)]
-    
-                        const normal = a === 0 ? VecUtils.cross(VecUtils.subtract(bottomOuter, topOuter), VecUtils.subtract(topInner, topOuter)) : VecUtils.cross(VecUtils.subtract(topInner, topOuter), VecUtils.subtract(bottomOuter, topOuter))
-    
-                        openedEdgesVertices.push(...topOuter)
-                        openedEdgesVertices.push(...topInner)
-                        openedEdgesVertices.push(...bottomOuter)
-                        openedEdgesVertices.push(...bottomInner)
-    
-                        openedEdgesNormals.push(...normal)
-                        openedEdgesNormals.push(...normal)
-                        openedEdgesNormals.push(...normal)
-                        openedEdgesNormals.push(...normal)
-    
-                        openedEdgesIndices.push(offset, offset + 1, offset + 2)
-                        openedEdgesIndices.push(offset + 1, offset + 2, offset + 3)  
-
-                        if (recurse) {
-                            offset += 4
-                            setOpenedEdgesData(angle, false)
-                        }
-                    })(0);
-                }
-            }
-
-            sidesVertices.push(...topSidesVertices)
-            sidesNormals.push(...topSidesNormals)
-
-            sidesVertices.push(...bottomSidesVertices)
-            sidesNormals.push(...bottomSidesNormals)
-
-            return { vertices: [...cylinderVertices, ...sidesVertices, ...openedEdgesVertices], normals: [...cylinderNormals, ...sidesNormals, ...openedEdgesNormals], indices: [...sidesIndices, ...openedEdgesIndices] }
-        })
-    }
-
-    render = () => {
-        const cylinderCount = (this.cylinderAngleDensity + 1) * 4
-        const triStripCount = (this.cylinderAngleDensity + 1) * 2
-        const triFanCount = this.cylinderAngleDensity + 2
-        
-        this.drawArrays(this.gl.TRIANGLE_STRIP, { count: triStripCount })
-        
-        if (this.opened) {
-            if (this.innerLayer) {
-                this.drawArrays(this.gl.TRIANGLE_STRIP, { count: triStripCount, offset: triStripCount })
-            
-                if (this.topSideOpened || this.bottomSideOpened) {
-                    this.drawElements(this.gl.TRIANGLES)
-                }
-
-                if (!this.topSideOpened) {
-                    this.drawArrays(this.gl.TRIANGLE_FAN, { offset: cylinderCount, count: triFanCount })
-                    this.drawArrays(this.gl.TRIANGLE_FAN, { offset: cylinderCount + triFanCount, count: triFanCount })
-                }
+                const rectPlateNormal = [currentCos * cylinderNormalPolarity, 0, currentSin * cylinderNormalPolarity]
+                const currentRectPlateIndex = vertexIndex
                 
-                if (!this.bottomSideOpened) {
-                    let offset = cylinderCount + triStripCount
+                vertices.push(...currentTopVertCoords, ...currentBottomVertCoords)
+                normals.push(...rectPlateNormal, ...rectPlateNormal)
+                
+                if (v > 0) {
+                    indices.push(lastRectPlateIndex, currentRectPlateIndex, lastRectPlateIndex + 1)
+                    indices.push(lastRectPlateIndex + 1, currentRectPlateIndex + 1, currentRectPlateIndex)
+                }
 
-                    if (!this.topSideOpened) {
-                        offset += 2
-                    }
-                    
-                    this.drawArrays(this.gl.TRIANGLE_FAN, { offset, count: triFanCount })
-                    this.drawArrays(this.gl.TRIANGLE_FAN, { offset: offset + triFanCount, count: triFanCount })
-                }
-            } else {
-                if (!this.topSideOpened || !this.bottomSideOpened) {
-                    this.drawArrays(this.gl.TRIANGLE_FAN, { offset: triStripCount, count: triFanCount })
-                }
+                lastRectPlateIndex = currentRectPlateIndex
+                vertexIndex += 2
             }
-        } else {
-            this.drawArrays(this.gl.TRIANGLE_FAN, { offset: triStripCount, count: triFanCount })
-            this.drawArrays(this.gl.TRIANGLE_FAN, { offset: triStripCount + triFanCount, count: triFanCount })
-        }
+
+            return { vertices, normals, indices }
+        })
     }
 }
 

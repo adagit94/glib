@@ -2,8 +2,8 @@ import VecUtils from "../../utils/VecUtils.js";
 import Shape from "../Shape.js";
 
 class Octahedron extends Shape {
-    constructor(name, ctx, squareSide, height, optionals) {
-        super(name, ctx, () => {
+    constructor(ctx, squareSide, height, optionals) {
+        super(ctx, optionals?.uniforms, () => {
             const invertNormals = !!optionals?.invertNormals
             
             const sidesNormals = [
@@ -24,14 +24,19 @@ class Octahedron extends Shape {
                 // bottom left
                 VecUtils.cross(VecUtils.subtract([-squareSide / 2, 0, -squareSide / 2], [-squareSide / 2, 0, squareSide / 2]), VecUtils.subtract([0, -height, 0], [-squareSide / 2, 0, squareSide / 2])),
             ]
-            let verticesNormals = []
 
-            for (let sideNormal of sidesNormals) {
+            let normals = [], indices = []
+
+            for (let i = 0; i < 8; i++) {
+                const sideNormal = sidesNormals[i]
+                const firstTriangleIndex = i * 3
+                
                 if (invertNormals) {
                     sideNormal = sideNormal.map(coord => coord * -1)
                 }
 
-                verticesNormals.push(...sideNormal, ...sideNormal, ...sideNormal)
+                normals.push(...sideNormal, ...sideNormal, ...sideNormal)
+                indices.push(firstTriangleIndex, firstTriangleIndex + 1, firstTriangleIndex + 2)
             }
             
             return {
@@ -76,12 +81,9 @@ class Octahedron extends Shape {
                     -squareSide / 2, 0, -squareSide / 2,
                     0, -height, 0,
                 ],
-                normals: verticesNormals,
+                normals,
+                indices
             }})
-    }
-
-    render = () => {
-        this.drawArrays(this.gl.TRIANGLES)
     }
 }
 

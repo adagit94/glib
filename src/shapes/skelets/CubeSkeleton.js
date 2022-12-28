@@ -1,17 +1,11 @@
-import MatUtils from "../utils/MatUtils.js";
-import Cube from "../shapes/solids/Cube.js";
-import RectangularCuboid from "../shapes/solids/RectangularCuboid.js";
+import MatUtils from "../../utils/MatUtils.js";
+import Cube from "../solids/Cube.js";
+import RectangularCuboid from "../solids/RectangularCuboid.js";
 
-class CubeSkeleton {
-    static #NEXT_INSTANCE_ID = 0
-    
+class CubeSkelet {
     constructor(ctx, cuboidWidth, cuboidHeight, settings) {
-        const id = this.instanceId = CubeSkeleton.#NEXT_INSTANCE_ID
-        
         this.#cuboid = new RectangularCuboid(`cubeSkeletonCuboid${id}`, ctx, cuboidWidth, cuboidHeight, cuboidHeight);
         this.#cube = new Cube(`cubeSkeletonCube${id}`, ctx, cuboidHeight);
-
-        CubeSkeleton.#NEXT_INSTANCE_ID++
 
         const yCuboidMat = MatUtils.rotated3d("z", Math.PI / 2);
         const zCuboidMat = MatUtils.rotated3d("y", Math.PI / 2);
@@ -70,7 +64,6 @@ class CubeSkeleton {
     #cuboid;
     #cube;
     mats;
-    instanceId
     modelsData = {};
 
     prepareModels(settings) {
@@ -83,7 +76,7 @@ class CubeSkeleton {
                 },
             })),
             render: this.#cuboid.render,
-        }
+        };
 
         this.modelsData.cubes = {
             uniforms: this.mats.cubes.map((mat) => ({
@@ -94,8 +87,8 @@ class CubeSkeleton {
                 },
             })),
             render: this.#cube.render,
-        }
+        };
     }
 }
 
-export default CubeSkeleton;
+export default CubeSkelet;

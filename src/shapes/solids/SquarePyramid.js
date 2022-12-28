@@ -15,8 +15,8 @@ class Pyramid extends Shape {
         13, 14, 15
     ]
 
-    constructor(name, ctx, squareSide, optionals) {
-        super(name, ctx, () => {
+    constructor(ctx, squareSide, optionals) {
+        super(ctx, optionals?.uniforms, () => {
             const height = typeof optionals?.height === "number" ? optionals.height : Math.sqrt(squareSide * squareSide / 2)
             const openedBase = optionals?.opened === "base"
             const invertNormals = !!optionals?.invertNormals
@@ -85,10 +85,6 @@ class Pyramid extends Shape {
                 indices,
             }
         })
-    }
-
-    render = () => {
-        this.drawElements(this.gl.TRIANGLES)
     }
 }
 

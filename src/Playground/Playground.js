@@ -1,110 +1,190 @@
 import MatUtils from "../utils/MatUtils.js";
 import Cube from "../shapes/solids/Cube.js";
-import Plane from "../shapes/Plane.js";
+import Plane from "../shapes/planar/Plane.js";
 import Framer from "../Generator/Framer/Framer.js";
-import LightSystem from "../LightSystem/LightSystem.js";
+import Scene from "../Scene/Scene.js";
 import TruncatedOctahedron from "../shapes/solids/TruncatedOctahedron.js";
 import Pyramid from "../shapes/solids/SquarePyramid.js";
 import Octahedron from "../shapes/solids/Octahedron.js";
-import Cone from "../shapes/solids/Cone.js";
 import Cylinder from "../shapes/solids/Cylinder.js";
 import Sphere from "../shapes/solids/Sphere.js";
 import RectangularCuboid from "../shapes/solids/RectangularCuboid.js";
-import CubeSkeleton from "../structures/CubeSkeleton.js";
+import CubeSkelet from "../shapes/skelets/CubeSkeleton.js";
 import Tetrahedron from "../shapes/solids/Tetrahedron.js";
 import TrirectangularTetrahedron from "../shapes/solids/TrirectangularTetrahedron.js";
 import Icosahedron from "../shapes/solids/Icosahedron.js";
 import AngleUtils from "../utils/AngleUtils.js";
 import PentagonalPyramid from "../shapes/solids/PentagonalPyramid.js";
+import SpotLight from "../Scene/lights/SpotLight.js";
+import PointLight from "../Scene/lights/PointLight.js";
+import Dodecahedron from "../shapes/solids/Dodecahedron.js";
 
 class Playground extends Framer {
     constructor() {
         super({
             canvasSelector: "#glFrame",
-            pespectiveConf: { fov: Math.PI / 2, near: 0.1, far: 100 },
         });
 
-        // const cameraPosition = [0, 0.5, 0];
-        // const cameraPosition = [-Math.cos(Math.PI / 4) * 1, 0, Math.sin(Math.PI / 4) * 1];
-        const cameraPosition = [Math.cos(Math.PI / 1.75) * 1, 0, Math.sin(Math.PI / 1.75) * 1];
-        // const cameraPosition = [-Math.cos(0) * 3, 0, Math.sin(0) * 3];
-        const viewMat = MatUtils.view3d(cameraPosition, [1, 0, -1]);
+        // const cameraPosition = [Math.cos(Math.PI / 2) * 4, 0, Math.sin(Math.PI / 2) * 4];
+        // const cameraPosition = [-1, 0, -1.1];
+        // const cameraPosition = [0, 0, 10];
+        const cameraPosition = [0, 0, 5];
+        const cameraDirection = [0, 0, -1];
         const lNear = 0.1;
         const lFar = 100;
 
-        new Plane("plane1", this, 1, 1);
-        new Plane("plane2", this, 0.25, 0.25);
+        const alphaMapWidth = 3200;
+        const alphaMapHeight = 1600;
+        const alphaMapAspectRatio = alphaMapWidth / alphaMapHeight;
 
-        this.mats.scene = MatUtils.mult3d(this.mats.projection, [viewMat]);
-        const lightSystem = (this.lightSystem = new LightSystem(this, {
-            shadows: true,
-            transparency: true,
-            depthMap: {
-                size: 3200,
-            },
-        }));
-
-        lightSystem.addLight(
-            "point",
-            "pointOne",
+        const scene = (this.scene = new Scene(
+            this,
             {
-                projectionMat: MatUtils.perspective(Math.PI / 2, 1, lNear, lFar),
-                position: [Math.cos(Math.PI / 2) * 1, 0, Math.sin(Math.PI / 4) * 1],
-            },
-            {
-                ambientColor: [0, 0, 0],
-                lightColor: [0.75, 0.75, 0.75],
-                shininess: 1024,
-                far: lFar,
-                cameraPosition,
-                outerLimit: Math.cos(Math.PI / 14),
-                innerLimit: Math.cos(Math.PI / 16),
-                lightDistanceLin: 0.0001,
-                lightDistanceQuad: 0.000125,
-                cameraDistanceLin: 0.00001,
-                cameraDistanceQuad: 0.0000125,
-                depthMap: {
-                    far: lFar,
+                projection: { fov: Math.PI / 2, near: 0.1, far: 10 },
+                camera: { position: cameraPosition, direction: cameraDirection },
+                alphaMap: {
+                    width: alphaMapWidth,
+                    height: alphaMapHeight,
                 },
-            }
-        );
+            },
+            { ambientLight: [0, 0, 0], camera: { distanceLin: 0.000000001, distanceQuad: 0.00000000125 } }
+        ));
 
-        this.animate = false;
+        scene.setLights([
+            // [
+            //     "s1",
+            //     new SpotLight(
+            //         {
+            //             projection: { fov: Math.PI / 2, near: 0.1, far: 100, aspectRatio: alphaMapAspectRatio},
+            //             direction: [0, 0, -1],
+            //             position: [Math.cos(Math.PI / 2) * 4, 0, Math.sin(Math.PI / 2) * 4],
+            //             // position: [0, 0, -2.5],
+            //         },
+            //         {
+            //             color: [0.5, 0, 0],
+            //             shininess: 80000,
+            //             far: lFar,
+            //             cameraPosition,
+            //             outerLimit: 0,
+            //             innerLimit: 0.25,
+            //             distanceLin: 0.00000001,
+            //             distanceQuad: 0.0000000125,
+            //         }
+            //     ),
+            // ],
+            [
+                "s2",
+                new SpotLight(
+                    {
+                        projection: { fov: Math.PI / 2, near: 0.1, far: 100, aspectRatio: alphaMapAspectRatio },
+                        direction: [0, 0, -1],
+                        // position: [Math.cos(Math.PI / 2) * 4, 0, Math.sin(Math.PI / 2) * 4],
+                        // position: [0, 0, 10],
+                        position: [0, 0, 10],
+                    },
+                    {
+                        color: [1, 1, 1],
+                        shininess: 80000,
+                        far: lFar,
+                        cameraPosition,
+                        outerLimit: 0,
+                        innerLimit: 0,
+                        distanceLin: 0.00000001,
+                        distanceQuad: 0.0000000125,
+                    }
+                ),
+            ],
+            // [
+            //     "p1",
+            //     new PointLight(
+            //         {
+            //             projection: { fov: Math.PI / 2, near: 0.1, far: 100, aspectRatio: alphaMapAspectRatio },
+            //             // position: [Math.cos(Math.PI / 2) * 4, 0, Math.sin(Math.PI / 2) * 4],
+            //             position: [0, 0, 2],
+            //         },
+            //         {
+            //             color: [0.5, 0, 0],
+            //             shininess: 80000,
+            //             cameraPosition,
+            //             distanceLin: 0.00000001,
+            //             distanceQuad: 0.0000000125,
+            //         }
+            //     ),
+            // ],
+        ]);
+
+        const p1Mat = MatUtils.mult3d(MatUtils.translated3d(0, 0, -10), [MatUtils.rotated3d("x", -Math.PI / 2)]);
+        const p2Mat = MatUtils.mult3d(MatUtils.translated3d(0, 0, 10), [MatUtils.rotated3d("x", Math.PI / 2)]);
+        const p3Mat = MatUtils.mult3d(MatUtils.translated3d(-10, 0, 0), [MatUtils.rotated3d("y", Math.PI / 2), MatUtils.rotated3d("x", Math.PI / 2)]);
+        const p4Mat = MatUtils.mult3d(MatUtils.translated3d(10, 0, 0), [MatUtils.rotated3d("y", Math.PI / 2), MatUtils.rotated3d("x", -Math.PI / 2)]);
+
+        scene.setShapes([
+            // [
+            //     "p1",
+            //     new Plane(this, 10, 10, {
+            //         uniforms: {
+            //             color: [1, 1, 1, 1],
+            //             modelMat: p1Mat,
+            //         },
+            //     }),
+            // ],
+            // [
+            //     "p2",
+            //     new Plane(this, 10, 10, {
+            //         uniforms: {
+            //             color: [1, 1, 1, 1],
+            //             modelMat: p2Mat,
+            //         },
+            //     }),
+            // ],
+            // [
+            //     "p3",
+            //     new Plane(this, 10, 10, {
+            //         uniforms: {
+            //             color: [1, 1, 1, 1],
+            //             modelMat: p3Mat,
+            //         },
+            //     }),
+            // ],
+            // [
+            //     "p4",
+            //     new Plane(this, 10, 10, {
+            //         uniforms: {
+            //             color: [1, 1, 1, 1],
+            //             modelMat: p4Mat,
+            //         },
+            //     }),
+            // ],
+            [
+                "x",
+                new TrirectangularTetrahedron(this, 2, {
+                    uniforms: {
+                        color: [1, 1, 1, 1],
+                    },
+                }),
+            ],
+            // [
+            //     "c",
+            //     new Cube(this, 1, {
+            //         invertNormals: true,
+            //         uniforms: {
+            //             color: [1, 1, 1, 0.75],
+            //         },
+            //     }),
+            // ],
+        ]);
+
+        this.animate = true;
         this.requestAnimationFrame();
-        // console.log(this);
     }
 
     renderScene = () => {
-        const firstSpotLight = this.lightSystem.getLight("pointOne");
-        // this.lightSystem.getLight("pointOne").active = false
+        const x = this.scene.getShape("x");
+        const xMat = MatUtils.rotated3d("y", this.animData.deltaTime / 2.5);
 
-        const plane1Mat = MatUtils.mult3d(MatUtils.translated3d(0, 0, -2), MatUtils.rotated3d("x", -Math.PI / 2));
-        const plane2Mat = MatUtils.mult3d(MatUtils.translated3d(0, 0, 0), MatUtils.rotated3d("x", -Math.PI / 2));
+        x.setUniforms({ modelMat: xMat });
 
-        this.lightSystem.setModels({
-            plane1: {
-                uniforms: {
-                    color: [1, 0, 0, 0.5],
-                    mats: {
-                        model: plane1Mat,
-                        final: MatUtils.mult3d(this.mats.scene, plane1Mat),
-                    },
-                },
-                render: this.shapes.plane1.render,
-            },
-            plane2: {
-                uniforms: {
-                    color: [0, 0, 1, 0.25],
-                    mats: {
-                        model: plane2Mat,
-                        final: MatUtils.mult3d(this.mats.scene, plane2Mat),
-                    },
-                },
-                render: this.shapes.plane2.render,
-            },
-        });
-
-        this.lightSystem.renderLights();
+        this.scene.render();
     };
 }
 

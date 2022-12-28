@@ -18,38 +18,36 @@ class PentagonalPyramid extends Shape {
         return vertices
     }
 
-    static setTriangularFaces(vertices, normals, pentaSourceVertices, apexVertex) {
-        for (let v = 0; v < 5; v++) {
+    static setTriangularFaces(vertices, normals, indices, pentaSourceVertices, apexVertex) {
+        for (let v = 0, vIndex = vertices.length / 3; v < 5; v++) {
             const v0 = pentaSourceVertices[v]
             const v1 = pentaSourceVertices[v + 1]
             const normal = VecUtils.cross(VecUtils.subtract(v1, v0), VecUtils.subtract(apexVertex, v0))
-            ShapeUtils.setGeometryData(3, [vertices, [apexVertex, v0, v1]], [normals, normal])
+            ShapeUtils.setGeometryData([vertices, [apexVertex, v0, v1]], [normals, normal], [indices, [vIndex++, vIndex++, vIndex++]])
         }
     }
     
-    constructor(name, ctx, pentaCircumradius, optionals) {
-        super(name, ctx, () => {
+    constructor(ctx, pentaCircumradius, optionals) {
+        super(ctx, optionals?.uniforms, () => {
             const openedBase = optionals?.opened === "base"
             const invertNormals = !!optionals?.invertNormals
 
             const pentaVertices = PentagonalPyramid.initPentagonVertices(pentaCircumradius)
             const height = typeof optionals?.height === "number" ? optionals.height : VecUtils.distance(pentaVertices[0], pentaVertices[1]) * Math.sqrt((5 - Math.sqrt(5)) / 10)
-            let vertices = [], normals = []
+            let vertices = [], normals = [], indices = []
             
-            PentagonalPyramid.setTriangularFaces(vertices, normals, pentaVertices, [0, height, 0])
+            PentagonalPyramid.setTriangularFaces(vertices, normals, indices, pentaVertices, [0, height, 0])
 
             if (!openedBase) {
-                ShapeUtils.setGeometryData(3, [vertices, [pentaVertices[0], pentaVertices[1], pentaVertices[4]]], [normals, [0, -1, 0], invertNormals])
-                ShapeUtils.setGeometryData(3, [vertices, [pentaVertices[1], pentaVertices[2], pentaVertices[3]]], [normals, [0, -1, 0], invertNormals])
-                ShapeUtils.setGeometryData(3, [vertices, [pentaVertices[3], pentaVertices[4], pentaVertices[1]]], [normals, [0, -1, 0], invertNormals])
+                let baseIndices = [15, 16, 17]
+                
+                ShapeUtils.setGeometryData([vertices, [pentaVertices[0], pentaVertices[1], pentaVertices[4]]], [normals, [0, -1, 0], invertNormals], [indices, baseIndices, true])
+                ShapeUtils.setGeometryData([vertices, [pentaVertices[1], pentaVertices[2], pentaVertices[3]]], [normals, [0, -1, 0], invertNormals], [indices, baseIndices, true])
+                ShapeUtils.setGeometryData([vertices, [pentaVertices[3], pentaVertices[4], pentaVertices[1]]], [normals, [0, -1, 0], invertNormals], [indices, baseIndices])
             }
 
-            return { vertices, normals }
+            return { vertices, normals, indices }
         })
-    }
-
-    render = () => {
-        this.drawArrays(this.gl.TRIANGLES)
     }
 }
 

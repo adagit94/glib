@@ -42,45 +42,6 @@ class Cube extends Shape {
         ],
     }
 
-    // static #TEXTURE_COORDS = {
-    //     front: [
-    //         1, 1,
-    //         1, 0,
-    //         0, 0,
-    //         0, 1,
-    //     ],
-    //     back: [
-    //         0, 1,
-    //         0, 0,
-    //         1, 0,
-    //         1, 1,
-    //     ],
-    //     top: [
-    //         1, 0,
-    //         1, 1,
-    //         0, 1,
-    //         0, 0,
-    //     ],
-    //     bottom: [
-    //         1, 0,
-    //         1, 1,
-    //         0, 1,
-    //         0, 0,
-    //     ],
-    //     right: [
-    //         0, 1,
-    //         1, 1,
-    //         1, 0,
-    //         0, 0,
-    //     ],
-    //     left: [
-    //         1, 1,
-    //         0, 1,
-    //         0, 0,
-    //         1, 0,
-    //     ],
-    // }
-
     static #INDICES = [
         0, 1, 2,
         0, 3, 2,
@@ -101,13 +62,49 @@ class Cube extends Shape {
         20, 23, 22,
     ]
 
-    static #SIDE_Z_COORD_INDICES = [2, 5, 8, 11]
+    static #TEXTURE_COORDS = {
+        front: [
+            1, 1,
+            1, 0,
+            0, 0,
+            0, 1,
+        ],
+        back: [
+            0, 1,
+            0, 0,
+            1, 0,
+            1, 1,
+        ],
+        top: [
+            1, 0,
+            1, 1,
+            0, 1,
+            0, 0,
+        ],
+        bottom: [
+            1, 0,
+            1, 1,
+            0, 1,
+            0, 0,
+        ],
+        right: [
+            0, 1,
+            1, 1,
+            1, 0,
+            0, 0,
+        ],
+        left: [
+            1, 1,
+            0, 1,
+            0, 0,
+            1, 0,
+        ],
+    }
 
-    constructor(name, ctx, sideLength, optionals) {
-        super(name, ctx, (instance) => {
+    constructor(ctx, sideLength, optionals) {
+        super(ctx, optionals?.uniforms, (instance) => {
             const openedSide = instance.opened = !!optionals?.opened
-            const innerLayer = instance.innerLayer = openedSide && !!optionals?.innerLayer
-            const invertNormals = instance.invertNormals = !innerLayer && !!optionals?.invertNormals
+            const invertNormals = instance.invertNormals = !!optionals?.invertNormals
             const sideHalfLength = sideLength / 2
 
             const verticesSource = {
@@ -149,162 +146,26 @@ class Cube extends Shape {
                 ],
             }
 
-            let vertices = [], normals = [], indices = []
+            let vertices = [], normals = [], indices = [...Cube.#INDICES]
+            
+            if (openedSide) indices.splice(0, 6)
 
-            ;(function setData(inner, invertNormals) {
-                for (const side of Cube.#SIDES) {
-                    const isSideOpened = openedSide && side === "front"
+            for (const side of Cube.#SIDES) {
+                let v = verticesSource[side]
+                let n = Cube.#NORMALS[side]
 
-                    let v = verticesSource[side]
-                    let n = Cube.#NORMALS[side]
+                if (invertNormals) n = n.map((coord) => coord * -1)
 
-                    if (inner) v = v.map(coord => coord * optionals.innerScale)
-                    if (invertNormals) {
-                        n = n.map((coord, coordI) => {
-                            if (inner && isSideOpened && Cube.#SIDE_Z_COORD_INDICES.includes(coordI)) return coord
+                vertices.push(...v)
+                normals.push(...n)
+            }
 
-                            return coord * -1
-                        })
-                    }
-
-                    vertices.push(...v)
-                    normals.push(...n)
-                }
-
-                let i = [...Cube.#INDICES]
-                
-                if (openedSide) {
-                    i.splice(0, 6)
-                
-                    if (inner) {
-                        i = i.map(index => index + 24)
-
-                        // top cuboid
-                        vertices.push(-sideHalfLength * optionals.innerScale, sideHalfLength * optionals.innerScale, sideHalfLength)
-                        vertices.push(-sideHalfLength * optionals.innerScale, sideHalfLength * optionals.innerScale, sideHalfLength * optionals.innerScale)
-                        vertices.push(sideHalfLength * optionals.innerScale, sideHalfLength * optionals.innerScale, sideHalfLength)
-                        vertices.push(sideHalfLength * optionals.innerScale, sideHalfLength * optionals.innerScale, sideHalfLength * optionals.innerScale)
-                        normals.push(0, -1, 0)
-                        normals.push(0, -1, 0)
-                        normals.push(0, -1, 0)
-                        normals.push(0, -1, 0)
-                        i.push(48, 49, 51)
-                        i.push(48, 50, 51)
-
-                        vertices.push(-sideHalfLength * optionals.innerScale, sideHalfLength * optionals.innerScale, sideHalfLength)
-                        vertices.push(-sideHalfLength * optionals.innerScale, sideHalfLength, sideHalfLength)
-                        vertices.push(sideHalfLength * optionals.innerScale, sideHalfLength * optionals.innerScale, sideHalfLength)
-                        vertices.push(sideHalfLength * optionals.innerScale, sideHalfLength, sideHalfLength)
-                        normals.push(0, 0, 1)
-                        normals.push(0, 0, 1)
-                        normals.push(0, 0, 1)
-                        normals.push(0, 0, 1)
-                        i.push(52, 53, 55)
-                        i.push(52, 54, 55)
-
-
-                        // right cuboid
-                        vertices.push(sideHalfLength * optionals.innerScale, sideHalfLength * optionals.innerScale, sideHalfLength)
-                        vertices.push(sideHalfLength * optionals.innerScale, sideHalfLength * optionals.innerScale, sideHalfLength * optionals.innerScale)
-                        vertices.push(sideHalfLength * optionals.innerScale, -sideHalfLength * optionals.innerScale, sideHalfLength)
-                        vertices.push(sideHalfLength * optionals.innerScale, -sideHalfLength * optionals.innerScale, sideHalfLength * optionals.innerScale)
-                        normals.push(-1, 0, 0)
-                        normals.push(-1, 0, 0)
-                        normals.push(-1, 0, 0)
-                        normals.push(-1, 0, 0)
-                        i.push(56, 57, 59)
-                        i.push(56, 58, 59)
-
-                        vertices.push(sideHalfLength * optionals.innerScale, sideHalfLength * optionals.innerScale, sideHalfLength)
-                        vertices.push(sideHalfLength, sideHalfLength * optionals.innerScale, sideHalfLength)
-                        vertices.push(sideHalfLength * optionals.innerScale, -sideHalfLength * optionals.innerScale, sideHalfLength)
-                        vertices.push(sideHalfLength, -sideHalfLength * optionals.innerScale, sideHalfLength)
-                        normals.push(0, 0, 1)
-                        normals.push(0, 0, 1)
-                        normals.push(0, 0, 1)
-                        normals.push(0, 0, 1)
-                        i.push(60, 61, 62)
-                        i.push(62, 63, 61)
-
-                        // bottom cuboid
-                        vertices.push(sideHalfLength * optionals.innerScale, -sideHalfLength * optionals.innerScale, sideHalfLength)
-                        vertices.push(sideHalfLength * optionals.innerScale, -sideHalfLength * optionals.innerScale, sideHalfLength * optionals.innerScale)
-                        vertices.push(-sideHalfLength * optionals.innerScale, -sideHalfLength * optionals.innerScale, sideHalfLength)
-                        vertices.push(-sideHalfLength * optionals.innerScale, -sideHalfLength * optionals.innerScale, sideHalfLength * optionals.innerScale)
-                        normals.push(0, 1, 0)
-                        normals.push(0, 1, 0)
-                        normals.push(0, 1, 0)
-                        normals.push(0, 1, 0)
-                        i.push(64, 65, 66)
-                        i.push(66, 67, 65)
-
-                        vertices.push(sideHalfLength * optionals.innerScale, -sideHalfLength * optionals.innerScale, sideHalfLength)
-                        vertices.push(sideHalfLength * optionals.innerScale, -sideHalfLength, sideHalfLength)
-                        vertices.push(-sideHalfLength * optionals.innerScale, -sideHalfLength * optionals.innerScale, sideHalfLength)
-                        vertices.push(-sideHalfLength * optionals.innerScale, -sideHalfLength, sideHalfLength)
-                        normals.push(0, 0, 1)
-                        normals.push(0, 0, 1)
-                        normals.push(0, 0, 1)
-                        normals.push(0, 0, 1)
-                        i.push(68, 69, 70)
-                        i.push(70, 71, 69)
-
-                        // left cuboid
-                        vertices.push(-sideHalfLength, -sideHalfLength * optionals.innerScale, sideHalfLength)
-                        vertices.push(-sideHalfLength * optionals.innerScale, -sideHalfLength * optionals.innerScale, sideHalfLength)
-                        vertices.push(-sideHalfLength, sideHalfLength * optionals.innerScale, sideHalfLength)
-                        vertices.push(-sideHalfLength * optionals.innerScale, sideHalfLength * optionals.innerScale, sideHalfLength)
-                        normals.push(0, 0, 1)
-                        normals.push(0, 0, 1)
-                        normals.push(0, 0, 1)
-                        normals.push(0, 0, 1)
-                        i.push(72, 73, 74)
-                        i.push(74, 75, 73)
-
-                        vertices.push(-sideHalfLength * optionals.innerScale, -sideHalfLength * optionals.innerScale, sideHalfLength)
-                        vertices.push(-sideHalfLength * optionals.innerScale, -sideHalfLength * optionals.innerScale, sideHalfLength * optionals.innerScale)
-                        vertices.push(-sideHalfLength * optionals.innerScale, sideHalfLength * optionals.innerScale, sideHalfLength)
-                        vertices.push(-sideHalfLength * optionals.innerScale, sideHalfLength * optionals.innerScale, sideHalfLength * optionals.innerScale)
-                        normals.push(1, 0, 0)
-                        normals.push(1, 0, 0)
-                        normals.push(1, 0, 0)
-                        normals.push(1, 0, 0)
-                        i.push(76, 77, 78)
-                        i.push(78, 79, 77)
-
-                        // top left cube
-                        i.push(72, 73, 53)
-                        i.push(53, 3, 72)
-
-                        // top right cube
-                        i.push(60, 61, 55)
-                        i.push(55, 0, 61)
-
-                        // bottom right cube
-                        i.push(62, 63, 69)
-                        i.push(69, 1, 63)
-
-                        // bottom left cube
-                        i.push(70, 71, 72)
-                        i.push(72, 2, 71)
-                    }
-                }
-
-                indices.push(...i)
-
-                if (innerLayer && !inner) setData(true, true)
-            })(false, invertNormals)
-        
             return {
                 vertices,
                 indices,
                 normals,
             }
         })
-    }
-
-    render = () => {
-        this.drawElements(this.gl.TRIANGLES)
     }
 }
 

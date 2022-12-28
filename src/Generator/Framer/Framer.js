@@ -12,7 +12,7 @@ class Framer extends Generator {
         this.animData = {
             frameDeltaTime: 0,
             deltaTime: 0,
-            lastFrameTime: Date.now() / 1000,
+            lastFrameTime: 0,
         };
 
         window.requestAnimationFrame(this.#render);
@@ -20,7 +20,7 @@ class Framer extends Generator {
 
     #render = () => {
         const now = Date.now() / 1000;
-        const elapsedTime = now - this.animData.lastFrameTime;
+        const elapsedTime = this.animData.lastFrameTime === 0 ? 0 : now - this.animData.lastFrameTime;
 
         this.animData.lastFrameTime = now;
         this.animData.frameDeltaTime = elapsedTime;

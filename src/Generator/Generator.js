@@ -1,7 +1,4 @@
-import MatUtils from "../utils/MatUtils.js";
-
 class Generator {
-    static #PERSPECTIVE_CONF = { fov: Math.PI / 4, near: 0.1, far: 100 };
     static #ATTRIBUTE_INDICES = {
         position: 0,
         normal: 1,
@@ -9,76 +6,37 @@ class Generator {
     };
 
     constructor(conf) {
-        let { canvasSelector, mode, perspectiveConf } = conf;
-
-        const gl = (this.gl = document.querySelector(canvasSelector).getContext("webgl2"));
+        const gl = (this.gl = document.querySelector(conf.canvasSelector).getContext("webgl2"));
 
         gl.canvas.width = gl.canvas.clientWidth;
         gl.canvas.height = gl.canvas.clientHeight;
-
-        if (!mode) mode = "3d";
-        this.mode = mode;
-
-        switch (mode) {
-            case "2d":
-                this.mats.projection = MatUtils.projection2d(gl.canvas.width, gl.canvas.height);
-                break;
-
-            case "3d":
-                if (!perspectiveConf) perspectiveConf = Generator.#PERSPECTIVE_CONF;
-                this.mats.projection = MatUtils.perspective(
-                    perspectiveConf.fov,
-                    gl.canvas.width / gl.canvas.height,
-                    perspectiveConf.near,
-                    perspectiveConf.far
-                );
-                break;
-        }
     }
 
     gl;
-    mode;
-    programs = {};
-    buffers = {};
-    textures = {};
-    framebuffers = {};
-    mats = {};
-    shapes = {};
-    lightSystem;
 
-    init(conf) {
-        const { programs, buffers, textures, framebuffers } = conf;
-
-        this.programs = {};
-        this.buffers = {};
-        this.textures = {};
-        this.framebuffers = {};
-
-        if (programs) this.createPrograms(programs);
-        if (buffers) this.createBufferSets(buffers);
-        if (textures) this.createTextures(textures);
-        if (framebuffers) this.createFramebuffers(framebuffers);
-    }
-
-    createPrograms(programsConfs) {
+    createPrograms(confs) {
         let newPrograms = {};
 
-        for (const programConf of programsConfs) {
-            let programData = (newPrograms[programConf.name] = {});
-            const program = this.gl.createProgram();
-
-            this.#prepareShader(program, this.gl.VERTEX_SHADER, programConf.vShader);
-            this.#prepareShader(program, this.gl.FRAGMENT_SHADER, programConf.fShader);
-
-            this.gl.linkProgram(program);
-
-            programData.program = program;
-            programData.locations = this.#initCommonLocations(program);
+        for (const conf of confs) {
+            newPrograms[conf.name] = this.createProgram(conf);
         }
 
-        Object.assign(this.programs, newPrograms);
-
         return newPrograms;
+    }
+
+    createProgram(conf) {
+        let programData = {};
+        const program = this.gl.createProgram();
+
+        this.#prepareShader(program, this.gl.VERTEX_SHADER, conf.vShader);
+        this.#prepareShader(program, this.gl.FRAGMENT_SHADER, conf.fShader);
+
+        this.gl.linkProgram(program);
+
+        programData.program = program;
+        programData.locations = this.#initCommonLocations(program);
+
+        return programData;
     }
 
     #prepareShader(program, shaderType, codeStr) {
@@ -89,16 +47,35 @@ class Generator {
         this.gl.attachShader(program, shader);
     }
 
-    createBufferSets(bufferSets) {
-        for (const bufferSet of bufferSets) {
-            this.createBufferSet(bufferSet);
+    #initCommonLocations = (program) => {
+        this.gl.bindAttribLocation(program, Generator.#ATTRIBUTE_INDICES.position, "a_position");
+        this.gl.bindAttribLocation(program, Generator.#ATTRIBUTE_INDICES.normal, "a_normal");
+        this.gl.bindAttribLocation(program, Generator.#ATTRIBUTE_INDICES.textureCoords, "a_textureCoords");
+
+        return {
+            position: this.gl.getAttribLocation(program, "a_position"),
+            normal: this.gl.getAttribLocation(program, "a_normal"),
+            textureCoords: this.gl.getAttribLocation(program, "a_textureCoords"),
+            color: this.gl.getUniformLocation(program, "u_color"),
+            texture: this.gl.getUniformLocation(program, "u_texture"),
+            finalMat: this.gl.getUniformLocation(program, "u_finalMat"),
+        };
+    };
+
+    createBufferSets(confs) {
+        let newBuffersSets = {};
+
+        for (const conf of confs) {
+            newBuffersSets[conf.name] = this.createBufferSet(conf);
         }
+
+        return newBuffersSets;
     }
 
     createBufferSet = (conf) => {
-        const commonBuffersSettings = { size: this.mode === "3d" ? 3 : 2 };
+        const commonBuffersSettings = { size: 3 };
         const { vertices, indices, normals, textureCoords } = conf.data;
-        const drawMethod = conf.drawMethod ?? this.gl.STATIC_DRAW;
+        const drawMethod = conf.drawMethod ?? this.gl.STREAM_DRAW;
 
         const vao = this.gl.createVertexArray();
 
@@ -126,12 +103,10 @@ class Generator {
             );
         }
 
-        this.buffers[conf.name] = buffersSet;
-
         return buffersSet;
     };
 
-    #createCoordsBuffer(index, bufferData, settings, drawMethod = this.gl.STATIC_DRAW) {
+    #createCoordsBuffer(index, bufferData, settings, drawMethod) {
         const buffer = this.gl.createBuffer();
 
         this.gl.bindBuffer(this.gl.ARRAY_BUFFER, buffer);
@@ -142,7 +117,7 @@ class Generator {
         return buffer;
     }
 
-    #createIndexBuffer(bufferData, drawMethod = this.gl.STATIC_DRAW) {
+    #createIndexBuffer(bufferData, drawMethod) {
         const buffer = this.gl.createBuffer();
 
         this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, buffer);
@@ -151,19 +126,39 @@ class Generator {
         return buffer;
     }
 
-    createTextures(texturesConfs) {
-        for (const textureConf of texturesConfs) {
-            textureConf.path ? this.createTextureFromImage(textureConf) : this.createTexture(textureConf);
+    redefineBufferData(target, buffer, newBufferData, drawMethod = this.gl.STREAM_DRAW) {
+        let typedArray;
+
+        switch (target) {
+            case this.gl.ARRAY_BUFFER:
+                typedArray = new Float32Array(newBufferData);
+                break;
+
+            case this.gl.ELEMENT_ARRAY_BUFFER:
+                typedArray = new Uint16Array(newBufferData);
+                break;
         }
+
+        this.gl.bindBuffer(target, buffer);
+        this.gl.bufferData(target, typedArray, drawMethod);
+    }
+
+    createTextures(confs) {
+        let newTexs = {};
+
+        for (const conf of confs) {
+            newTexs[conf.name] = this.createTexture(conf);
+        }
+
+        return newTexs;
     }
 
     createTexture(textureConf, textureImage) {
-        const { path, settings } = textureConf;
-        const unit = Object.keys(this.textures).length;
+        const { path, settings, setParams } = textureConf;
         const texture = this.gl.createTexture();
-        const newTexData = { texture, unit, settings };
+        const newTexData = { texture, settings };
 
-        this.gl.activeTexture(this.gl[`TEXTURE${unit}`]);
+        this.gl.activeTexture(this.gl[`TEXTURE${settings.unit}`]);
 
         if (path) {
             this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
@@ -171,12 +166,8 @@ class Generator {
             this.gl.generateMipmap(this.gl.TEXTURE_2D);
         } else {
             this.gl.bindTexture(settings.bindTarget, texture);
-            
-            if (
-                settings.bindTarget === this.gl.TEXTURE_3D ||
-                settings.bindTarget === this.gl.TEXTURE_2D_ARRAY ||
-                settings.bindTarget === this.gl.TEXTURE_CUBE_MAP_ARRAY
-            ) {
+
+            if (settings.bindTarget === this.gl.TEXTURE_3D || settings.bindTarget === this.gl.TEXTURE_2D_ARRAY) {
                 this.gl.texImage3D(
                     settings.texTarget,
                     0,
@@ -208,8 +199,7 @@ class Generator {
             }
         }
 
-        textureConf.setParams?.();
-        this.textures[textureConf.name] = newTexData;
+        setParams?.();
 
         return newTexData;
     }
@@ -223,39 +213,36 @@ class Generator {
         };
     }
 
-    createFramebuffers(framebuffersConfs) {
-        for (const fbConf of framebuffersConfs) {
-            this.createFramebuffer(fbConf);
+    bindTextureToUnit(unit, texture, bindTarget) {
+        if (unit === 0 || unit === 1) {
+            console.error(`Units 0, 1 are reserved.`);
+            return;
         }
+
+        this.gl.activeTexture(this.gl[`TEXTURE${unit}`]);
+        this.gl.bindTexture(bindTarget, texture);
+    }
+
+    createFramebuffers(confs) {
+        let newFbs = {};
+
+        for (const conf of confs) {
+            newFbs[conf.name] = this.createFramebuffer(conf);
+        }
+
+        return newFbs;
     }
 
     createFramebuffer(framebufferConf) {
-        const { name, setTexture } = framebufferConf;
+        const { setTexture } = framebufferConf;
         const framebuffer = this.gl.createFramebuffer();
 
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, framebuffer);
         setTexture();
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
 
-        this.framebuffers[name] = framebuffer;
-
         return framebuffer;
     }
-
-    #initCommonLocations = (program) => {
-        this.gl.bindAttribLocation(program, Generator.#ATTRIBUTE_INDICES.position, "a_position");
-        this.gl.bindAttribLocation(program, Generator.#ATTRIBUTE_INDICES.normal, "a_normal");
-        this.gl.bindAttribLocation(program, Generator.#ATTRIBUTE_INDICES.textureCoords, "a_textureCoords");
-
-        return {
-            position: this.gl.getAttribLocation(program, "a_position"),
-            normal: this.gl.getAttribLocation(program, "a_normal"),
-            textureCoords: this.gl.getAttribLocation(program, "a_textureCoords"),
-            color: this.gl.getUniformLocation(program, "u_color"),
-            texture: this.gl.getUniformLocation(program, "u_texture"),
-            finalMat: this.gl.getUniformLocation(program, "u_finalMat"),
-        };
-    };
 }
 
 export default Generator;

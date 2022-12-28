@@ -1,3 +1,2 @@
-src/utils/*
-src/shapes/*
-src/_experimentation/Archivist/ArchivistUtils.js
+src/utils/*/*
+src/shapes/*/*

@@ -1,8 +1,8 @@
 import Shape from "../Shape.js";
 
 class Sphere extends Shape {
-    constructor(name, ctx, radius, stacks, sectors, optionals) {
-        super(name, ctx, () => {
+    constructor(ctx, radius, stacks, sectors, optionals) {
+        super(ctx, optionals?.uniforms, () => {
             const angle = optionals?.angle ?? Math.PI * 2
             const innerLayer = !!optionals?.innerLayer
             const invertNormals = !innerLayer && !!optionals?.invertNormals
@@ -113,10 +113,6 @@ class Sphere extends Shape {
 
             return { vertices, indices, normals }
         })
-    }
-
-    render = () => {
-        this.drawElements(this.gl.TRIANGLES)
     }
 }
 

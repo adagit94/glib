@@ -62,8 +62,8 @@ class RectangularCuboid extends Shape {
 
     static #SIDES = ["top", "bottom", "front", "back", "right", "left"]
     
-    constructor(name, ctx, width, height, depth, optionals) {
-        super(name, ctx, () => {
+    constructor(ctx, width, height, depth, optionals) {
+        super(ctx, optionals?.uniforms, () => {
             const opened = !!optionals?.opened && RectangularCuboid.#SIDES.includes(optionals.opened) ? optionals.opened : false
             const invertNormals = !!optionals?.invertNormals
             
@@ -124,10 +124,6 @@ class RectangularCuboid extends Shape {
             
             return { vertices, normals, indices }
         })
-    }
-
-    render = () => {
-        this.drawElements(this.gl.TRIANGLES)
     }
 }
 

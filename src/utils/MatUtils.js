@@ -388,20 +388,18 @@ class MatUtils {
 
   static view3d = (eye, target, upVec = [0, 1, 0]) => MatUtils.inverted3d(MatUtils.lookAtMat(eye, target, upVec))
   
-  static lookAtMat = (eye, target, upVec) => {
-    const eyeToTargetVec = VecUtils.subtract(eye, target);
-
-    const camDirection = VecUtils.normalize(eyeToTargetVec);
+  static lookAtMat = (view, target, upVec) => {
+    const viewDirection = VecUtils.normalize(VecUtils.subtract(target, view));
     const xVec = VecUtils.normalize(
-      VecUtils.cross(upVec, camDirection)
+      VecUtils.cross(upVec, viewDirection)
     );
-    const yVec = VecUtils.normalize(VecUtils.cross(camDirection, xVec));
+    const yVec = VecUtils.normalize(VecUtils.cross(viewDirection, xVec));
 
     return new Float32Array([
       xVec[0], xVec[1], xVec[2], 0,
       yVec[0], yVec[1], yVec[2], 0,
-      camDirection[0], camDirection[1], camDirection[2], 0,
-      eye[0], eye[1], eye[2], 1,
+      -viewDirection[0], -viewDirection[1], -viewDirection[2], 0,
+      view[0], view[1], view[2], 1,
     ]);
   };
 }

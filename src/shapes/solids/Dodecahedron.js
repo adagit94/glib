@@ -5,8 +5,8 @@ import Shape from "../Shape.js"
 import ShapeUtils from "../ShapeUtils.js"
 
 class Dodecahedron extends Shape {
-    constructor(name, ctx, pentaCircumradius, optionals) {
-        super(name, ctx, () => {
+    constructor(ctx, pentaCircumradius, optionals) {
+        super(ctx, optionals?.uniforms, () => {
             const opened = Array.isArray(optionals?.opened) ? optionals.opened : typeof optionals?.opened === "string" ? [optionals.opened] : undefined
             const invertNormals = !!optionals?.invertNormals
             
@@ -32,13 +32,13 @@ class Dodecahedron extends Shape {
             // Y+
             const topFaceVertices = pentagonVertices.map(vert => MatUtils.multVertWithMats3d(vert, [MatUtils.rotated3d("y", Math.PI), MatUtils.translated3d(0, dodecaInradius, 0)]))
             if (!opened?.includes("y+")) {
-                ShapeUtils.setGeometryData(5, [vertices, topFaceVertices.flat()], [normals, [0, 1, 0]], [indices, faceIndices, true])
+                ShapeUtils.setGeometryData([vertices, topFaceVertices], [normals, [0, 1, 0]], [indices, faceIndices, true])
             }
             
             // Y-
             const bottomFaceVertices = pentagonVertices.map(vert => MatUtils.multVertWithMats3d(vert, MatUtils.translated3d(0, -dodecaInradius, 0)))
             if (!opened?.includes("y-")) {
-                ShapeUtils.setGeometryData(5, [vertices, bottomFaceVertices.flat()], [normals, [0, -1, 0,]], [indices, faceIndices])
+                ShapeUtils.setGeometryData([vertices, bottomFaceVertices], [normals, [0, -1, 0,]], [indices, faceIndices, true])
             }
 
             // Y-Z+
@@ -48,7 +48,7 @@ class Dodecahedron extends Shape {
                 faceVertices = faceVertices.map(vert => VecUtils.add(vert, transpositionVec))
                 const normal = VecUtils.cross(VecUtils.subtract(faceVertices[3], faceVertices[2]), VecUtils.subtract(faceVertices[1], faceVertices[2]))
                 
-                ShapeUtils.setGeometryData(5, [vertices, faceVertices.flat()], [normals, normal], [indices, faceIndices, true])
+                ShapeUtils.setGeometryData([vertices, faceVertices], [normals, normal], [indices, faceIndices, true])
             }
 
             // X-Y-Z+
@@ -58,7 +58,7 @@ class Dodecahedron extends Shape {
                 faceVertices = faceVertices.map(vert => VecUtils.add(vert, transpositionVec))
                 const normal = VecUtils.cross(VecUtils.subtract(faceVertices[1], faceVertices[2]), VecUtils.subtract(faceVertices[3], faceVertices[2]))
                 
-                ShapeUtils.setGeometryData(5, [vertices, faceVertices.flat()], [normals, normal], [indices, faceIndices, true])
+                ShapeUtils.setGeometryData([vertices, faceVertices], [normals, normal], [indices, faceIndices, true])
             }
 
             // X+Y+Z+
@@ -68,7 +68,7 @@ class Dodecahedron extends Shape {
                 faceVertices = faceVertices.map(vert => VecUtils.add(vert, transpositionVec))
                 const normal = VecUtils.cross(VecUtils.subtract(faceVertices[1], faceVertices[2]), VecUtils.subtract(faceVertices[3], faceVertices[2]))
                 
-                ShapeUtils.setGeometryData(5, [vertices, faceVertices.flat()], [normals, normal], [indices, faceIndices, true])
+                ShapeUtils.setGeometryData([vertices, faceVertices], [normals, normal], [indices, faceIndices, true])
             }
 
             // Y-Z-
@@ -78,7 +78,7 @@ class Dodecahedron extends Shape {
                 faceVertices = faceVertices.map(vert => VecUtils.add(vert, transpositionVec))
                 const normal = VecUtils.cross(VecUtils.subtract(faceVertices[1], faceVertices[2]), VecUtils.subtract(faceVertices[3], faceVertices[2]))
                 
-                ShapeUtils.setGeometryData(5, [vertices, faceVertices.flat()], [normals, normal], [indices, faceIndices, true])
+                ShapeUtils.setGeometryData([vertices, faceVertices], [normals, normal], [indices, faceIndices, true])
             }
 
             // X-Y-Z-
@@ -88,7 +88,7 @@ class Dodecahedron extends Shape {
                 faceVertices = faceVertices.map(vert => VecUtils.add(vert, transpositionVec))
                 const normal = VecUtils.cross(VecUtils.subtract(faceVertices[3], faceVertices[2]), VecUtils.subtract(faceVertices[1], faceVertices[2]))
 
-                ShapeUtils.setGeometryData(5, [vertices, faceVertices.flat()], [normals, normal], [indices, faceIndices, true])
+                ShapeUtils.setGeometryData([vertices, faceVertices], [normals, normal], [indices, faceIndices, true])
             }
 
             // X+Y-Z-
@@ -98,7 +98,7 @@ class Dodecahedron extends Shape {
                 faceVertices = faceVertices.map(vert => VecUtils.add(vert, transpositionVec))
                 const normal = VecUtils.cross(VecUtils.subtract(faceVertices[3], faceVertices[2]), VecUtils.subtract(faceVertices[1], faceVertices[2]))
 
-                ShapeUtils.setGeometryData(5, [vertices, faceVertices.flat()], [normals, normal], [indices, faceIndices, true])
+                ShapeUtils.setGeometryData([vertices, faceVertices], [normals, normal], [indices, faceIndices, true])
             }
 
             // X-Y+Z-
@@ -108,7 +108,7 @@ class Dodecahedron extends Shape {
                 faceVertices = faceVertices.map(vert => VecUtils.add(vert, transpositionVec))
                 const normal = VecUtils.cross(VecUtils.subtract(faceVertices[1], faceVertices[2]), VecUtils.subtract(faceVertices[3], faceVertices[2]))
 
-                ShapeUtils.setGeometryData(5, [vertices, faceVertices.flat()], [normals, normal], [indices, faceIndices, true])
+                ShapeUtils.setGeometryData([vertices, faceVertices], [normals, normal], [indices, faceIndices, true])
             }
 
             // X-Y+Z+
@@ -118,7 +118,7 @@ class Dodecahedron extends Shape {
                 faceVertices = faceVertices.map(vert => VecUtils.add(vert, transpositionVec))
                 const normal = VecUtils.cross(VecUtils.subtract(faceVertices[3], faceVertices[2]), VecUtils.subtract(faceVertices[1], faceVertices[2]))
 
-                ShapeUtils.setGeometryData(5, [vertices, faceVertices.flat()], [normals, normal], [indices, faceIndices, true])
+                ShapeUtils.setGeometryData([vertices, faceVertices], [normals, normal], [indices, faceIndices, true])
             }
 
             // X+Y+Z-
@@ -128,7 +128,7 @@ class Dodecahedron extends Shape {
                 faceVertices = faceVertices.map(vert => VecUtils.add(vert, transpositionVec))
                 const normal = VecUtils.cross(VecUtils.subtract(faceVertices[1], faceVertices[2]), VecUtils.subtract(faceVertices[3], faceVertices[2]))
 
-                ShapeUtils.setGeometryData(5, [vertices, faceVertices.flat()], [normals, normal], [indices, faceIndices, true])
+                ShapeUtils.setGeometryData([vertices, faceVertices], [normals, normal], [indices, faceIndices, true])
             }
 
             // X+Y-Z+
@@ -138,17 +138,13 @@ class Dodecahedron extends Shape {
                 faceVertices = faceVertices.map(vert => VecUtils.add(vert, transpositionVec))
                 const normal = VecUtils.cross(VecUtils.subtract(faceVertices[3], faceVertices[2]), VecUtils.subtract(faceVertices[1], faceVertices[2]))
                 
-                ShapeUtils.setGeometryData(5, [vertices, faceVertices.flat()], [normals, normal], [indices, faceIndices, true])
+                ShapeUtils.setGeometryData([vertices, faceVertices], [normals, normal], [indices, faceIndices])
             }
 
             if (invertNormals) normals = normals.map(coord => coord * -1)
 
             return { vertices, normals, indices }
         })
-    }
-
-    render = () => {
-        this.drawElements(this.gl.TRIANGLES)
     }
 }
 

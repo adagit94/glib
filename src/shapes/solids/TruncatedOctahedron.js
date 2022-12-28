@@ -16,8 +16,8 @@ class TruncatedOctahedron extends Shape {
         if (!skipIndices) allIndices.push(...currentIndices)
     }
     
-    constructor(name, ctx, pyrSquareLength, truncPyrSquareLength, optionals) {
-        super(name, ctx, () => {
+    constructor(ctx, pyrSquareLength, truncPyrSquareLength, optionals) {
+        super(ctx, optionals?.uniforms, () => {
             const invertNormals = !!optionals?.invertNormals
             const openedSides = Array.isArray(optionals?.opened) ? optionals.opened : typeof optionals?.opened === "string" ? [optionals.opened] : undefined
             
@@ -138,10 +138,6 @@ class TruncatedOctahedron extends Shape {
 
             return { vertices, normals, indices }
         })
-    }
-
-    render = () => {
-        this.drawElements(this.gl.TRIANGLES)
     }
 }
 
