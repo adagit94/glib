@@ -165,6 +165,7 @@ export default {
                 }
 
                 translucencyFactor *= 1. - texture(u_spotLightAlphaMap, vec3(projectedCoords, layer)).a;
+                if (translucencyFactor == 0.) break;
             }
         
             return translucencyFactor;
@@ -238,6 +239,7 @@ export default {
                 }
 
                 translucencyFactor *= 1. - texture(u_pointLightAlphaMap, vec3(projectedCoords, layer)).a;
+                if (translucencyFactor == 0.) break;
             }
         
             return translucencyFactor;
