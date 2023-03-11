@@ -1,5 +1,5 @@
-import Shape from "../Shape.js";
-import ShapeUtils from "../ShapeUtils.js";
+import Shape from "../../Shape.js";
+import ShapeUtils from "../../ShapeUtils.js";
 
 class Tetrahedron extends Shape {
     constructor(ctx, squareSide, optionals) {
@@ -13,15 +13,15 @@ class Tetrahedron extends Shape {
             let indicesToAdd = [0, 1, 2]
 
             if (!openedSides?.includes("x-y-z+")) {
-                ShapeUtils.setGeometryData([vertices, [[squareSideHalf, -squareSideHalf, squareSideHalf], [-squareSideHalf, -squareSideHalf, -squareSideHalf], [-squareSideHalf, squareSideHalf, squareSideHalf]]], [normals, [-1, -1, 1]], [indices, indicesToAdd, true])
+                ShapeUtils.setGeometryData([vertices, [[squareSideHalf, -squareSideHalf, squareSideHalf], [-squareSideHalf, -squareSideHalf, -squareSideHalf], [-squareSideHalf, squareSideHalf, squareSideHalf]]], [normals, [-1, -1, 1]], [indices, indicesToAdd])
             }
 
             if (!openedSides?.includes("x+y+z+")) {
-                ShapeUtils.setGeometryData([vertices, [[-squareSideHalf, squareSideHalf, squareSideHalf], [squareSideHalf, squareSideHalf, -squareSideHalf], [squareSideHalf, -squareSideHalf, squareSideHalf]]], [normals, [1, 1, 1]], [indices, indicesToAdd, true])
+                ShapeUtils.setGeometryData([vertices, [[-squareSideHalf, squareSideHalf, squareSideHalf], [squareSideHalf, squareSideHalf, -squareSideHalf], [squareSideHalf, -squareSideHalf, squareSideHalf]]], [normals, [1, 1, 1]], [indices, indicesToAdd])
             }
 
             if (!openedSides?.includes("x+y-z-")) {
-                ShapeUtils.setGeometryData([vertices, [[-squareSideHalf, -squareSideHalf, -squareSideHalf], [squareSideHalf, -squareSideHalf, squareSideHalf], [squareSideHalf, squareSideHalf, -squareSideHalf]]], [normals, [1, -1, -1]], [indices, indicesToAdd, true])
+                ShapeUtils.setGeometryData([vertices, [[-squareSideHalf, -squareSideHalf, -squareSideHalf], [squareSideHalf, -squareSideHalf, squareSideHalf], [squareSideHalf, squareSideHalf, -squareSideHalf]]], [normals, [1, -1, -1]], [indices, indicesToAdd])
             }
 
             if (!openedSides?.includes("x-y+z-")) {

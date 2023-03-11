@@ -16,7 +16,7 @@ class VecUtils {
 
     static length = (vec) => Math.sqrt(Math.pow(vec[0], 2) + Math.pow(vec[1], 2) + Math.pow(vec[2], 2));
 
-    static distance = (vecA, vecB) => VecUtils.length(VecUtils.subtract(vecA, vecB));
+    static distance = (pA, pB) => VecUtils.length(VecUtils.subtract(pA, pB));
 }
 
 export default VecUtils

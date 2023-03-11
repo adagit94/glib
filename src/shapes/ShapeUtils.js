@@ -2,22 +2,51 @@ import MatUtils from "../utils/MatUtils.js";
 import VecUtils from "../utils/VecUtils.js";
 
 class ShapeUtils {
-    static setGeometryData(vertices, normals, indices) {
+    static setGeometryData(vertices, normals, indices, colors) {
         let [verticesSum, verticesToAdd] = vertices;
-        let [normalsSum, normalToAdd, invertNormal] = normals;
-        let [indicesSum, indicesToAdd, incrementIndices] = indices;
+        let [indicesSum, indicesToAdd, incrementIndices = true] = indices;
+        let [normalsSum, normalsToAdd, invertNormals, repeatNormal = true] = normals;
 
         verticesSum.push(...verticesToAdd.flat());
-        
-        if (invertNormal) normalToAdd = normalToAdd.map((coord) => coord * -1);
-        for (let v = 0; v < verticesToAdd.length; v++) {
-            normalsSum.push(...normalToAdd);
-        }
 
         indicesSum.push(...indicesToAdd);
         if (incrementIndices) {
             for (let i = 0; i < indicesToAdd.length; i++) {
                 indicesToAdd[i] += verticesToAdd.length;
+            }
+        }
+
+        let vertexDataToRepeat = [];
+
+        if (invertNormals) normalsToAdd = normalsToAdd.flat().map(coord => coord * -1);
+
+        if (repeatNormal) {
+            vertexDataToRepeat.push([normalsToAdd, normalsSum]);
+        } else {
+            normalsSum.push(...normalsToAdd);
+        }
+
+        if (colors) {
+            let [colorsSum, colorsToAdd, repeatColor] = colors;
+
+            if (repeatColor) {
+                vertexDataToRepeat.push([colorsToAdd, colorsSum]);
+            } else {
+                colorsSum.push(...colorsToAdd.flat());
+            }
+        }
+
+        if (vertexDataToRepeat.length > 0) {
+            ShapeUtils.#repeatVertexData(verticesToAdd.length, vertexDataToRepeat);
+        }
+    }
+
+    static #repeatVertexData(verticesCount, dataItems) {
+        for (let i = 0; i < verticesCount; i++) {
+            for (const dataItem of dataItems) {
+                const [input, dataSet] = dataItem;
+
+                dataSet.push(...input);
             }
         }
     }

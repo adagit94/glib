@@ -2,7 +2,7 @@ import SHADERS from "./shaders.js";
 import PointLight from "./lights/PointLight.js";
 import SpotLight from "./lights/SpotLight.js";
 import SceneUtils from "./SceneUtils.js";
-import MatUtils from "../utils/MatUtils.js";
+import MatUtils from "../../utils/MatUtils.js";
 
 class Scene {
     static #PERSPECTIVE_CONF = { fov: Math.PI / 4, near: 0.1, far: 100 };
@@ -23,6 +23,7 @@ class Scene {
             projection.near,
             projection.far
         );
+
         this.setView(camera);
 
         this.#initAlphaMapProgram(alphaMap);
@@ -46,7 +47,7 @@ class Scene {
         camera: {},
     };
 
-    setView = (conf) => {
+    setView = conf => {
         this.#projection.mats.view = MatUtils.mult3d(this.#projection.mats.proj, MatUtils.view3d(conf.position, conf.direction));
     };
 
@@ -70,12 +71,17 @@ class Scene {
 
         for (let s = 0; s < shapes.length; s++) {
             let shape = shapes[s];
-            const [name, instance] = shape;
 
-            this.#shapes[name] = instance;
-            this.#shapes._values.push(instance);
+            if (Array.isArray(shape)) {
+                const [name, instance] = shape;
 
-            instance.layer = s;
+                this.#shapes[name] = instance;
+                this.#shapes._values.push(instance);
+                instance.layer = s;
+            } else {
+                this.#shapes._values.push(shape);
+                shape.layer = s;
+            }
         }
     }
 
@@ -93,12 +99,16 @@ class Scene {
 
     #prepareSceneProgram() {
         const { scene: sceneProg } = this.#programs;
+
         const shapesCount = this.#shapes._values.length;
         const highershapesCount = shapesCount > this.#programs.shapesCount;
+
         let spotLightsCount = 0;
         let activeSpotLights = (sceneProg.activeSpotLights = []);
         let pointLightsCount = 0;
         let activePointLights = (sceneProg.activePointLights = []);
+
+        this.#programs.activeShapes = this.#shapes._values.filter(s => s.active);
 
         for (const light of this.#lights._values) {
             if (light instanceof SpotLight) {
@@ -224,10 +234,10 @@ class Scene {
 
     #sortAndSetShapesFromLight(light) {
         light.shapesFromLight = SceneUtils.sortByDistance({
-            entities: this.#shapes._values,
+            entities: this.#programs.activeShapes,
             refPoint: light.getUniforms().position,
             direction: "from",
-        }).map((m) => m.layer);
+        }).map(m => m.layer);
     }
 
     #genSpotLightAlphaMap = (light, index) => {
@@ -243,7 +253,7 @@ class Scene {
     #setSpotLightAlphaMap = (lightConf, shape) => {
         this.#setAlphaMap(lightConf, shape, {
             tex: this.#programs.alphaMap.alphaMap.textures.spotLight.texture,
-            layer: this.#programs.shapesCount * lightConf.lightIndex + shape.layer,
+            layer: this.#programs.activeShapes.length * lightConf.lightIndex + shape.layer,
         });
     };
 
@@ -261,11 +271,11 @@ class Scene {
     };
 
     #setPointLightAlphaMap = (lightConf, shape) => {
-        const { shapesCount } = this.#programs;
+        const { activeShapes } = this.#programs;
 
         this.#setAlphaMap(lightConf, shape, {
             tex: this.#programs.alphaMap.alphaMap.textures.pointLight.texture,
-            layer: shape.layer + shapesCount * lightConf.lightIndex * 6 + shapesCount * lightConf.cubeSide,
+            layer: shape.layer + activeShapes.length * lightConf.lightIndex * 6 + activeShapes.length * lightConf.cubeSide,
         });
     };
 
@@ -273,7 +283,8 @@ class Scene {
         const { alphaMap: alphaMapProg } = this.#programs;
         const shapeUniforms = shape.getUniforms();
 
-        this.#gl.uniform4f(alphaMapProg.locations.color, ...shapeUniforms.color);
+        if (shapeUniforms.color) this.#gl.uniform4f(alphaMapProg.locations.color, ...shapeUniforms.color);
+        this.#gl.uniform1i(alphaMapProg.locations.useBufferColor, shapeUniforms.useBufferColor ? 1 : 0);
         this.#gl.uniformMatrix4fv(alphaMapProg.locations.finalLightMat, false, MatUtils.mult3d(lightConf.lightMat, shapeUniforms.modelMat));
 
         this.#setLightTexLayer(texConf.tex, texConf.layer);
@@ -284,7 +295,7 @@ class Scene {
         this.#gl.useProgram(this.#programs.scene.program);
         this.#gl.viewport(0, 0, this.#gl.canvas.width, this.#gl.canvas.height);
         this.#gl.bindFramebuffer(this.#gl.FRAMEBUFFER, null);
-        SceneUtils.sortByDistance({ entities: this.#shapes._values, refPoint: this.#uniforms.camera.position, direction: "to" });
+        SceneUtils.sortByDistance({ entities: this.#programs.activeShapes, refPoint: this.#uniforms.camera.position, direction: "to" });
 
         this.#renderShapes(undefined, this.#setScene, { phase: "final" });
     };
@@ -304,10 +315,10 @@ class Scene {
     };
 
     #setSpotLightsLocationsForShape(uniforms, layer) {
-        const { scene, shapesCount } = this.#programs;
+        const { scene, activeShapes } = this.#programs;
         const { activeSpotLights } = scene;
 
-        for (let light = 0, shapesOffset = 0; light < activeSpotLights.length; light++, shapesOffset += shapesCount) {
+        for (let light = 0, shapesOffset = 0; light < activeSpotLights.length; light++, shapesOffset += activeShapes.length) {
             const lightInstance = activeSpotLights[light];
             const alphaMapLayers = this.#getAlphaMapLayersForLight(lightInstance, layer);
 
@@ -325,14 +336,14 @@ class Scene {
     }
 
     #setPointLightsLocationsForShape(uniforms, layer) {
-        const { scene, shapesCount } = this.#programs;
+        const { scene, activeShapes } = this.#programs;
         const { activePointLights } = scene;
 
         for (let light = 0, sidesOffset = 0, shapesOffset = 0; light < activePointLights.length; light++) {
             const lightInstance = activePointLights[light];
             const alphaMapLayersForLight = this.#getAlphaMapLayersForLight(lightInstance, layer);
 
-            for (let cubeSide = 0, layerIndex = 0; cubeSide < 6; cubeSide++, sidesOffset++, shapesOffset += shapesCount) {
+            for (let cubeSide = 0, layerIndex = 0; cubeSide < 6; cubeSide++, sidesOffset++, shapesOffset += activeShapes.length) {
                 for (const layer of alphaMapLayersForLight) {
                     this.#gl.uniform1i(
                         this.#gl.getUniformLocation(scene.program, `u_pointLights[${light}].alphaMapLayers[${layerIndex++}]`),
@@ -355,7 +366,7 @@ class Scene {
     }
 
     #getAlphaMapLayersForLight(light, layer) {
-        const currentShapelI = light.shapesFromLight.findIndex((l) => l === layer);
+        const currentShapelI = light.shapesFromLight.findIndex(l => l === layer);
         const layersFromLightToShape = light.shapesFromLight.slice(0, currentShapelI);
 
         return layersFromLightToShape;
@@ -396,7 +407,8 @@ class Scene {
     #setShapeLocations(uniforms) {
         const { locations } = this.#programs.scene;
 
-        this.#gl.uniform4f(locations.color, ...uniforms.color);
+        if (uniforms.color) this.#gl.uniform4f(locations.color, ...uniforms.color);
+        this.#gl.uniform1i(locations.useBufferColor, uniforms.useBufferColor ? 1 : 0);
         this.#gl.uniformMatrix4fv(locations.finalMat, false, MatUtils.mult3d(this.#projection.mats.view, uniforms.modelMat));
         this.#gl.uniformMatrix4fv(locations.modelMat, false, uniforms.modelMat);
         this.#gl.uniformMatrix4fv(locations.normalMat, false, MatUtils.normal3d(uniforms.modelMat));
@@ -432,10 +444,10 @@ class Scene {
     #renderShapes = (light, setProgram, renderConf = {}) => {
         const { _phase, lightIndex, lightMat, cubeSide } = renderConf;
         const lightConf = { uniforms: light?.getUniforms(), lightIndex, lightMat, cubeSide };
-        const shapes = this.#shapes._values;
+        const { activeShapes } = this.#programs;
 
-        for (let i = 0; i < shapes.length; i++) {
-            let shape = shapes[i];
+        for (let i = 0; i < activeShapes.length; i++) {
+            let shape = activeShapes[i];
 
             setProgram(lightConf, shape);
             shape.render();

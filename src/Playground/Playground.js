@@ -1,23 +1,12 @@
 import MatUtils from "../utils/MatUtils.js";
-import Cube from "../shapes/solids/Cube.js";
-import Plane from "../shapes/planar/Plane.js";
 import Framer from "../Generator/Framer/Framer.js";
-import Scene from "../Scene/Scene.js";
-import TruncatedOctahedron from "../shapes/solids/TruncatedOctahedron.js";
-import Pyramid from "../shapes/solids/SquarePyramid.js";
-import Octahedron from "../shapes/solids/Octahedron.js";
-import Cylinder from "../shapes/solids/Cylinder.js";
+import Scene from "../scene-systems/basic/Scene.js";
+import SpotLight from "../scene-systems/basic/lights/SpotLight.js";
+import PointLight from "../scene-systems/basic/lights/PointLight.js";
+import TetrahedronSkelet from "../shapes/solids/Tetrahedron/TetrahedronSkelet.js";
 import Sphere from "../shapes/solids/Sphere.js";
-import RectangularCuboid from "../shapes/solids/RectangularCuboid.js";
-import CubeSkelet from "../shapes/skelets/CubeSkeleton.js";
-import Tetrahedron from "../shapes/solids/Tetrahedron.js";
-import TrirectangularTetrahedron from "../shapes/solids/TrirectangularTetrahedron.js";
-import Icosahedron from "../shapes/solids/Icosahedron.js";
-import AngleUtils from "../utils/AngleUtils.js";
-import PentagonalPyramid from "../shapes/solids/PentagonalPyramid.js";
-import SpotLight from "../Scene/lights/SpotLight.js";
-import PointLight from "../Scene/lights/PointLight.js";
-import Dodecahedron from "../shapes/solids/Dodecahedron.js";
+import TriangularPlane from "../shapes/planar/patterns/TriangularPlane.js";
+import Tetrahedron from "../shapes/solids/Tetrahedron/Tetrahedron.js";
 
 class Playground extends Framer {
     constructor() {
@@ -25,10 +14,9 @@ class Playground extends Framer {
             canvasSelector: "#glFrame",
         });
 
-        // const cameraPosition = [Math.cos(Math.PI / 2) * 4, 0, Math.sin(Math.PI / 2) * 4];
-        // const cameraPosition = [-1, 0, -1.1];
-        // const cameraPosition = [0, 0, 10];
-        const cameraPosition = [0, 0, 5];
+        const cameraPosition = [Math.cos(Math.PI / 2) * 10, 0, Math.sin(Math.PI / 2) * 10];
+        // const cameraPosition = [Math.cos(Math.PI * 0.75) * 5, 0, Math.sin(Math.PI * 0.75) * 5];
+        // const cameraPosition = [0, 0, 5];
         const cameraDirection = [0, 0, -1];
         const lNear = 0.1;
         const lFar = 100;
@@ -40,55 +28,31 @@ class Playground extends Framer {
         const scene = (this.scene = new Scene(
             this,
             {
-                projection: { fov: Math.PI / 2, near: 0.1, far: 10 },
+                projection: { fov: Math.PI / 2, near: 0.1, far: 100 },
                 camera: { position: cameraPosition, direction: cameraDirection },
                 alphaMap: {
                     width: alphaMapWidth,
                     height: alphaMapHeight,
                 },
             },
-            { ambientLight: [0, 0, 0], camera: { distanceLin: 0.000000001, distanceQuad: 0.00000000125 } }
+            { ambientLight: [0.5, 0, 0], camera: { distanceLin: 0.000000001, distanceQuad: 0.00000000125 } }
         ));
 
         scene.setLights([
-            // [
-            //     "s1",
-            //     new SpotLight(
-            //         {
-            //             projection: { fov: Math.PI / 2, near: 0.1, far: 100, aspectRatio: alphaMapAspectRatio},
-            //             direction: [0, 0, -1],
-            //             position: [Math.cos(Math.PI / 2) * 4, 0, Math.sin(Math.PI / 2) * 4],
-            //             // position: [0, 0, -2.5],
-            //         },
-            //         {
-            //             color: [0.5, 0, 0],
-            //             shininess: 80000,
-            //             far: lFar,
-            //             cameraPosition,
-            //             outerLimit: 0,
-            //             innerLimit: 0.25,
-            //             distanceLin: 0.00000001,
-            //             distanceQuad: 0.0000000125,
-            //         }
-            //     ),
-            // ],
             [
-                "s2",
+                "s1",
                 new SpotLight(
                     {
                         projection: { fov: Math.PI / 2, near: 0.1, far: 100, aspectRatio: alphaMapAspectRatio },
                         direction: [0, 0, -1],
-                        // position: [Math.cos(Math.PI / 2) * 4, 0, Math.sin(Math.PI / 2) * 4],
-                        // position: [0, 0, 10],
-                        position: [0, 0, 10],
+                        position: [0, 0, 15],
                     },
                     {
                         color: [1, 1, 1],
                         shininess: 80000,
                         far: lFar,
-                        cameraPosition,
                         outerLimit: 0,
-                        innerLimit: 0,
+                        innerLimit: 0.9,
                         distanceLin: 0.00000001,
                         distanceQuad: 0.0000000125,
                     }
@@ -105,7 +69,6 @@ class Playground extends Framer {
             //         {
             //             color: [0.5, 0, 0],
             //             shininess: 80000,
-            //             cameraPosition,
             //             distanceLin: 0.00000001,
             //             distanceQuad: 0.0000000125,
             //         }
@@ -113,76 +76,38 @@ class Playground extends Framer {
             // ],
         ]);
 
-        const p1Mat = MatUtils.mult3d(MatUtils.translated3d(0, 0, -10), [MatUtils.rotated3d("x", -Math.PI / 2)]);
-        const p2Mat = MatUtils.mult3d(MatUtils.translated3d(0, 0, 10), [MatUtils.rotated3d("x", Math.PI / 2)]);
-        const p3Mat = MatUtils.mult3d(MatUtils.translated3d(-10, 0, 0), [MatUtils.rotated3d("y", Math.PI / 2), MatUtils.rotated3d("x", Math.PI / 2)]);
-        const p4Mat = MatUtils.mult3d(MatUtils.translated3d(10, 0, 0), [MatUtils.rotated3d("y", Math.PI / 2), MatUtils.rotated3d("x", -Math.PI / 2)]);
+        const tetron = (this.tetron = new TetrahedronSkelet(this, {
+            internal: true,
+            external: true,
+            cubeSideLength: 4,
+            vertex: { color: [1, 0.5, 0, 1], r: 0.25 },
+            edge: { middle: { color: [1, 0.5, 0, 1], r: 0.125 }, side: { color: [1, 0.5, 0, 1], r: 0.0625 } },
+            scale: 1,
+        }));
 
-        scene.setShapes([
-            // [
-            //     "p1",
-            //     new Plane(this, 10, 10, {
-            //         uniforms: {
-            //             color: [1, 1, 1, 1],
-            //             modelMat: p1Mat,
-            //         },
-            //     }),
-            // ],
-            // [
-            //     "p2",
-            //     new Plane(this, 10, 10, {
-            //         uniforms: {
-            //             color: [1, 1, 1, 1],
-            //             modelMat: p2Mat,
-            //         },
-            //     }),
-            // ],
-            // [
-            //     "p3",
-            //     new Plane(this, 10, 10, {
-            //         uniforms: {
-            //             color: [1, 1, 1, 1],
-            //             modelMat: p3Mat,
-            //         },
-            //     }),
-            // ],
-            // [
-            //     "p4",
-            //     new Plane(this, 10, 10, {
-            //         uniforms: {
-            //             color: [1, 1, 1, 1],
-            //             modelMat: p4Mat,
-            //         },
-            //     }),
-            // ],
-            [
-                "x",
-                new TrirectangularTetrahedron(this, 2, {
-                    uniforms: {
-                        color: [1, 1, 1, 1],
-                    },
-                }),
-            ],
-            // [
-            //     "c",
-            //     new Cube(this, 1, {
-            //         invertNormals: true,
-            //         uniforms: {
-            //             color: [1, 1, 1, 0.75],
-            //         },
-            //     }),
-            // ],
-        ]);
+        scene.setShapes(tetron.getShapes());
+        // scene.setShapes([
+        //     [
+        //         "a",
+        //         new Tetrahedron(this, 2.5, {
+        //             uniforms: {
+        //                 color: [1, 1, 1, 1],
+        //             },
+        //         }),
+        //     ],
+        // ]);
 
-        this.animate = true;
+        this.animate = false;
         this.requestAnimationFrame();
     }
 
     renderScene = () => {
-        const x = this.scene.getShape("x");
-        const xMat = MatUtils.rotated3d("y", this.animData.deltaTime / 2.5);
+        const shapeA = this.scene.getShape("a");
+        const mat = MatUtils.rotated3d("y", this.animData.deltaTime / 20);
 
-        x.setUniforms({ modelMat: xMat });
+        this.tetron.transform(mat);
+
+        // shapeA.setUniforms({ modelMat: mat });
 
         this.scene.render();
     };

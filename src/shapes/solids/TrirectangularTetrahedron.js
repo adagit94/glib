@@ -1,4 +1,3 @@
-import VecUtils from "../../utils/VecUtils.js";
 import Shape from "../Shape.js";
 import ShapeUtils from "../ShapeUtils.js";
 

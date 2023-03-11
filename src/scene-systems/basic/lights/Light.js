@@ -1,4 +1,4 @@
-import MatUtils from "../../utils/MatUtils.js";
+import MatUtils from "../../../utils/MatUtils.js";
 
 class Light {
     constructor(conf, initialUniforms) {

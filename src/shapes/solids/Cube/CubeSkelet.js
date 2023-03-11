@@ -1,6 +1,6 @@
-import MatUtils from "../../utils/MatUtils.js";
+import MatUtils from "../../../utils/MatUtils.js";
 import Cube from "../solids/Cube.js";
-import RectangularCuboid from "../solids/RectangularCuboid.js";
+import RectangularCuboid from "../RectangularCuboid.js";
 
 class CubeSkelet {
     constructor(ctx, cuboidWidth, cuboidHeight, settings) {

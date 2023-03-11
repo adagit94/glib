@@ -1,9 +1,11 @@
 export default {
     scene: {
         vShader: (maxSpotLightsCount, maxPointLightsCount) => `#version 300 es
-
         precision highp int;
+        precision highp float;
         
+        uniform int u_useBufferColor;
+        uniform vec4 u_color;
         uniform mat4 u_finalMat;
         uniform mat4 u_modelMat;
         uniform mat4 u_normalMat;
@@ -14,10 +16,12 @@ export default {
         
         in vec3 a_position;
         in vec3 a_normal;
+        in vec4 a_color;
         in vec2 a_textureCoords;
         
         out vec3 v_surfacePos;
         out vec3 v_normal;
+        out vec4 v_color;
         out vec2 v_textureCoords;
         out vec4 v_fragPosInSpotLightsSpaces[${maxSpotLightsCount + 1}];
         out vec4 v_fragPosInPointLightsSpaces[${maxPointLightsCount * 6 + 1}];
@@ -61,12 +65,12 @@ export default {
         
             v_surfacePos = vec3(u_modelMat * position);
             v_normal = mat3(u_normalMat) * a_normal;
+            v_color = u_useBufferColor == 1 ? a_color : u_color;
             v_textureCoords = a_textureCoords;
         
             gl_Position = u_finalMat * position;
         }`,
         fShader: (maxModelsCount, maxSpotLightsCount, maxPointLightsCount) => `#version 300 es
-
         precision highp int;
         precision highp float;
         precision highp sampler2DArray;
@@ -100,7 +104,6 @@ export default {
             float distanceQuad;
         };
         
-        uniform vec4 u_color;
         uniform vec3 u_ambientLight;
         uniform sampler2DArray u_spotLightAlphaMap;
         uniform sampler2DArray u_pointLightAlphaMap;
@@ -111,12 +114,13 @@ export default {
         uniform int u_pointLightsCount;
         
         in vec3 v_normal;
+        in vec4 v_color;
         in vec3 v_surfacePos;
         in vec4 v_fragPosInSpotLightsSpaces[${maxSpotLightsCount + 1}];
         in vec4 v_fragPosInPointLightsSpaces[${maxPointLightsCount * 6 + 1}];
         
-        out vec4 color;
-        
+        out vec4 outputColor;
+
         float getDistanceFactor(vec3 p, float distanceLin, float distanceQuad) {
             float pointToSurface = distance(v_surfacePos, p);
             float distanceFactor = 1. / (1. + distanceLin * pointToSurface + distanceQuad * pow(pointToSurface, 2.));
@@ -283,7 +287,8 @@ export default {
         }
 
         void main() {
-            vec3 lightMix = u_color.rgb * u_ambientLight;
+            vec4 inputColor = v_color;
+            vec3 lightMix = inputColor.rgb * u_ambientLight;
             
             for (int i = 0; i < u_spotLightsCount; i++) {
                 SpotLight lightStruct;
@@ -305,7 +310,7 @@ export default {
                     })()}
                 }
                 
-                lightMix += u_color.rgb * computeSpotLight(lightStruct, fragPosInLightSpace);
+                lightMix += inputColor.rgb * computeSpotLight(lightStruct, fragPosInLightSpace);
             }
 
             for (int i = 0; i < u_pointLightsCount; i++) {
@@ -379,35 +384,42 @@ export default {
                     })()}
                 }
 
-                lightMix += u_color.rgb * computePointLight(lightStruct, fragPosInLightSpace, side);
+                lightMix += inputColor.rgb * computePointLight(lightStruct, fragPosInLightSpace, side);
             }
 
-            color = vec4(lightMix, u_color.a);
+            outputColor = vec4(lightMix, inputColor.a);
         }
         `,
     },
     alphaMap: {
         vShader: `#version 300 es
-
+        precision lowp int;
+        
+        uniform int u_useBufferColor;
+        uniform vec4 u_color;
         uniform mat4 u_finalLightMat;
         
         in vec3 a_position;
+        in vec4 a_color;
+
+        out vec4 v_color;
         
         void main() {
             vec4 position = vec4(a_position, 1.);
+
+            v_color = u_useBufferColor == 1 ? a_color : u_color;
         
             gl_Position = u_finalLightMat * position;
         }`,
         fShader: `#version 300 es
-
         precision highp float;
         
-        uniform vec4 u_color;
+        in vec4 v_color;
         
         out vec4 alpha;
         
         void main() {
-            alpha = vec4(vec3(0.), u_color.a);
+            alpha = vec4(vec3(0.), v_color.a);
         }`,
     },
 };

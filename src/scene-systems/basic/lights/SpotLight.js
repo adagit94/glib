@@ -1,4 +1,4 @@
-import MatUtils from "../../utils/MatUtils.js";
+import MatUtils from "../../../utils/MatUtils.js";
 import Light from "./Light.js";
 
 class SpotLight extends Light {

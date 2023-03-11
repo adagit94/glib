@@ -2,7 +2,8 @@ class Generator {
     static #ATTRIBUTE_INDICES = {
         position: 0,
         normal: 1,
-        textureCoords: 2,
+        color: 2,
+        textureCoords: 3,
     };
 
     constructor(conf) {
@@ -47,15 +48,18 @@ class Generator {
         this.gl.attachShader(program, shader);
     }
 
-    #initCommonLocations = (program) => {
+    #initCommonLocations = program => {
         this.gl.bindAttribLocation(program, Generator.#ATTRIBUTE_INDICES.position, "a_position");
         this.gl.bindAttribLocation(program, Generator.#ATTRIBUTE_INDICES.normal, "a_normal");
+        this.gl.bindAttribLocation(program, Generator.#ATTRIBUTE_INDICES.color, "a_color");
         this.gl.bindAttribLocation(program, Generator.#ATTRIBUTE_INDICES.textureCoords, "a_textureCoords");
 
         return {
             position: this.gl.getAttribLocation(program, "a_position"),
             normal: this.gl.getAttribLocation(program, "a_normal"),
+            aColor: this.gl.getAttribLocation(program, "a_color"),
             textureCoords: this.gl.getAttribLocation(program, "a_textureCoords"),
+            useBufferColor: this.gl.getUniformLocation(program, "u_useBufferColor"),
             color: this.gl.getUniformLocation(program, "u_color"),
             texture: this.gl.getUniformLocation(program, "u_texture"),
             finalMat: this.gl.getUniformLocation(program, "u_finalMat"),
@@ -72,10 +76,9 @@ class Generator {
         return newBuffersSets;
     }
 
-    createBufferSet = (conf) => {
+    createBufferSet = conf => {
         const commonBuffersSettings = { size: 3 };
-        const { vertices, indices, normals, textureCoords } = conf.data;
-        const drawMethod = conf.drawMethod ?? this.gl.STREAM_DRAW;
+        const { vertices, indices, normals, colors, textureCoords } = conf.data;
 
         const vao = this.gl.createVertexArray();
 
@@ -83,15 +86,19 @@ class Generator {
 
         let buffersSet = {
             vao,
-            vertices: this.#createCoordsBuffer(Generator.#ATTRIBUTE_INDICES.position, vertices, commonBuffersSettings, drawMethod),
+            vertices: this.#createCoordsBuffer(Generator.#ATTRIBUTE_INDICES.position, vertices, commonBuffersSettings, this.gl.STATIC_DRAW),
         };
 
         if (indices?.length) {
-            buffersSet.indices = this.#createIndexBuffer(indices, drawMethod);
+            buffersSet.indices = this.#createIndexBuffer(indices, this.gl.STREAM_DRAW);
         }
 
         if (normals?.length) {
-            buffersSet.normals = this.#createCoordsBuffer(Generator.#ATTRIBUTE_INDICES.normal, normals, commonBuffersSettings, drawMethod);
+            buffersSet.normals = this.#createCoordsBuffer(Generator.#ATTRIBUTE_INDICES.normal, normals, commonBuffersSettings, this.gl.STATIC_DRAW);
+        }
+
+        if (colors?.length) {
+            buffersSet.colors = this.#createCoordsBuffer(Generator.#ATTRIBUTE_INDICES.color, colors, { size: 4 }, this.gl.STATIC_DRAW);
         }
 
         if (textureCoords?.length) {
@@ -99,7 +106,7 @@ class Generator {
                 Generator.#ATTRIBUTE_INDICES.textureCoords,
                 textureCoords,
                 { size: 2, normalize: true },
-                drawMethod
+                this.gl.STATIC_DRAW
             );
         }
 

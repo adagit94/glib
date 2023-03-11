@@ -1,4 +1,4 @@
-import VecUtils from "../utils/VecUtils.js";
+import VecUtils from "../../utils/VecUtils.js";
 
 class SceneUtils {
     static sortByDistance(sourceData) {

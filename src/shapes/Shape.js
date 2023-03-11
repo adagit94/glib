@@ -16,6 +16,7 @@ class Shape {
     position;
     layer;
     transpose = true;
+    active = true;
     #geometryData;
     #buffers;
     #uniforms = {};
@@ -51,14 +52,10 @@ class Shape {
     }
 
     render = () => {
-        this.#drawElements(this.gl.TRIANGLES);
-    };
-
-    #drawElements(mode, settings) {
         this.gl.bindVertexArray(this.#buffers.vao);
         this.gl.bindBuffer(this.gl.ELEMENT_ARRAY_BUFFER, this.#buffers.indices);
-        this.gl.drawElements(mode, settings?.count ?? this.#geometryData.indices.length, this.gl.UNSIGNED_SHORT, settings?.offset * 2 ?? 0);
-    }
+        this.gl.drawElements(this.gl.TRIANGLES, this.#geometryData.indices.length, this.gl.UNSIGNED_SHORT, 0);
+    };
 }
 
 export default Shape;
