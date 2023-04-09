@@ -73,7 +73,7 @@ class TetrahedronSkelet {
         });
     }
 
-    #positionVertex(position = true) {
+    #positionVertex(position) {
         this.#shapes.push(this.#createSphere(this.#conf.vertex, position));
     }
 

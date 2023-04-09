@@ -23,9 +23,8 @@ class Scene {
             projection.near,
             projection.far
         );
-
         this.setView(camera);
-
+        
         this.#initAlphaMapProgram(alphaMap);
 
         this.#gl.enable(this.#gl.BLEND);
@@ -38,14 +37,16 @@ class Scene {
         scene: {},
         alphaMap: {},
     };
+    #uniforms = {
+        camera: {},
+    };
     #projection = {
         mats: {},
     };
     #lights = {};
     #shapes = {};
-    #uniforms = {
-        camera: {},
-    };
+    #magnets = {};
+    #frameDelta;
 
     setView = conf => {
         this.#projection.mats.view = MatUtils.mult3d(this.#projection.mats.proj, MatUtils.view3d(conf.position, conf.direction));
@@ -53,13 +54,7 @@ class Scene {
 
     setLights(lights) {
         this.#lights = { _values: [] };
-
-        for (const light of lights) {
-            const [name, instance] = light;
-
-            this.#lights[name] = instance;
-            this.#lights._values.push(instance);
-        }
+        this.#setEntities(this.#lights, lights);
     }
 
     getLight(name) {
@@ -68,25 +63,37 @@ class Scene {
 
     setShapes(shapes) {
         this.#shapes = { _values: [] };
-
-        for (let s = 0; s < shapes.length; s++) {
-            let shape = shapes[s];
-
-            if (Array.isArray(shape)) {
-                const [name, instance] = shape;
-
-                this.#shapes[name] = instance;
-                this.#shapes._values.push(instance);
-                instance.layer = s;
-            } else {
-                this.#shapes._values.push(shape);
-                shape.layer = s;
-            }
-        }
+        this.#setEntities(this.#shapes, shapes, { setLayer: true });
     }
 
     getShape(name) {
         return this.#shapes[name];
+    }
+
+    setMagnets(magnets) {
+        this.#magnets = { _values: [] };
+        this.#setEntities(this.#magnets, magnets);
+    }
+
+    getMagnet(name) {
+        return this.#magnets[name];
+    }
+
+    #setEntities(group, entities, optionals) {
+        for (let i = 0; i < entities.length; i++) {
+            let entity = entities[i];
+            let entityInstance = entity;
+
+            if (Array.isArray(entity)) {
+                const [instanceName, instance] = entity;
+
+                entityInstance = instance;
+                group[instanceName] = instance;
+            }
+
+            group._values.push(entityInstance);
+            if (optionals?.setLayer) entityInstance.layer = i;
+        }
     }
 
     setUniforms(uniforms) {
@@ -109,6 +116,7 @@ class Scene {
         let activePointLights = (sceneProg.activePointLights = []);
 
         this.#programs.activeShapes = this.#shapes._values.filter(s => s.active);
+        this.#programs.activeMagnets = this.#magnets._values.filter(m => m.active);
 
         for (const light of this.#lights._values) {
             if (light instanceof SpotLight) {
@@ -237,7 +245,7 @@ class Scene {
             entities: this.#programs.activeShapes,
             refPoint: light.getUniforms().position,
             direction: "from",
-        }).map(m => m.layer);
+        }).map(s => s.layer);
     }
 
     #genSpotLightAlphaMap = (light, index) => {
@@ -305,7 +313,7 @@ class Scene {
         const { textures } = alphaMap.alphaMap;
         const shapeUniforms = shape.getUniforms();
 
-        shape.transposeTriangles(this.#uniforms.camera.position);
+        if (shape.sortTriangles) shape.sortIndices(this.#uniforms.camera.position);
 
         this.#setShapeLocations(shapeUniforms);
         this.#setSpotLightsLocationsForShape(shapeUniforms, shape.layer);
@@ -414,11 +422,26 @@ class Scene {
         this.#gl.uniformMatrix4fv(locations.normalMat, false, MatUtils.normal3d(uniforms.modelMat));
     }
 
-    render() {
+    #evalEffectsForShapes() {
+        const { activeShapes, activeMagnets } = this.#programs;
+
+        for (let i = 0; i < activeShapes.length; i++) {
+            const shape = activeShapes[i]
+
+            const magnetism = shape.getEffect("magnetism")
+            
+            if (magnetism.active) magnetism.evalMagnets(this.#frameDelta, activeMagnets);
+        }
+    }
+
+    render(frameDelta) {
         const { alphaMap } = this.#programs;
+
+        this.#frameDelta = frameDelta;
 
         this.#prepareSceneProgram();
         this.#setSceneLocations();
+        this.#evalEffectsForShapes()
 
         this.#gl.blendFuncSeparate(this.#gl.ZERO, this.#gl.ZERO, this.#gl.ONE_MINUS_DST_ALPHA, this.#gl.ONE);
         this.#gl.bindFramebuffer(this.#gl.FRAMEBUFFER, alphaMap.alphaMap.framebuffer);
@@ -447,7 +470,7 @@ class Scene {
         const { activeShapes } = this.#programs;
 
         for (let i = 0; i < activeShapes.length; i++) {
-            let shape = activeShapes[i];
+            const shape = activeShapes[i];
 
             setProgram(lightConf, shape);
             shape.render();

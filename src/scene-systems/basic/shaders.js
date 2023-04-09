@@ -27,42 +27,16 @@ export default {
         out vec4 v_fragPosInPointLightsSpaces[${maxPointLightsCount * 6 + 1}];
         
         void main() {
-            vec4 position = vec4(a_position, 1);
+            vec4 position = vec4(a_position, 1.);
 
             for(int i = 0; i < u_spotLightsCount; i++) {
-                switch (i) {
-                    ${(() => {
-                        let switchBody = "";
-
-                        for (let light = 0; light < maxSpotLightsCount; light++) {
-                            switchBody += `case ${light}:
-                                            v_fragPosInSpotLightsSpaces[${light}] = u_finalSpotLightsMats[${light}] * position;
-                                            break;
-                                            `;
-                        }
-
-                        return switchBody;
-                    })()}
-                }
+                ${generateSwitch(maxSpotLightsCount, i => `v_fragPosInSpotLightsSpaces[${i}] = u_finalSpotLightsMats[${i}] * position;`)}
             }
 
             for(int i = 0; i < u_pointLightsCount * 6; i++) {
-                switch (i) {
-                    ${(() => {
-                        let switchBody = "";
-
-                        for (let cubeSide = 0; cubeSide < maxPointLightsCount * 6; cubeSide++) {
-                            switchBody += `case ${cubeSide}:
-                                            v_fragPosInPointLightsSpaces[${cubeSide}] = u_finalPointLightsMats[${cubeSide}] * position;
-                                            break;
-                                            `;
-                        }
-
-                        return switchBody;
-                    })()}
-                }
+                ${generateSwitch(maxPointLightsCount * 6, i => `v_fragPosInPointLightsSpaces[${i}] = u_finalPointLightsMats[${i}] * position;`)}
             }
-        
+
             v_surfacePos = vec3(u_modelMat * position);
             v_normal = mat3(u_normalMat) * a_normal;
             v_color = u_useBufferColor == 1 ? a_color : u_color;
@@ -153,21 +127,8 @@ export default {
             for(int i = 0; i < light.alphaMapLayersCount; i++) {
                 int layer;
                 
-                switch (i) {
-                    ${(() => {
-                        let switchBody = "";
-
-                        for (let layer = 0; layer < maxModelsCount; layer++) {
-                            switchBody += `case ${layer}:
-                                            layer = light.alphaMapLayers[${layer}];
-                                            break;
-                                            `;
-                        }
-
-                        return switchBody;
-                    })()}
-                }
-
+                ${generateSwitch(maxModelsCount, i => `layer = light.alphaMapLayers[${i}];`)}
+                
                 translucencyFactor *= 1. - texture(u_spotLightAlphaMap, vec3(projectedCoords, layer)).a;
                 if (translucencyFactor == 0.) break;
             }
@@ -227,20 +188,7 @@ export default {
             for(int i = from; i < to; i++) {
                 int layer;
                 
-                switch (i) {
-                    ${(() => {
-                        let switchBody = "";
-
-                        for (let i = 0; i < maxModelsCount * 6; i++) {
-                            switchBody += `case ${i}:
-                                            layer = light.alphaMapLayers[${i}];
-                                            break;
-                                            `;
-                        }
-
-                        return switchBody;
-                    })()}
-                }
+                ${generateSwitch(maxModelsCount * 6, i => `layer = light.alphaMapLayers[${i}];`)}
 
                 translucencyFactor *= 1. - texture(u_pointLightAlphaMap, vec3(projectedCoords, layer)).a;
                 if (translucencyFactor == 0.) break;
@@ -294,21 +242,10 @@ export default {
                 SpotLight lightStruct;
                 vec4 fragPosInLightSpace;
 
-                switch (i) {
-                    ${(() => {
-                        let switchBody = "";
-
-                        for (let light = 0; light < maxSpotLightsCount; light++) {
-                            switchBody += `case ${light}:
-                                            lightStruct = u_spotLights[${light}];
-                                            fragPosInLightSpace = v_fragPosInSpotLightsSpaces[${light}];
-                                            break;
-                                            `;
-                        }
-
-                        return switchBody;
-                    })()}
-                }
+                ${generateSwitch(
+                    maxSpotLightsCount,
+                    i => `lightStruct = u_spotLights[${i}]; fragPosInLightSpace = v_fragPosInSpotLightsSpaces[${i}];`
+                )}
                 
                 lightMix += inputColor.rgb * computeSpotLight(lightStruct, fragPosInLightSpace);
             }
@@ -316,21 +253,8 @@ export default {
             for (int i = 0; i < u_pointLightsCount; i++) {
                 PointLight lightStruct;
 
-                switch (i) {
-                    ${(() => {
-                        let switchBody = "";
-
-                        for (let light = 0; light < maxPointLightsCount; light++) {
-                            switchBody += `case ${light}:
-                                            lightStruct = u_pointLights[${light}];
-                                            break;
-                                            `;
-                        }
-
-                        return switchBody;
-                    })()}
-                }
-
+                ${generateSwitch(maxPointLightsCount, i => `lightStruct = u_pointLights[${i}];`)}
+                
                 float distancePositiveX = distance(v_surfacePos, vec3(lightStruct.position.x + 1., lightStruct.position.y, lightStruct.position.z));
                 float distanceNegativeX = distance(v_surfacePos, vec3(lightStruct.position.x - 1., lightStruct.position.y, lightStruct.position.z));
                 float distancePositiveY = distance(v_surfacePos, vec3(lightStruct.position.x, lightStruct.position.y + 1., lightStruct.position.z));
@@ -369,20 +293,7 @@ export default {
                 int sideForLight = i * 6 + side;
                 vec4 fragPosInLightSpace;
 
-                switch (sideForLight) {
-                    ${(() => {
-                        let switchBody = "";
-
-                        for (let sideForLight = 0; sideForLight < maxPointLightsCount * 6; sideForLight++) {
-                            switchBody += `case ${sideForLight}:
-                                            fragPosInLightSpace = v_fragPosInPointLightsSpaces[${sideForLight}];
-                                            break;
-                                            `;
-                        }
-
-                        return switchBody;
-                    })()}
-                }
+                ${generateSwitch(maxPointLightsCount * 6, i => `fragPosInLightSpace = v_fragPosInPointLightsSpaces[${i}];`, "sideForLight")}
 
                 lightMix += inputColor.rgb * computePointLight(lightStruct, fragPosInLightSpace, side);
             }
@@ -422,4 +333,19 @@ export default {
             alpha = vec4(vec3(0.), v_color.a);
         }`,
     },
+};
+
+const generateSwitch = (iterations, generateCase, switchVar = "i") => {
+    let switchBody = "";
+
+    for (let i = 0; i < iterations; i++) {
+        switchBody += `case ${i}:
+                        ${generateCase(i)}
+                        break;
+                        `;
+    }
+
+    return `switch (${switchVar}) {
+                ${switchBody}
+            }`;
 };

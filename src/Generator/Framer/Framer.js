@@ -10,9 +10,9 @@ class Framer extends Generator {
 
     requestAnimationFrame() {
         this.animData = {
-            frameDeltaTime: 0,
-            deltaTime: 0,
-            lastFrameTime: 0,
+            delta: 0,
+            frameDelta: 0,
+            lastFrame: 0,
         };
 
         window.requestAnimationFrame(this.#render);
@@ -20,11 +20,11 @@ class Framer extends Generator {
 
     #render = () => {
         const now = Date.now() / 1000;
-        const elapsedTime = this.animData.lastFrameTime === 0 ? 0 : now - this.animData.lastFrameTime;
+        const elapsedTime = this.animData.lastFrame === 0 ? 0 : now - this.animData.lastFrame;
 
-        this.animData.lastFrameTime = now;
-        this.animData.frameDeltaTime = elapsedTime;
-        this.animData.deltaTime += elapsedTime;
+        this.animData.delta += elapsedTime;
+        this.animData.frameDelta = elapsedTime;
+        this.animData.lastFrame = now;
 
         this.gl.viewport(0, 0, this.gl.canvas.width, this.gl.canvas.height);
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);

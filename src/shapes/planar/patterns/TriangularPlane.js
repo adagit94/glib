@@ -42,10 +42,7 @@ class TriangularPlane extends Shape {
 
             setTriangleGroupData([verticesForAngle[1].ic, verticesForAngle[3].ic, verticesForAngle[5].ic], triColors.inscribed);
 
-            setTriangleGroupData(
-                [verticesForAngle.at(-1).ic, verticesForAngle.at(0).cc, verticesForAngle.at(0).ic],
-                triColors.groups[0][0]
-            );
+            setTriangleGroupData([verticesForAngle.at(-1).ic, verticesForAngle.at(0).cc, verticesForAngle.at(0).ic], triColors.groups[0][0]);
             setTriangleGroupData([verticesForAngle.at(1).ic, verticesForAngle.at(0).cc, verticesForAngle.at(0).ic], triColors.groups[0][1]);
             setTriangleGroupData([verticesForAngle.at(-1).ic, verticesForAngle.at(0).ic, verticesForAngle.at(1).ic], triColors.groups[0][2]);
 
@@ -60,7 +57,7 @@ class TriangularPlane extends Shape {
             return { vertices, indices, normals, colors };
         });
 
-        this.transpose = false;
+        this.sortTriangles = false;
     }
 }
 

@@ -22,7 +22,7 @@ class Plane extends Shape {
             return { vertices, indices: Plane.#INDICES, normals: Plane.#NORMALS, textureCoords: Plane.#TEXTURE_COORDS };
         });
 
-        this.transpose = false
+        this.sortTriangles = false;
     }
 }
 
