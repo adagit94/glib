@@ -1,2 +1,2 @@
-src/utils/*/*
-src/shapes/solids/*
+src/utils/**/*
+src/shapes/solids/**/*

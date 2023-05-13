@@ -3,6 +3,7 @@ import PointLight from "./lights/PointLight.js";
 import SpotLight from "./lights/SpotLight.js";
 import SceneUtils from "./SceneUtils.js";
 import MatUtils from "../../utils/MatUtils.js";
+import BehaviourSystem from "../../behaviour/BehaviourSystem.js";
 
 class Scene {
     static #PERSPECTIVE_CONF = { fov: Math.PI / 4, near: 0.1, far: 100 };
@@ -24,7 +25,7 @@ class Scene {
             projection.far
         );
         this.setView(camera);
-        
+
         this.#initAlphaMapProgram(alphaMap);
 
         this.#gl.enable(this.#gl.BLEND);
@@ -43,13 +44,14 @@ class Scene {
     #projection = {
         mats: {},
     };
-    #lights = {};
-    #shapes = {};
-    #magnets = {};
+    #lights = { _values: [] };
+    #shapes = { _values: [] };
+    #magnets = { _values: [] };
+    #behaviourSystem;
     #frameDelta;
 
     setView = conf => {
-        this.#projection.mats.view = MatUtils.mult3d(this.#projection.mats.proj, MatUtils.view3d(conf.position, conf.direction));
+        this.#projection.mats.view = MatUtils.mult3d(this.#projection.mats.proj, MatUtils.view3d(conf.position, conf.target));
     };
 
     setLights(lights) {
@@ -102,6 +104,18 @@ class Scene {
 
     getUniforms() {
         return this.#uniforms;
+    }
+
+    createBehaviourSystem(pattern) {
+        this.#behaviourSystem = new BehaviourSystem(pattern);
+    }
+
+    getBehaviourSystem() {
+        return this.#behaviourSystem;
+    }
+
+    deleteBehaviourSystem() {
+        this.#behaviourSystem = undefined;
     }
 
     #prepareSceneProgram() {
@@ -406,7 +420,11 @@ class Scene {
         this.#gl.uniform1f(this.#gl.getUniformLocation(scene.program, `u_${light.type}Lights[${index}].distanceQuad`), uniforms.distanceQuad);
 
         if (light.type === "spot") {
-            this.#gl.uniform3f(this.#gl.getUniformLocation(scene.program, `u_spotLights[${index}].direction`), ...uniforms.direction);
+            this.#gl.uniform3f(
+                this.#gl.getUniformLocation(scene.program, `u_spotLights[${index}].direction`),
+                ...uniforms.direction,
+                uniforms.position
+            );
             this.#gl.uniform1f(this.#gl.getUniformLocation(scene.program, `u_spotLights[${index}].outerLimit`), uniforms.outerLimit);
             this.#gl.uniform1f(this.#gl.getUniformLocation(scene.program, `u_spotLights[${index}].innerLimit`), uniforms.innerLimit);
         }
@@ -422,14 +440,14 @@ class Scene {
         this.#gl.uniformMatrix4fv(locations.normalMat, false, MatUtils.normal3d(uniforms.modelMat));
     }
 
-    #evalEffectsForShapes() {
+    #evalExtensionsForShapes() {
         const { activeShapes, activeMagnets } = this.#programs;
 
         for (let i = 0; i < activeShapes.length; i++) {
-            const shape = activeShapes[i]
+            const shape = activeShapes[i];
+            const magnetism = shape.getEffect("magnetism");
 
-            const magnetism = shape.getEffect("magnetism")
-            
+            if (this.#behaviourSystem) this.#behaviourSystem.evalPattern(this.#frameDelta, shape, activeShapes);
             if (magnetism.active) magnetism.evalMagnets(this.#frameDelta, activeMagnets);
         }
     }
@@ -441,7 +459,7 @@ class Scene {
 
         this.#prepareSceneProgram();
         this.#setSceneLocations();
-        this.#evalEffectsForShapes()
+        this.#evalExtensionsForShapes();
 
         this.#gl.blendFuncSeparate(this.#gl.ZERO, this.#gl.ZERO, this.#gl.ONE_MINUS_DST_ALPHA, this.#gl.ONE);
         this.#gl.bindFramebuffer(this.#gl.FRAMEBUFFER, alphaMap.alphaMap.framebuffer);

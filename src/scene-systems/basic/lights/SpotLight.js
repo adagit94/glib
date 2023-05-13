@@ -1,4 +1,5 @@
 import MatUtils from "../../../utils/MatUtils.js";
+import VecUtils from "../../../utils/VecUtils.js";
 import Light from "./Light.js";
 
 class SpotLight extends Light {
@@ -9,21 +10,14 @@ class SpotLight extends Light {
     }
 
     get type() {
-        return "spot"
+        return "spot";
     }
 
-    setView = (conf) => {
-        const { position, direction } = conf;
-        let newUniforms = {}
+    setView = conf => {
+        const { position, target } = conf;
 
-        if (position) newUniforms.position = position;
-        if (direction) newUniforms.direction = direction;
-
-        this.setUniforms(newUniforms)
-
-        const uniforms = this.getUniforms()
-
-        this.projection.mats.view = MatUtils.mult3d(this.projection.mats.proj, MatUtils.view3d(uniforms.position, uniforms.direction));
+        this.setUniforms({ position, direction: VecUtils.subtract(target, position) });
+        this.projection.mats.view = MatUtils.mult3d(this.projection.mats.proj, MatUtils.view3d(position, target));
     };
 }
 
