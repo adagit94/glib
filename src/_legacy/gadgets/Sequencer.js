@@ -35,8 +35,6 @@ class Sequencer {
     validateStep(frameT) {
         const step = this.#steps[this.#currentStep];
 
-        console.log("step", step);
-
         if (step) {
             let shouldAdvance = this.#validateDelay(step, frameT);
 
