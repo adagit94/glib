@@ -1,3 +1,3 @@
 # glib
 
-WebGPU library and rendering engine written in TypeScript.
+Library for computer graphics.
