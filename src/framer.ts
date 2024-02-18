@@ -1,7 +1,9 @@
-type TFramerSettings = { animate: boolean; timescale: number, renderer: () => void }
+type TFramerSettings = { timescale: number, renderer: () => void }
 
-export const createFramer = ({ animate, timescale, renderer }: TFramerSettings) => {
-    const data = {
+export const createFramer = ({ timescale, renderer }: TFramerSettings) => {
+    let anim = true
+    
+    const values = {
         delta: 0,
         frameDelta: 0,
         lastTimestamp: 0,
@@ -9,30 +11,32 @@ export const createFramer = ({ animate, timescale, renderer }: TFramerSettings) 
 
     const render = () => {
         const now = Date.now() * (timescale ?? 1)
-        const elapsedTime = data.lastTimestamp === 0 ? 0 : now - data.lastTimestamp
+        const elapsedTime = values.lastTimestamp === 0 ? 0 : now - values.lastTimestamp
 
-        data.delta += elapsedTime
-        data.frameDelta = elapsedTime
-        data.lastTimestamp = now
+        values.delta += elapsedTime
+        values.frameDelta = elapsedTime
+        values.lastTimestamp = now
 
         renderer()
 
-        if (animate) window.requestAnimationFrame(render)
+        if (anim) window.requestAnimationFrame(render)
     }
 
-    const trigger = () => {
-        data.delta = 0
-        data.frameDelta = 0
-        data.lastTimestamp = 0
+    const trigger = (animate = true) => {
+        anim = animate
+        
+        values.delta = 0
+        values.frameDelta = 0
+        values.lastTimestamp = 0
 
         window.requestAnimationFrame(render)
 
         return () => {
-            animate = false
+            anim = false
 
             return trigger
         }
     }
 
-    return trigger
+    return [trigger, values]
 }
