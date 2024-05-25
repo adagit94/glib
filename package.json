@@ -14,6 +14,10 @@
     "url": "https://github.com/adagit94/glib/issues"
   },
   "homepage": "https://github.com/adagit94/glib#readme",
+  "dependencies": {
+    "typescript": "^5.3.3",
+    "vec-ts": "^1.0.0"
+  },
   "devDependencies": {
     "@webgpu/types": "^0.1.40",
     "typescript": "^5.3.3"
