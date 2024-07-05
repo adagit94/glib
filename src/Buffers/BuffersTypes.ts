@@ -14,9 +14,9 @@ export type TSetBuffer = (
 export type TWriteBuffer = (
   key: string | number,
   settings: {
-    bufferOffset: GPUSize64
+    bufferOffset: number
     data: BufferSource | SharedArrayBuffer
-    dataOffset?: GPUSize64
-    size?: GPUSize64
+    dataOffset?: number
+    size?: number
   }
 ) => void

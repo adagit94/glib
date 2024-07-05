@@ -31,6 +31,8 @@ export const createFramer = ({ timescale, renderer }: TFramerSettings) => {
 
         window.requestAnimationFrame(render)
 
+        if (!animate) return trigger
+        
         return () => {
             anim = false
 
